@@ -287,6 +287,7 @@ function getMailReplied($conn){
 	$mail_template_id = $_POST['mail_template_id'];
 	$reply_email = '';
 	$arr_replied_mails = [];
+	$arr_err = [];
 
 	$stmt = $conn->prepare("SELECT sender_name,sender_SMTP_server,sender_from,sender_acc_username,sender_acc_pwd,sender_mailbox,cust_headers FROM tb_core_mailcamp_sender_list where sender_list_id = ?");
 	$stmt->bind_param("s", $sender_list_id);
@@ -328,29 +329,41 @@ function getMailReplied($conn){
 
 		//-----------
 		$arr_msg_info =[];
-		$read = imap_open($sender_mailbox,$reply_email,$sender_acc_pwd) or die('error');
-		 
-		$array = imap_search($read,'SUBJECT "Re:" SUBJECT "'.$mail_template_subject.'"'); // search subject and "re:" in subject
-		if($array) {
-			foreach($array as $result) {
-				$overview = imap_fetch_overview($read,$result,0);//var_dump($overview);
-				$reply_mail_subject = $overview[0]->subject;
 
-				$msg_from = strtolower(str_replace(">","",explode("<",$overview[0]->from)[1]));	//xxx <username@domain.com> => username@domain.com 
-			    if(in_array($msg_from, array_map('strtolower', $arr_emails))){
-			    	$msg_time = $overview[0]->date;			
-			    	$msg_body = base64_encode((imap_fetchbody ($read,$result,1)));
-			    	if (!array_key_exists($msg_from, $arr_msg_info))
-					    $arr_msg_info[$msg_from] = ['msg_time'=>[$msg_time],'msg_body'=>[$msg_body]];
-					else{
-						array_push($arr_msg_info[$msg_from]['msg_time'],$msg_time);
-						array_push($arr_msg_info[$msg_from]['msg_body'],$msg_body);
-					}	
-			    }
+		try{
+			if($read = imap_open($sender_mailbox,$reply_email,$sender_acc_pwd)){
+			 
+				$array = imap_search($read,'SUBJECT "Re:" SUBJECT "'.$mail_template_subject.'"'); // search subject and "re:" in subject
+				if($array) {
+					foreach($array as $result) {
+						$overview = imap_fetch_overview($read,$result,0);//var_dump($overview);
+						$reply_mail_subject = $overview[0]->subject;
+
+						if (filter_var($overview[0]->from, FILTER_VALIDATE_EMAIL))
+		                    $msg_from = $overview[0]->from;
+		                else
+		                    $msg_from = strtolower(str_replace(">","",explode("<",$overview[0]->from)[1]));	//xxx <username@domain.com> => username@domain.com 
+							
+					    if(in_array($msg_from, array_map('strtolower', $arr_emails))){
+					    	$msg_time = $overview[0]->date;			
+					    	$msg_body = base64_encode((imap_fetchbody ($read,$result,1)));
+					    	if (!array_key_exists($msg_from, $arr_msg_info))
+							    $arr_msg_info[$msg_from] = ['msg_time'=>[$msg_time],'msg_body'=>[$msg_body]];
+							else{
+								array_push($arr_msg_info[$msg_from]['msg_time'],$msg_time);
+								array_push($arr_msg_info[$msg_from]['msg_body'],$msg_body);
+							}	
+					    }
+					}
+				}	
 			}
-		}	
+		}catch(Exception $e) {
+			array_push($arr_err,$e->getMessage());
+		}
+		array_push($arr_err,imap_errors());		//required to capture imap errors
+		
 		header('Content-Type: application/json');
-		echo json_encode(['total_user_email_count'=>count($arr_emails), 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
+		echo json_encode(['error'=>$arr_err, 'total_user_email_count'=>count($arr_emails), 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
 	}			
 	$stmt->close();
 }
