@@ -442,9 +442,9 @@ function verifyMailBoxAccess(){
         function(data, status) {
             $("#modal_prompts_body").attr("hidden", false);
             $("#modal_prompts_body").parent().children().remove('.loadercust');
-            if (data == "")
+            if (data.error[0] == false)
                 $("#modal_prompts_body").html("<strong>Successfully verified</strong>");
             else
-                $("#modal_prompts_body").html("<strong>Error:</strong><br/>" + data);
+                $("#modal_prompts_body").html("<strong>Error:</strong><br/>" + data.error);
         });   
 }
