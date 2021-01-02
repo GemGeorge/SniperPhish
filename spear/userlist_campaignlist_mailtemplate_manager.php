@@ -156,12 +156,18 @@ function verifyMailboxAccess($conn){
 	$sender_acc_username = base64_decode($_POST['mail_sender_acc_username']);
 	$sender_acc_pwd = base64_decode($_POST['mail_sender_acc_pwd']);
 	$mail_sender_mailbox = base64_decode($_POST['mail_sender_mailbox']);
+	$arr_err = [];	
 
 	try{
-		$read = imap_open($mail_sender_mailbox,$sender_acc_username,$sender_acc_pwd) or die('Unable to connect');
+		$read = imap_open($mail_sender_mailbox,$sender_acc_username,$sender_acc_pwd);
+
 	} catch (Exception $e) {
-  		echo $e->getMessage();
+  		array_push($arr_err,$e->getMessage());
 	}
+	array_push($arr_err,imap_errors());		//required to capture imap errors
+
+	header('Content-Type: application/json');
+	echo json_encode(['error'=>$arr_err]);
 }
 //---------------------------------------Email Template Section --------------------------------
 
