@@ -208,6 +208,10 @@
                                                    <tr>
                                                       <td>{{BASEURL}}</td>
                                                       <td>SniperPhish base URL</td>
+                                                   </tr>                                                    
+                                                   <tr>
+                                                      <td>{{MDOMAIN}}</td>
+                                                      <td>Domain part of user Email</td>
                                                    </tr>
                                                 </tbody>
                                              </table>
