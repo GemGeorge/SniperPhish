@@ -95,6 +95,7 @@ function InitMailCampaign($conn, $campaign_id){
 		    $keyword_vals['{{trackingurl}}'] = $serv_variables['baseurl'].'/trackmail?mid='.$campaign_id.'&cid='.$id;
 		    $keyword_vals['{{tracker}}'] = '<img src="'.$keyword_vals['{{trackingurl}}'].'"/>';
 		    $keyword_vals['{{baseurl}}'] = $serv_variables['baseurl'];
+		    $keyword_vals['{{mdomain}}'] = explode('@', $mailto_user_email)[1];
 		    ////////////////Updating start status///////////////
 		    $stmt = $conn->prepare("INSERT INTO tb_data_mailcamp_live(id,campaign_id,campaign_name,sending_status,send_time,mailto_user_name,mailto_user_email) VALUES(?,?,?,1,?,?,?)"); //1= in progress
 			$stmt->bind_param('ssssss', $id,$campaign_id,$MC_name,$send_time,$arr_names[$index],$mailto_user_email);
@@ -185,6 +186,7 @@ function filterKeywords($content,$keyword_vals){
 			case "{{trackingurl}}" : $r_val = $keyword_vals['{{trackingurl}}']; break;
 			case "{{tracker}}" : $r_val = $keyword_vals['{{tracker}}']; break;
 			case "{{baseurl}}" : $r_val = $keyword_vals['{{baseurl}}']; break;
+			case "{{mdomain}}" : $r_val = $keyword_vals['{{mdomain}}']; break;
 		}
 	  	$content = str_ireplace($keword,$r_val,$content);
 	}
