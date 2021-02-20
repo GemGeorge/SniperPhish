@@ -172,7 +172,7 @@ function InitMailCampaign($conn, $campaign_id){
 		echo("Unable to find mail campaign ".$campaign_id);		
 }
 function filterKeywords($content,$keyword_vals){
-	$keywords = array("{{cid}}", "{{mid}}", "{{name}}", "{{notes}}", "{{email}}", "{{from}}", "{{trackingurl}}", "{{tracker}}", "{{baseurl}}");
+	$keywords = array("{{cid}}", "{{mid}}", "{{name}}", "{{notes}}", "{{email}}", "{{from}}", "{{trackingurl}}", "{{tracker}}", "{{baseurl}}", "{{mdomain}}");
 
 	foreach($keywords as $keword) {
 		switch(strtolower($keword))
