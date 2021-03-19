@@ -1,5 +1,5 @@
 <?php
-ini_set('max_execution_time', 18000);
+ini_set('max_execution_time', 0);
 require_once(dirname(__FILE__) . '/db.php');
 require_once(dirname(__FILE__) . '/common_functions.php');
 date_default_timezone_set("UTC");
