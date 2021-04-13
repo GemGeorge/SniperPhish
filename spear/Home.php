@@ -1,12 +1,11 @@
 <?php
     @ob_start();
     session_start();
+//-----------------
+   require_once(dirname(__FILE__) . '/session_manager.php');   
+   checkSession();
 ?>
 <!DOCTYPE html>
-<?php
-   require_once(dirname(__FILE__) . '/session_manager.php');   
-   checkSession(false);
-?>
 <html dir="ltr" lang="en">
    <head>
       <meta charset="utf-8">
@@ -101,8 +100,8 @@
                            <div class="d-flex">
                               <div class="mr-3 align-self-center text-white"><i class="mdi mdi-watch-vibrate mdi-36px"></i></div>
                               <div class="align-self-center">
-                                 <h7 class="text-white mt-2 mb-0">Simple Trackers</h7>
-                                 <h5 class="mt-0 text-white" id="lb_simpletracker">Total: 0, Active: 0</h5>
+                                 <h7 class="text-white mt-2 mb-0">Quick Trackers</h7>
+                                 <h5 class="mt-0 text-white" id="lb_quicktracker">Total: 0, Active: 0</h5>
                               </div>
                            </div>
                         </div>
@@ -114,7 +113,8 @@
                      <div class="card">
                         <div class="card-body">
                            <h5 class="card-title">Campaigns</h5>
-                           <div id="graph_overview" style="height: 400px;"></div>
+                           <div id="graph_overview" style="height: 140px;">                                  
+                           </div>
                         </div>
                      </div>
                   </div>
@@ -124,78 +124,7 @@
                      <div class="card">
                         <div class="card-body">
                            <h5 class="card-title">Campaigns Timeline</h5>
-                           <div id="graph_timeline_all" style="height: 400px;"></div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <!-- Modal -->
-            <div class="modal fade" id="ModalTracker" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true ">
-               <div class="modal-dialog" role="document ">
-                  <div class="modal-content">
-                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Select Tracker</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true ">&times;</span>
-                        </button>
-                     </div>
-                     <div class="modal-body">
-                        <div class="form-group row">
-                           <div class="table-responsive">
-                              <table id="Modal_table_trackers" class="table table-striped table-bordered">
-                                 <thead>
-                                    <tr>
-                                       <th>#</th>
-                                       <th>ID</th>
-                                       <th>Tracker Name</th>
-                                       <th>Date Created</th>
-                                       <th>Action</th>
-                                    </tr>
-                                 </thead>
-                                 <tbody>
-                                 </tbody>
-                              </table>
-                           </div>
-                           <div class="ml-auto text-right">
-                              <button type="button" class="btn btn-info" data-toggle="modal" data-target="#ModalTracker" onclick="templateSelected('','All active web trackers')"><i class="mdi mdi-auto-fix"></i> Select All trackers</button>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <!-- Modal -->
-            <!-- Modal -->
-            <div class="modal fade" id="ModalEmailTracker" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true ">
-               <div class="modal-dialog" role="document ">
-                  <div class="modal-content">
-                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Select Email Tracker</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true ">&times;</span>
-                        </button>
-                     </div>
-                     <div class="modal-body">
-                        <div class="form-group row">
-                           <div class="table-responsive">
-                              <table id="Modal_email_table_trackers" class="table table-striped table-bordered">
-                                 <thead>
-                                    <tr>
-                                       <th>#</th>
-                                       <th>ID</th>
-                                       <th>Tracker Name</th>
-                                       <th>Date Created</th>
-                                       <th>Action</th>
-                                    </tr>
-                                 </thead>
-                                 <tbody>
-                                 </tbody>
-                              </table>
-                           </div>
-                           <div class="ml-auto text-right">
-                              <button type="button" class="btn btn-info" data-toggle="modal" data-target="#ModalTracker" onclick="emailTemplateSelected ('','All Active Email Trackers')"><i class="mdi mdi-auto-fix"></i> Select All trackers</button>
-                           </div>
+                           <div id="graph_timeline_all" style="height: 140px;"></div>
                         </div>
                      </div>
                   </div>
@@ -223,29 +152,22 @@
       <!-- ============================================================== -->
       <!-- All Jquery -->
       <!-- ============================================================== -->
-      <script src="js/libs/jquery/jquery-3.5.1.min.js"></script>
+      <script src="js/libs/jquery/jquery-3.6.0.min.js"></script>
       <script src="js/libs/js.cookie.min.js"></script>
       <!-- Bootstrap tether Core JavaScript -->
-      <script src="js/libs/popper.min.js"></script>
       <script src="js/libs/bootstrap.min.js"></script>
-      <script src="js/libs/sparkline.js"></script>
       <!--Wave Effects -->
-      <script src="js/libs/waves.js"></script>
-      <!--Menu sidebar -->
-      <script src="js/libs/sidebarmenu.js"></script>
       <script src="js/libs/perfect-scrollbar.jquery.min.js"></script>
       <!--Custom JavaScript -->
       <script src="js/libs/custom.min.js"></script>
       <!--This page JavaScript -->
       <!-- Charts js Files -->
-      <script src="js/libs/jquery/jquery.flot.js"></script>
-      <script src="js/libs/toastr.min.js"></script>
-      <script src="js/libs/jquery/jquery.flot.tooltip.min.js"></script>
-      <script src="js/libs/jquery/datatables.js"></script>
       <script src="js/libs/apexcharts.js"></script>
       <script src="js/libs/moment.min.js"></script>
       <script src="js/libs/moment-timezone-with-data.min.js"></script>
       <script src="js/common_scripts.js"></script>
       <script src="js/home_functions.js"></script>
+      <script defer src="js/libs/sidebarmenu.js"></script>
+      <script defer src="js/libs/toastr.min.js"></script>
    </body>
 </html>

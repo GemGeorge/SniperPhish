@@ -2,52 +2,149 @@
 //-------------------Session check-----------------------
 @ob_start();
 session_start();
-if(!isset($_SESSION['username']))
-	die("Access denied");
-//-------------------------------------------------------
-
 require_once(dirname(__FILE__) . '/session_manager.php');
-require '../vendor/autoload.php';
-
+//-------------------------------------------------------
 date_default_timezone_set('UTC');
 $entry_time = (new DateTime())->format('d-m-Y h:i A');
+header('Content-Type: application/json');
 
-if(isset($_POST['action_type'])){
+if (isset($_POST)) {
+	$POSTJ = json_decode(file_get_contents('php://input'),true);
 
-	if($_POST['action_type'] == "pull_mail_campaign_field_data")
-		pullMailCampaignFieldData($conn);
-	if($_POST['action_type'] == "save_campaign_list")
-		saveCampaignList($conn);
-	if($_POST['action_type'] == "get_campaign_list")
-		getCampaignList($conn);
-	if($_POST['action_type'] == "get_campaign_from_campaign_list_id")
-		getCampaignFromCampaignListId($conn,$_POST['campaign_id']);
-	if($_POST['action_type'] == "delete_campaign_from_campaign_id")
-		deleteMailCampaignFromCampaignId($conn,$_POST['campaign_id']);
-	if($_POST['action_type'] == "make_copy_campaign_list")
-		makeCopyMailCampaignList($conn);
-	if($_POST['action_type'] == "start_stop_mailCampaign")
-		startStopMailCampaign($conn);
+	if(isset($POSTJ['action_type'])){
 
+		if(isSessionRefreshed() == false){
+			$OPS = ['multi_get_mcampinfo_from_mcamp_list_id_get_live_mcamp_data','get_user_group_data','get_mail_replied'];	//permited requests
+			if(isset($POSTJ['tk_id']) && in_array($POSTJ['action_type'],$OPS)){
+				if(isset($POSTJ['campaign_id']) && isset($POSTJ['tracker_id'])){
+					if(!amIPublic($POSTJ['tk_id'],$POSTJ['campaign_id'], $POSTJ['tracker_id']))
+						die("Access denied");
+				}
+				else
+					if(isset($POSTJ['campaign_id'])){
+						if(!amIPublic($POSTJ['tk_id'],$POSTJ['campaign_id']))
+							die("Access denied");
+					}
+					else
+						die("Access denied");
+			}
+			else
+				die("Access denied");
+		}
 
-	if($_POST['action_type'] == "send_mail_direct")
-		sendMailDirect($conn);
-
-	if($_POST['action_type'] == "init_mail_campaign")
-		InitMailCampaign($conn);
-	if($_POST['action_type'] == "get_live_campaign_data")
-		getLiveCampaignData($conn);
-	if($_POST['action_type'] == "get_mail_replied")
-		getMailReplied($conn);
-
-
-	if($_POST['action_type'] == "multi_get_campaign_from_campaign_list_id__get_live_campaign_data")
-		multi_get_campaign_from_campaign_list_id__get_live_campaign_data($conn);
+		if($POSTJ['action_type'] == "save_campaign_list")
+			saveCampaignList($conn, $POSTJ);
+		if($POSTJ['action_type'] == "get_campaign_list")
+			getCampaignList($conn);
+		if($POSTJ['action_type'] == "get_campaign_from_campaign_list_id")
+			getCampaignFromCampaignListId($conn,$POSTJ['campaign_id']);
+		if($POSTJ['action_type'] == "delete_campaign_from_campaign_id")
+			deleteMailCampaignFromCampaignId($conn,$POSTJ['campaign_id']);
+		if($POSTJ['action_type'] == "make_copy_campaign_list")
+			makeCopyMailCampaignList($conn,$POSTJ['campaign_id'], $POSTJ['new_campaign_id'], $POSTJ['new_campaign_name']);
+		if($POSTJ['action_type'] == "pull_mail_campaign_field_data")
+			pullMailCampaignFieldData($conn);
+		if($POSTJ['action_type'] == "start_stop_mailCampaign")
+			startStopMailCampaign($conn,$POSTJ['campaign_id'],$POSTJ['action_value']);		
+			
+		if($POSTJ['action_type'] == "get_user_group_data")
+			getUserGroupData($conn,$POSTJ['campaign_id']);
+		if($POSTJ['action_type'] == "get_mail_replied")
+			getMailReplied($conn, $POSTJ['campaign_id']);	
+		if($POSTJ['action_type'] == "multi_get_mcampinfo_from_mcamp_list_id_get_live_mcamp_data")
+			multi_get_mcampinfo_from_mcamp_list_id_get_live_mcamp_data($conn,$POSTJ['campaign_id']);
+	}
 }
 else
-    die();
+	die();
 
 //----------------------------------------------------------------------
+function saveCampaignList($conn, &$POSTJ){
+	$campaign_id = $POSTJ['campaign_id'];
+	$campaign_name = $POSTJ['campaign_name'];
+	$campaign_data = json_encode($POSTJ['campaign_data']);
+	$scheduled_time = $POSTJ['scheduled_time'];
+	$camp_status = $POSTJ['camp_status'];
+
+	if(checkCampaignListIdExist($conn,$campaign_id)){
+		$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET campaign_name=?, campaign_data=?, scheduled_time=?, stop_time=null, camp_status=?, camp_lock=0 WHERE campaign_id=?");
+		$stmt->bind_param('sssss', $campaign_name,$campaign_data,$scheduled_time,$camp_status,$campaign_id);
+	}
+	else{
+		$stmt = $conn->prepare("INSERT INTO tb_core_mailcamp_list(campaign_id,campaign_name,campaign_data,date,scheduled_time,camp_status,camp_lock) VALUES(?,?,?,?,?,?,0)");
+		$stmt->bind_param('ssssss', $campaign_id,$campaign_name,$campaign_data,$GLOBALS['entry_time'],$scheduled_time,$camp_status);
+	}
+	
+
+	if ($stmt->execute() === TRUE){
+		deleteLiveMailcampData($conn,$campaign_id); /// Clear live data before starting or when campaign deletes
+		kickStartCampaign($conn,$campaign_id);
+		echo(json_encode(['result' => 'success']));	
+	}
+	else 
+		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+}
+
+function getCampaignList($conn){
+	$resp = [];
+
+	$result = mysqli_query($conn, "SELECT campaign_id,campaign_name,campaign_data,date,scheduled_time,stop_time,camp_status FROM tb_core_mailcamp_list");
+	if(mysqli_num_rows($result) > 0){
+		foreach (mysqli_fetch_all($result, MYSQLI_ASSOC) as $row){
+			$row["campaign_data"] = json_decode($row["campaign_data"]);	//avoid double json encoding
+        	array_push($resp,$row);
+		}
+		echo json_encode($resp);
+	}
+	else
+		echo json_encode(['error' => 'No data']);	
+}
+
+function getCampaignFromCampaignListId($conn, $campaign_id,$quite=false){
+	$stmt = $conn->prepare("SELECT campaign_name,campaign_data,date,scheduled_time,camp_status FROM tb_core_mailcamp_list WHERE campaign_id = ?");
+	$stmt->bind_param("s", $campaign_id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($row = $result->fetch_assoc()){
+		$row["campaign_data"] = json_decode($row["campaign_data"]);	//avoid double json encoding
+		if($quite)
+			return $row;
+		else
+			echo json_encode($row) ;
+	}
+	else
+		if($quite)
+			return ['result' => 'No data'];
+		else
+			echo json_encode(['error' => 'No data']);	
+	$stmt->close();
+}
+
+function deleteMailCampaignFromCampaignId($conn,$campaign_id){	
+	$stmt = $conn->prepare("DELETE FROM tb_core_mailcamp_list WHERE campaign_id = ?");
+	$stmt->bind_param("s", $campaign_id);
+	$stmt->execute();
+	if($stmt->affected_rows != 0){
+		echo(json_encode(['result' => 'success']));	
+		deleteLiveMailcampData($conn,$campaign_id); // Clear live data before starting or when campaign deletes
+	}
+	else
+		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+	$stmt->close();
+}
+
+function makeCopyMailCampaignList($conn, $old_campaign_id, $new_campaign_id, $new_campaign_name){
+	$stmt = $conn->prepare("INSERT INTO tb_core_mailcamp_list (campaign_id,campaign_name,campaign_data,date,scheduled_time,camp_status) SELECT ?, ?, campaign_data,?,scheduled_time,0 FROM tb_core_mailcamp_list WHERE campaign_id=?");
+	$stmt->bind_param("ssss", $new_campaign_id, $new_campaign_name, $GLOBALS['entry_time'], $old_campaign_id);
+	
+	if ($stmt->execute() === TRUE){
+		echo(json_encode(['result' => 'success']));	
+	}
+	else 
+		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+	$stmt->close();
+}
+
 function pullMailCampaignFieldData($conn){
 	$resp;
 	$result = mysqli_query($conn, "SELECT user_group_id,user_group_name FROM tb_core_mailcamp_user_group");
@@ -65,43 +162,36 @@ function pullMailCampaignFieldData($conn){
 		$resp['mail_sender'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
 	}
 
-	header('Content-Type: application/json');
+	$result = mysqli_query($conn, "SELECT mconfig_id,mconfig_name FROM tb_core_mailcamp_config");
+	if(mysqli_num_rows($result) > 0){
+		$resp['mail_config'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
+	}
+
 	echo (json_encode($resp));
 }
 
-function saveCampaignList($conn){
-	$campaign_id = $_POST['campaign_id'];
-	if($campaign_id == '')
-		$campaign_id = null;
-	$mail_campaign_name = $_POST['mail_campaign_name'];
-	$mail_campaign_user_group = base64_decode($_POST['mail_campaign_user_group']);
-	$mail_campaign_mail_template = base64_decode($_POST['mail_campaign_mail_template']);
-	$mail_campaign_mail_sender = base64_decode($_POST['mail_campaign_mail_sender']);
-	$mail_campaign_scheduled_time = base64_decode($_POST['mail_campaign_scheduled_time']);
-	$msg_interval = base64_decode($_POST['msg_interval']);
-	$msg_fail_retry = $_POST['msg_fail_retry'];
-	$camp_status = $_POST['camp_status'];
-
-	if(checkCampaignListIdExist($conn,$campaign_id)){
-		$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET campaign_name=?, user_group=?, mail_template=?, mail_sender=?, scheduled_time=?, stop_time=null, msg_interval=?, msg_fail_retry=?, camp_status=?, camp_lock=0 WHERE campaign_id=?");
-		$stmt->bind_param('sssssssss', $mail_campaign_name,$mail_campaign_user_group,$mail_campaign_mail_template,$mail_campaign_mail_sender,$mail_campaign_scheduled_time,$msg_interval,$msg_fail_retry,$camp_status,$campaign_id);
-	}
-	else{
-		$stmt = $conn->prepare("INSERT INTO tb_core_mailcamp_list(campaign_id,campaign_name,user_group,mail_template,mail_sender,date,scheduled_time,msg_interval,msg_fail_retry,camp_status,camp_lock) VALUES(?,?,?,?,?,?,?,?,?,?,0)");
-		$stmt->bind_param('ssssssssss', $campaign_id,$mail_campaign_name,$mail_campaign_user_group,$mail_campaign_mail_template,$mail_campaign_mail_sender,$GLOBALS['entry_time'],$mail_campaign_scheduled_time,$msg_interval,$msg_fail_retry,$camp_status);
-	}
-	
-	if ($stmt->execute() === TRUE){
-		deleteLiveMailcampData($conn,$campaign_id); /// Clear live data before starting or when campaign deletes
-		kickStartCampaign($conn,$campaign_id);
-		echo "success";
-	}
+function startStopMailCampaign($conn, $campaign_id, $action_value){	
+	if($action_value == 3)
+		$stop_time = $GLOBALS['entry_time'];
 	else
-		echo "error";
+		$stop_time = null;
+
+	$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET camp_status=?,stop_time=? where campaign_id=?");
+	$stmt->bind_param('sss', $action_value,$stop_time,$campaign_id);
+	if ($stmt->execute() === TRUE){
+		echo(json_encode(['result' => 'success']));	
+	}
+	else 
+		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+
+	if($action_value == 1){	//if scheduled campaign
+		deleteLiveMailcampData($conn,$campaign_id); // Clear live data before starting or when campaign deletes
+		kickStartCampaign($conn,$campaign_id);
+	}
 }
 
 function checkCampaignListIdExist($conn,$campaign_id){
-	$stmt = $conn->prepare("SELECT camp_status FROM tb_core_mailcamp_list where campaign_id = ?");
+	$stmt = $conn->prepare("SELECT camp_status FROM tb_core_mailcamp_list WHERE campaign_id = ?");
 	$stmt->bind_param("s", $campaign_id);
 	$stmt->execute();
 	if($row = $stmt->get_result()->fetch_assoc()){
@@ -115,93 +205,20 @@ function checkCampaignListIdExist($conn,$campaign_id){
 }
 
 function kickStartCampaign($conn,$campaign_id){
-	$stmt = $conn->prepare("SELECT scheduled_time,camp_status FROM tb_core_mailcamp_list where campaign_id = ?");
+	$stmt = $conn->prepare("SELECT scheduled_time,camp_status FROM tb_core_mailcamp_list WHERE campaign_id = ?");
 	$stmt->bind_param("s", $campaign_id);
 	$stmt->execute();
 	$result = $stmt->get_result();
 	if($row = $result->fetch_assoc()){
 		if($row['camp_status'] == 1){//If scheduled
-			$scheduled_time = date('d-m-Y h:i A',strtotime($row['scheduled_time']));
-			$current_time = (new DateTime())->format('d-m-Y h:i A');
-			if($scheduled_time >= $current_time)
+			$scheduled_time = strtotime($row['scheduled_time']);
+			$current_time = strtotime("now");
+			if($scheduled_time <= $current_time)
 				executeCron($conn,getOSType($conn),$campaign_id);
 		}
 	}
 	$stmt->close();
 	return false;
-}
-
-function getCampaignList($conn){
-	header('Content-Type: application/json');
-	$result = mysqli_query($conn, "SELECT campaign_id,campaign_name,user_group,mail_template,mail_sender,date,scheduled_time,stop_time,camp_status FROM tb_core_mailcamp_list");
-	if(mysqli_num_rows($result) > 0)
-		echo json_encode(mysqli_fetch_all($result, MYSQLI_ASSOC));
-	else
-		echo json_encode(['resp' => 'No data']);	
-}
-
-function getCampaignFromCampaignListId($conn,$campaign_id){
-	$stmt = $conn->prepare("SELECT campaign_name,user_group,mail_template,mail_sender,date,scheduled_time,msg_interval,msg_fail_retry,camp_status FROM tb_core_mailcamp_list where campaign_id = ?");
-	$stmt->bind_param("s", $campaign_id);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	if($row = $result->fetch_assoc()){
-		header('Content-Type: application/json');
-		echo json_encode($row) ;
-	}
-	else
-		echo '{}';				
-	$stmt->close();
-}
-
-function deleteMailCampaignFromCampaignId($conn,$campaign_id){	
-	$stmt = $conn->prepare("DELETE FROM tb_core_mailcamp_list WHERE campaign_id = ?");
-	$stmt->bind_param("s", $campaign_id);
-	$stmt->execute();
-	if($stmt->affected_rows != 0){
-		echo "success";
-		deleteLiveMailcampData($conn,$campaign_id); /// Clear live data before starting or when campaign deletes
-	}
-	else
-		echo "error";
-	$stmt->close();
-}
-
-function makeCopyMailCampaignList($conn){
-	$old_campaign_id = $_POST['campaign_id'];
-	$new_campaign_id = $_POST['new_campaign_id'];
-	$new_campaign_name = $_POST['new_campaign_name'];
-
-	$stmt = $conn->prepare("INSERT INTO tb_core_mailcamp_list (campaign_id,campaign_name,user_group,mail_template,mail_sender,date,scheduled_time,msg_interval,msg_fail_retry,camp_status) SELECT ?, ?, user_group,mail_template,mail_sender,?,scheduled_time,msg_interval,msg_fail_retry,0 FROM tb_core_mailcamp_list WHERE campaign_id=?");
-	$stmt->bind_param("ssss", $new_campaign_id, $new_campaign_name, $GLOBALS['entry_time'], $old_campaign_id);
-	
-	if ($stmt->execute() === TRUE)
-			die('success'); 
-		else 
-			die("failed"); 
-	$stmt->close();
-}
-
-function startStopMailCampaign($conn){		
-	$campaign_id = $_POST['campaign_id'];
-	$action_value = $_POST['action_value'];
-	if($action_value == 3)
-		$stop_time = $GLOBALS['entry_time'];
-	else
-		$stop_time = null;
-
-	$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET camp_status=?,stop_time=? where campaign_id=?");
-	$stmt->bind_param('sss', $action_value,$stop_time,$campaign_id);
-	if ($stmt->execute() != TRUE)
-		echo("failed"); 
-	else
-		echo("success"); 
-	//------------------
-
-	if($action_value == 1){	//if scheduled campaign
-		deleteLiveMailcampData($conn,$campaign_id); // Clear live data before starting or when campaign deletes
-		kickStartCampaign($conn,$campaign_id);
-	}
 }
 
 function deleteLiveMailcampData($conn,$campaign_id){
@@ -211,82 +228,64 @@ function deleteLiveMailcampData($conn,$campaign_id){
 	$stmt->close();
 }
 
-//====================================================================================================
+//-----------------------------------------------------------------------------------------------------------
+function getLiveCampaignData($conn, $campaign_id){
+	$resp = [];
 
-function sendMailDirect($conn){
-
-	$smtp_server_ip = explode(":", base64_decode($_POST['sender_list_mail_sender_SMTP_server']))[0];
-	$smtp_server_port = explode(":", base64_decode($_POST['sender_list_mail_sender_SMTP_server']))[1];
-	$sender_list_mail_sender_from_name = explode("<", base64_decode($_POST['sender_list_mail_sender_from']))[0];
-	$sender_list_mail_sender_from_mail = str_replace(">","",explode("<", base64_decode($_POST['sender_list_mail_sender_from']))[1]);
-	$sender_list_mail_sender_acc_username = base64_decode($_POST['sender_list_mail_sender_acc_username']);
-	$sender_list_mail_sender_acc_pwd = base64_decode($_POST['sender_list_mail_sender_acc_pwd']);
-	$sender_list_cust_headers = array_filter(explode("$#$",base64_decode($_POST['sender_list_cust_headers']))); //array_filter removes last empty array 
-	$test_to_address = base64_decode($_POST['test_to_address']);
-
-	$transport = (new Swift_SmtpTransport($smtp_server_ip, $smtp_server_port, 'ssl')) ->setUsername($sender_list_mail_sender_acc_username) ->setPassword($sender_list_mail_sender_acc_pwd);
-
-	// Create the Mailer using your created Transport
-	$mailer = new Swift_Mailer($transport);
-
-	// Create a message
-	$message = (new Swift_Message('SniperPhish Test Mail'))
-  		->setFrom([$sender_list_mail_sender_from_mail => $sender_list_mail_sender_from_name])
-  		->setTo([$test_to_address])
-  		->setBody('Success. Here is the test message body');
-
-
-	$headers = $message->getHeaders();	
-
-	foreach ($sender_list_cust_headers as $header) {
-		$header_name = trim(explode(":",$header)[0]);
-		$header_val = trim(explode(":",$header)[1]);
-		if ($headers->has($header_name)) {			// check if header exist
-			if(strcasecmp($header_name, "return-path") == 0)
-				$headers->get('Return-Path')->setAddress($header_val);
-			else
-    			$headers->get($header_name)->setValue($header_val);
-    	}
-    	else{
-    		if(strcasecmp($header_name, "return-path") == 0)
-				$headers->addPathHeader('Return-Path', $header_val);
-			else
-    			$headers->addTextHeader($header_name, $header_val);
-    	}
-
-	}
-	//echo $headers->toString();
-
-	try {
-		// Send the message
-		$result = $mailer->send($message);
-		echo "success";
-	} catch (Exception $e) {
-  		echo $e->getMessage();
-	}
-    	
-}
-
-function getLiveCampaignData($conn){
-	$stmt = $conn->prepare("SELECT * FROM tb_data_mailcamp_live where campaign_id = ?");
-	$stmt->bind_param("s", $_POST['campaign_id']);
+	$stmt = $conn->prepare("SELECT * FROM tb_data_mailcamp_live WHERE campaign_id = ?");
+	$stmt->bind_param("s", $campaign_id);
 	$stmt->execute();
 	$result = $stmt->get_result();
-	if($result->num_rows > 0){
-		header('Content-Type: application/json');
-		echo json_encode(mysqli_fetch_all($result, MYSQLI_ASSOC));
-	}	
+	$rows = $result->fetch_all(MYSQLI_ASSOC);
+	foreach($rows as $i => $row){
+		$row['mail_open_times'] = json_decode($row['mail_open_times']);
+		$row['public_ip'] = json_decode($row['public_ip']);
+		$row['ip_info'] = json_decode($row['ip_info']);
+		$row['user_agent'] = json_decode($row['user_agent']);
+		$row['mail_client'] = json_decode($row['mail_client']);
+		$row['platform'] = json_decode($row['platform']);
+		$row['device_type'] = json_decode($row['device_type']);
+		$row['all_headers'] = json_decode($row['all_headers']);
+		array_push($resp,$row);
+	}
+
+	if(!empty($resp))
+		return $resp;
 	else
-		echo json_encode(['resp' => 'No data']);	
-	$stmt->close();	
+		return ['error' => 'No data'];	
 }
 
-function getMailReplied($conn){
-	$sender_list_id = $_POST['sender_list_id'];	
-	$user_group_id = $_POST['user_group_id'];
-	$mail_template_id = $_POST['mail_template_id'];
+function getUserGroupData($conn, $campaign_id){
+	$campaign_data = getCampaignDataFromCampaignID($conn, $campaign_id);
+	if(!empty($campaign_data)){
+		$user_group_id = getCampaignDataFromCampaignID($conn, $campaign_id)['user_group']['id'];
+	
+		$stmt = $conn->prepare("SELECT * FROM tb_core_mailcamp_user_group WHERE user_group_id = ?");
+		$stmt->bind_param("s", $user_group_id);
+		$stmt->execute();
+		$result = $stmt->get_result();
+		if($result->num_rows != 0){
+			$row = $result->fetch_assoc();
+			$row['user_data'] = json_decode($row["user_data"]);	//avoid double json encoding
+			echo json_encode($row) ;
+		}		
+		else
+			echo json_encode(['error' => 'No data']);	
+	}
+	else
+		echo json_encode(['error' => 'No data']);	
+	$stmt->close();
+}
+
+function getMailReplied($conn, $campaign_id){
 	$reply_email = '';
 	$arr_replied_mails = [];
+	$arr_err = [];
+
+	$campaign_data = getCampaignDataFromCampaignID($conn, $campaign_id);
+	$sender_list_id = $campaign_data['mail_sender']['id'];
+	$user_group_id = $campaign_data['user_group']['id'];
+	$mail_template_id = $campaign_data['mail_template']['id'];
 
 	$stmt = $conn->prepare("SELECT sender_name,sender_SMTP_server,sender_from,sender_acc_username,sender_acc_pwd,sender_mailbox,cust_headers FROM tb_core_mailcamp_sender_list where sender_list_id = ?");
 	$stmt->bind_param("s", $sender_list_id);
@@ -294,7 +293,7 @@ function getMailReplied($conn){
 	$result = $stmt->get_result();
 	if($result->num_rows > 0){
 		$row = $result->fetch_assoc() ;
-		$reply_email = str_replace(">","",explode("<",$row['sender_from'])[1]); //xxx <username@domain.com> => username@domain.com 
+		$reply_email = str_ireplace(">","",explode("<",$row['sender_from'])[1]); //xxx <username@domain.com> => username@domain.com 
 		$sender_acc_pwd = $row['sender_acc_pwd'];
 		$sender_mailbox = $row['sender_mailbox'];
 		$sender_list_cust_headers = explode("$#$",$row['cust_headers']);
@@ -312,62 +311,67 @@ function getMailReplied($conn){
 		$stmt->execute();
 		$result = $stmt->get_result();
 		if($row = $result->fetch_assoc())
-			$mail_template_subject = $row['mail_template_subject'];
+			$mail_template_subject = preg_replace('/{{.+}}/', '', $row['mail_template_subject']);
 		else
-			die("Unable to find email template");	
+			die(json_encode(['error'=>'Unable to find email template']));
 
 		//----------------------Get user emails----------
-		$stmt = $conn->prepare("SELECT user_name,user_email,user_notes FROM tb_core_mailcamp_user_group where user_group_id = ?");
+		$stmt = $conn->prepare("SELECT user_data FROM tb_core_mailcamp_user_group where user_group_id = ?");
 		$stmt->bind_param("s", $user_group_id);
 		$stmt->execute();
 		$result = $stmt->get_result();
-		if($row = $result->fetch_assoc())
-			$arr_emails =  array_filter(explode(",",$row['user_email']));
+		if($row = $result->fetch_assoc()){
+			$user_data=json_decode($row['user_data'],true);
+			$arr_emails=[];
+			foreach($user_data as $user)
+			    array_push($arr_emails,$user['email']);
+		}
 		else
-			die("Unable to find email user email accounts in user group");		
-
+			die(json_encode(['error'=>'User group is empty']));
 		//-----------
 		$arr_msg_info =[];
-		$read = imap_open($sender_mailbox,$reply_email,$sender_acc_pwd) or die('error');
-		 
-		$array = imap_search($read,'SUBJECT "Re:" SUBJECT "'.$mail_template_subject.'"'); // search subject and "re:" in subject
-		if($array) {
-			foreach($array as $result) {
-				$overview = imap_fetch_overview($read,$result,0);//var_dump($overview);
-				$reply_mail_subject = $overview[0]->subject;
 
-				$msg_from = strtolower(str_replace(">","",explode("<",$overview[0]->from)[1]));	//xxx <username@domain.com> => username@domain.com 
-			    if(in_array($msg_from, array_map('strtolower', $arr_emails))){
-			    	$msg_time = $overview[0]->date;			
-			    	$msg_body = base64_encode((imap_fetchbody ($read,$result,1)));
-			    	if (!array_key_exists($msg_from, $arr_msg_info))
-					    $arr_msg_info[$msg_from] = ['msg_time'=>[$msg_time],'msg_body'=>[$msg_body]];
-					else{
-						array_push($arr_msg_info[$msg_from]['msg_time'],$msg_time);
-						array_push($arr_msg_info[$msg_from]['msg_body'],$msg_body);
-					}	
-			    }
+		try{
+			if($read = imap_open($sender_mailbox,$reply_email,$sender_acc_pwd)){			 
+				$array = imap_search($read,'SUBJECT "Re:" SUBJECT "'.$mail_template_subject.'"'); // search subject and "re:" in subject
+				if($array) {
+					foreach($array as $result) {
+						$overview = imap_fetch_overview($read,$result,0);//var_dump($overview);
+						$reply_mail_subject = $overview[0]->subject;
+
+						if (filter_var($overview[0]->from, FILTER_VALIDATE_EMAIL))
+		                    $msg_from = $overview[0]->from;
+		                else
+		                    $msg_from = str_ireplace(">","",explode("<",$overview[0]->from)[1]);	//xxx <username@domain.com> => username@domain.com 
+							
+					    if(in_array($msg_from, array_map('strtolower', $arr_emails))){
+					    	$msg_time = $overview[0]->date;			
+					    	$msg_body = imap_fetchbody ($read,$result,1);
+					    	if (!array_key_exists($msg_from, $arr_msg_info))
+							    $arr_msg_info[$msg_from] = ['msg_time'=>[$msg_time],'msg_body'=>[$msg_body]];
+							else{
+								array_push($arr_msg_info[$msg_from]['msg_time'],$msg_time);
+								array_push($arr_msg_info[$msg_from]['msg_body'],$msg_body);
+							}	
+					    }
+					}
+				}	
 			}
-		}	
-		header('Content-Type: application/json');
-		echo json_encode(['total_user_email_count'=>count($arr_emails), 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
+		}catch(Exception $e) {
+			array_push($arr_err,$e->getMessage());
+		}
+		array_push($arr_err,imap_errors());		//required to capture imap errors
+		
+		
+		if(empty($arr_err) || $arr_err[0] == false)
+			echo json_encode(['total_user_email_count'=>count($arr_emails), 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
+		else
+			echo json_encode(['error'=>$arr_err, 'total_user_email_count'=>count($arr_emails), 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
 	}			
 	$stmt->close();
 }
 
-function multi_get_campaign_from_campaign_list_id__get_live_campaign_data($conn){
-	header('Content-Type: application/json');
-	echo '{"campaign_data":';
-	echo getCampaignFromCampaignListId($conn,$_POST['campaign_id']);
-	echo ',"live_campaign_data":';
-	echo getLiveCampaignData($conn);
-	echo '}';
-}
-
-function getServerVariable($conn){
-	$result = mysqli_query($conn, "SELECT win_uname,domain,win_pwd FROM tb_main_variables");
-		if(mysqli_num_rows($result) > 0){
-		return mysqli_fetch_all($result, MYSQLI_ASSOC)[0];
-	}
+function multi_get_mcampinfo_from_mcamp_list_id_get_live_mcamp_data($conn, $campaign_id){
+	echo json_encode(['mcamp_info'=>getCampaignFromCampaignListId($conn,$campaign_id,true), 'live_mcamp_data'=>getLiveCampaignData($conn, $campaign_id,true)]);
 }
 ?>

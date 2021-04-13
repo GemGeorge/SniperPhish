@@ -1,20 +1,34 @@
-var globalModalValue = '';
-var nextRandomId = '';
+var globalModalValue = nextRandomId ='';
+var cookie_c_data = JSON.parse(atob(decodeURIComponent(Cookies.get('c_data'))));
+var date_space_format = {"space": " ", "comma": ",", "comaspace":", "};
+var space_format = date_space_format[cookie_c_data.time_format.space];
 $(function() {
     checkSniperPhishProcess();
-    $('[data-toggle="tooltip"]').click(function () {
-          $('[data-toggle="tooltip"]').tooltip("hide");
-    });
+   // $('[data-toggle="tooltip"]').click(function () {
+   //       $('[data-toggle="tooltip"]').tooltip("hide");
+   // });
+    $('[data-toggle="tooltip"]').tooltip({
+        trigger : 'hover'
+    })  
 });
-function displayLoader(dis_val){
-    return `<div class="loadercust loader-checking">
+function displayLoader(dis_val,type="normal"){
+    if(type == "small")
+        return `<div class="loader">
+                  <div class="loader--blue">
+                      <div></div>
+                      <div></div>
+                      <div></div>
+                  </div>` + dis_val + `
+               </div>`;
+    else
+        return `<div class="loadercust loader-checking">
                     <div class="loader" >
                     <div class="loader--blue">
                         <div></div>
                         <div></div>
                         <div></div>
-                    </div><strong>`+dis_val+
-                    `</strong><div class="loader--green">
+                    </div><strong>` + dis_val + `</strong>
+                    <div class="loader--green">
                         <div></div>
                         <div></div>
                         <div></div>
@@ -35,54 +49,31 @@ function UTC2Local(in_val){     //Converts Unix and format 'DD-MM-Y hh:mm A' in 
     if(in_val == '' || in_val == undefined)
         return '-';
 
-    var cookie_c_data = atob(decodeURIComponent(Cookies.get('c_data'))).split(',');
-
-    switch(cookie_c_data[3]){
-        case 'space': space_format = ' '; break;
-        case 'comma': space_format = ','; break;
-        case 'comaspace': space_format = ', ';
-    }
-
-    var rep_time_format = cookie_c_data[2] + space_format + cookie_c_data[4];
+    var time_format = getDateTimeFormat();
 
     if(moment(in_val, 'DD-MM-Y hh:mm A', true).isValid())       
-        return moment.utc(in_val, "DD-MM-Y hh:mm A").tz(cookie_c_data[0]).format(rep_time_format); //eg: cookie_c_data[0]=Asia/Kuala_Lumpur
+        return moment.utc(in_val, "DD-MM-Y hh:mm A").tz(cookie_c_data.time_zone.timezone).format(time_format); //timezone => Asia/Kuala_Lumpur
     else
-        return moment.unix(in_val/1000+(+cookie_c_data[1])).utc().format(rep_time_format);
+        return moment.unix(in_val/1000+(+cookie_c_data.time_zone.value)).utc().format(time_format);
 }
 
 function Local2LocalUNIX(in_val){     //Converts Local date to Unix local 
     if(in_val == '' || in_val == undefined)
         return '-';
 
-    var cookie_c_data = atob(decodeURIComponent(Cookies.get('c_data'))).split(',');
+    var time_format = getDateTimeFormat();
 
-    switch(cookie_c_data[3]){
-        case 'space': space_format = ' '; break;
-        case 'comma': space_format = ','; break;
-        case 'comaspace': space_format = ', ';
-    }
-
-    var rep_time_format = cookie_c_data[2] + space_format + cookie_c_data[4];
-
-    return moment(in_val, rep_time_format).unix();
+    return moment(in_val, time_format).unix();
 }
 
 function getDateTimeFormat(type=''){
-    var cookie_c_data = atob(decodeURIComponent(Cookies.get('c_data'))).split(',');
-
-    switch(cookie_c_data[3]){
-        case 'space': space_format = ' '; break;
-        case 'comma': space_format = ','; break;
-        case 'comaspace': space_format = ', ';
-    }
     if(type == 'dateonly')
-        return cookie_c_data[2];
+        return cookie_c_data.time_format.date;
     else
         if(type == 'tzonly')
-            return cookie_c_data[0];
+            return cookie_c_data.time_zone.timezone;
     else
-        return cookie_c_data[2] + space_format + cookie_c_data[4];
+        return cookie_c_data.time_format.date + space_format + cookie_c_data.time_format.time;
 }
 
 function UTC2LocalUNIX(in_val){ // 02-05-2020 07:10 AM => 1588403400000
@@ -140,31 +131,38 @@ function applyDataMask(field) {
 
 //----------------------------------------------
 function checkSniperPhishProcess(){
-   // if(window.location.href.indexOf('?') == -1){    // works only in main pages
+    if(window.location.href.indexOf('?') == -1){    // works only in main pages
         setTimeout(function (){
-            $.post(window.location.origin + "/spear/home_manager", {
-                action_type: "check_process",
-            },
-            function(data, status) {
-                if (data != "success") 
-                    addAlert('process')
-            });
+        $.post({
+            url: window.location.origin + "/spear/home_manager",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ 
+                    action_type: "check_process",
+                })
+            }).done(function (data) {
+                if (data.result == false) 
+                    addAlert('process');
+        });
+            
 
         }, 1000);
         
-  //  }
+    }
 }
 
 function startSniperPhishService(e){
-    $.post(window.location.origin + "/spear/home_manager", {
-            action_type: "start_process",
-        },
-        function(data, status) {
-            if (data == "success") {
-                toastr.success('', 'Service started successfully!');
-                removeAlert("process",e);
-            } else
-                toastr.error('', data);
+    $.post({
+            url: window.location.origin + "/spear/home_manager",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ 
+                    action_type: "start_process",
+                })
+            }).done(function (data) {
+                if (data.result) {
+                    toastr.success('', 'Service started successfully!');
+                    removeAlert("process",e);
+                } else
+                    toastr.error('', data.error);
         });
 }
 
@@ -211,8 +209,44 @@ function enableDisableMe(e){
     e.children(":first").toggleClass('fa-spinner fa-spin');
 }
 
+function getBase64ofFile(fun_name,file,el) {
+    var reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function () {
+        fun_name(file.name,file.size,file.type,reader.result,el);
+    };
+}
 
-$('body').on('click', function (e) {
-    if (!$('[data-toggle="popover"]').is(e.target))
-        $('[data-toggle="popover"]').popover('hide');
+function fadeAni(area=".card") {
+    this.toggle = !this.toggle;
+    $(area).stop().fadeTo(400, this.toggle ? 0.1 : 1);
+}
+
+/*File drop add effects on drag */
+$('.dropzone').bind({
+     dragover: function(ev) {
+         $(this).addClass('dropzone-drag');
+         ev.preventDefault();
+     },
+     
+     dragleave: function() {
+        $(this).removeClass('dropzone-drag');
+     }
 });
+
+/*File drop remove effect on upload*/
+function uploadFile(ev,upload_fn,el){
+    var file = ev.dataTransfer.items[0].getAsFile();
+    getBase64ofFile(upload_fn,file,el)
+    ev.preventDefault();
+    $(el).removeClass('dropzone-drag');
+}
+//---------------------
+function isValidURL(url) {
+  try {
+    new URL(url);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}

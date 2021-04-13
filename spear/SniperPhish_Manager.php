@@ -5,29 +5,13 @@ require_once(dirname(__FILE__) . '/common_functions.php');
 date_default_timezone_set("UTC");
 //---------------------------------------------------------
 
-if(isset($argv[1]))
-	$arg_1=$argv[1];
-else
-	$arg_1='';
-
 $os = getOSType($conn);
-
-//Single instance manager (check if 'our' php.exe cron running)
-if(isProcessRunning($conn,$os)){
-	if($arg_1 != "quite")
-		die("Process already running...");	
-	return;
-}
 
 //Register cron, since cron not runnign already
 $current_pid = getmypid();
 $stmt = $conn->prepare("UPDATE tb_main_cron SET pid=?");
 $stmt->bind_param('s', $current_pid);
 $stmt->execute();
-
-if($arg_1 != "quite")
-	echo "Success. SniperPhish process started!";	//Echo breaks background execution
-//echo $prev_pid;
 
 while(true){
 	$camp_ids = getScheduledCampaigns($conn);

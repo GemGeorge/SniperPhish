@@ -2,54 +2,75 @@ var chart_web_pie;
 var chart_email_hit;
 var f_all_empty = false;
 
+$("#graph_overview").html(displayLoader("Loading..."));
+$("#graph_timeline_all").html(displayLoader("Loading..."));
 getGraphsData();
 
 function getGraphsData() {
-    $.post("home_manager", {
+    $.post({
+        url: "home_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
             action_type: "get_home_graphs_data"
-        },
-        function(data, status) {
-            count_mailcamp = data.mailcamp?data.mailcamp.length:0;
-            count_mailcamp_active=0, count_webtracker_active=0, count_simpletracker_active=0;
+        })
+    }).done(function (data) {
+        var count_mailcamp = data.mailcamp?data.mailcamp.length:0;
+        var count_mailcamp_active=0, count_webtracker_active=0, count_quicktracker_active=0;
+        var html_cont = `<div class="text-center align-items-center m-t-40">
+                             <span class="col-md-5 badge badge-pill badge-warning"><h4>No data</h4></span>
+                          </div>`;
 
-            if(count_mailcamp){
-                count_mailcamp_active = data.mailcamp.filter(function(x) {
-                    return x.camp_status === 1 || x.camp_status === 2 || x.camp_status === 4;
-                }).length;
-            }
+        if(count_mailcamp){
+            count_mailcamp_active = data.mailcamp.filter(function(x) {
+                return x.camp_status === 1 || x.camp_status === 2 || x.camp_status === 4;
+            }).length;
+        }
 
-            count_webtracker = data.webtracker?data.webtracker.length:0;
-            if(count_webtracker){
-                count_webtracker_active = data.webtracker.filter(function(x) {
-                    return x.active === 1;
-                }).length;
-            }
+        count_webtracker = data.webtracker?data.webtracker.length:0;
+        if(count_webtracker){
+            count_webtracker_active = data.webtracker.filter(function(x) {
+                return x.active === 1;
+            }).length;
+        }
 
-            count_simpletracker = data.simpletracker?data.simpletracker.length:0;
-                if(count_simpletracker){
-                count_simpletracker_active = data.simpletracker.filter(function(x) {
-                    return x.active === 1;
-                }).length;
-            }
+        count_quicktracker = data.quicktracker?data.quicktracker.length:0;
+            if(count_quicktracker){
+            count_quicktracker_active = data.quicktracker.filter(function(x) {
+                return x.active === 1;
+            }).length;
+        }
 
-            if(count_mailcamp==0 && count_webtracker==0 && count_simpletracker==0)
-                f_all_empty=true;
+        if(count_mailcamp==0 && count_webtracker==0 && count_quicktracker==0)
+            f_all_empty=true;
 
-            $('#lb_mailcamp').text('Total: ' + count_mailcamp + ', Active: ' + count_mailcamp_active);
-            $('#lb_webtracker').text('Total: ' + count_webtracker + ', Active: ' + count_webtracker_active);
-            $('#lb_simpletracker').text('Total: ' + count_simpletracker + ', Active: ' + count_simpletracker_active);
-            renderOverviewGraph(data);
-            renderTimelineAllGraph(data);
-        });
+        $('#lb_mailcamp').text('Total: ' + count_mailcamp + ', Active: ' + count_mailcamp_active);
+        $('#lb_webtracker').text('Total: ' + count_webtracker + ', Active: ' + count_webtracker_active);
+        $('#lb_quicktracker').text('Total: ' + count_quicktracker + ', Active: ' + count_quicktracker_active);
+
+
+        $("#graph_timeline_all").html(html_cont);
+        if(data.webtracker.length == 0 && data.mailcamp.length == 0  && data.quicktracker.length == 0)
+            $("#graph_overview").html(html_cont);
+        else{
+            $("#graph_overview").html('');
+            renderOverviewGraph(data);  
+            $('#graph_overview').css("height","400px");
+
+            if(data.webtracker.some(o => o.start_time!=null) || data.mailcamp.some(o => o.scheduled_time!=null) || data.quicktracker.some(o => o.start_time!=null)){
+                $("#graph_timeline_all").html('');
+                renderTimelineAllGraph(data);
+                $('#graph_timeline_all').css("height","400px");
+            }   
+        }
+    }); 
 }
 
 function renderOverviewGraph(cmp_info) {
-
     date_arr = {
         'all': [],
         'webtracker': [],
         'mailcamp': [],
-        'simpletracker': []
+        'quicktracker': []
     };
 
     $.each(cmp_info['webtracker'], function(key, value) {
@@ -67,9 +88,9 @@ function renderOverviewGraph(cmp_info) {
             date_arr.all.push(date);
     });
 
-    $.each(cmp_info['simpletracker'], function(key, value) {
+    $.each(cmp_info['quicktracker'], function(key, value) {
         date = moment.unix(UTC2LocalUNIX(value.date) / 1000).format("MM/DD/YYYY");
-        date_arr.simpletracker.push(date);
+        date_arr.quicktracker.push(date);
         if (date_arr.all.indexOf(date) == -1)
             date_arr.all.push(date);
     });
@@ -78,7 +99,7 @@ function renderOverviewGraph(cmp_info) {
     graph_data_all_count = {
         'webtracker': [date_arr.webtracker.length],
         'mailcamp': [date_arr.mailcamp.length],
-        'simpletracker': [date_arr.simpletracker.length]
+        'quicktracker': [date_arr.quicktracker.length]
     };
 
     $.each(date_arr.all, function(i, value) {
@@ -92,10 +113,10 @@ function renderOverviewGraph(cmp_info) {
         }).length;
         graph_data_all_count.mailcamp[i] = array_val_count;
 
-        array_val_count = date_arr.simpletracker.filter(function(x) {
+        array_val_count = date_arr.quicktracker.filter(function(x) {
             return x === value;
         }).length;
-        graph_data_all_count.simpletracker[i] = array_val_count;
+        graph_data_all_count.quicktracker[i] = array_val_count;
     });
 
 
@@ -108,8 +129,8 @@ function renderOverviewGraph(cmp_info) {
             name: 'Web Tracker',
             data: graph_data_all_count.webtracker
         }, {
-            name: 'Simple Tracker',
-            data: graph_data_all_count.simpletracker
+            name: 'Quick Tracker',
+            data: graph_data_all_count.quicktracker
         }],
         chart: {
             type: 'bar',
@@ -191,12 +212,11 @@ function renderOverviewGraph(cmp_info) {
     graph_overview.render();
 }
 
-
 function renderTimelineAllGraph(cmp_info) {
     var time_arr = {
         'webtracker': [],
         'mailcamp': [],
-        'simpletracker': []
+        'quicktracker': []
     };
 
     level = 0;
@@ -241,7 +261,7 @@ function renderTimelineAllGraph(cmp_info) {
     });
 
     level = 0;
-    $.each(cmp_info['simpletracker'], function(key, value) {
+    $.each(cmp_info['quicktracker'], function(key, value) {
         if (value.start_time != '' && value.start_time != undefined) {
             start_time = UTC2LocalUNIX(value.start_time);
             if (value.stop_time == '' || value.stop_time == undefined)
@@ -249,7 +269,7 @@ function renderTimelineAllGraph(cmp_info) {
             else
                 stop_time = UTC2LocalUNIX(value.stop_time);
 
-            time_arr.simpletracker.push({
+            time_arr.quicktracker.push({
                 x: level++ + '',
                 y: [
                     start_time,
@@ -270,8 +290,8 @@ function renderTimelineAllGraph(cmp_info) {
                 data: time_arr.webtracker
             },
             {
-                name: 'Simple Tracker',
-                data: time_arr.simpletracker
+                name: 'Quick Tracker',
+                data: time_arr.quicktracker
             }
         ],
         chart: {

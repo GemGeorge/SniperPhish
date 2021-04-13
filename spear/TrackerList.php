@@ -1,12 +1,11 @@
 <?php
     @ob_start();
     session_start();
+//-----------------
+	require_once(dirname(__FILE__) . '/session_manager.php');
+   checkSession();
 ?>
 <!DOCTYPE html>
-<?php
-	require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession(false);
-?>
 <html dir="ltr" lang="en">
    <head>
       <meta charset="utf-8">
@@ -18,19 +17,13 @@
       <!-- Favicon icon -->
       <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
       <title>SniperPhish - The Web-Email Spear Phishing Toolkit</title>
-      <!-- Custom CSS -->
-      <link type="text/css" href="css/jquery.steps.css" rel="stylesheet">
-      <link type="text/css" href="css/steps.css" rel="stylesheet">
+      <link rel="stylesheet" type="text/css" href="css/select2.min.css">
       <link rel="stylesheet" type="text/css" href="css/style.min.css">
       <link rel="stylesheet" type="text/css" href="css/dataTables.foundation.min.css">
       <style> 
          .tab-header{ list-style-type: none; }
       </style>
       <link rel="stylesheet" type="text/css" href="css/toastr.min.css">
-      <script src="js/libs/clipboard.min.js"></script>  
-      <link href="css/prism.css" rel="stylesheet" />
-      <script src="js/libs/prism.js"></script>
-      <script src="js/libs/jszip.min.js"></script>	  	  
    </head>
    <body>
       <!-- ============================================================== -->
@@ -81,7 +74,7 @@
                   <div class="card-body">
                      <div class="row">
                         <div class="col-md-12">
-                           <button type="button" class="btn btn-info" onclick="document.location='TrackerGenerator';"><i class="fas fa-plus"></i> New Web Tracker</button>
+                           <button type="button" class="btn btn-info btn-sm" onclick="document.location='TrackerGenerator';"><i class="fas fa-plus"></i> New Web Tracker</button>
                         </div>
                      </div>
                   
@@ -187,29 +180,22 @@
       <!-- ============================================================== -->
       <!-- All Jquery -->
       <!-- ============================================================== -->
-      <script src="js/libs/jquery/jquery-3.5.1.min.js"></script> 
+      <script src="js/libs/jquery/jquery-3.6.0.min.js"></script> 
       <script src="js/libs/js.cookie.min.js"></script>
-      <!-- Bootstrap tether Core JavaScript -->
       <script src="js/libs/popper.min.js"></script>
       <script src="js/libs/bootstrap.min.js"></script>
-      <!-- slimscrollbar scrollbar JavaScript -->
-      <script src="js/libs/sparkline.js"></script>
-      <!--Wave Effects -->
-      <script src="js/libs/waves.js"></script>
-      <!--Menu sidebar -->
-      <script src="js/libs/sidebarmenu.js"></script>
       <script src="js/libs/perfect-scrollbar.jquery.min.js"></script>
       <!--Custom JavaScript -->
       <script src="js/libs/custom.min.js"></script>
-      <!-- this page js -->
-      <script src="js/libs/jquery/jquery.steps.min.js"></script>
-      <script src="js/libs/jquery/jquery.validate.min.js"></script>
-
-      <script src="js/libs/jquery/datatables.js"></script>	 
-      <script src="js/libs/toastr.min.js"></script> 
+      <!-- this page js --> 
       <script src="js/libs/moment.min.js"></script>
       <script src="js/libs/moment-timezone-with-data.min.js"></script>
       <script src="js/common_scripts.js"></script>  
       <script src="js/web_tracker_list.js"></script>
+
+      <script defer src="js/libs/jquery/datatables.js"></script>
+      <script defer src="js/libs/sidebarmenu.js"></script>
+      <script defer src="js/libs/toastr.min.js"></script>    
+      <script defer src="js/libs/select2.min.js"></script>
    </body>
 </html>

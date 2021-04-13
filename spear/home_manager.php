@@ -2,23 +2,25 @@
 //-------------------Session check-----------------------
 @ob_start();
 session_start();
-if(!isset($_SESSION['username']))
+require_once(dirname(__FILE__) . '/session_manager.php');
+if(isSessionRefreshed() == false)
 	die("Access denied");
 //-------------------------------------------------------
+header('Content-Type: application/json');
 
-require_once(dirname(__FILE__) . '/session_manager.php');
+if (isset($_POST)) {
+	$POSTJ = json_decode(file_get_contents('php://input'),true);
 
-if(isset($_POST['action_type'])){
-	if($_POST['action_type'] == "get_home_graphs_data")
-		getHomeGraphsData($conn);
+	if(isset($POSTJ['action_type'])){
+		if($POSTJ['action_type'] == "get_home_graphs_data")
+			getHomeGraphsData($conn);
 
-	if($_POST['action_type'] == "check_process")
-		checkSniperPhishProcess($conn,false);
-	if($_POST['action_type'] == "start_process")
-		startSniperPhishProcess($conn);
+		if($POSTJ['action_type'] == "check_process")
+			checkSniperPhishProcess($conn,false);
+		if($POSTJ['action_type'] == "start_process")
+			startSniperPhishProcess($conn);
+	}
 }
-else
-    die();
 
 //-----------------------------
 
@@ -31,21 +33,25 @@ function getHomeGraphsData($conn){
 	$result = $stmt->get_result();
 	if($result->num_rows > 0)
 		$campaign_info['webtracker'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
+	else
+		$campaign_info['webtracker'] =[];
 
 	$stmt = $conn->prepare("SELECT campaign_id,campaign_name,date,scheduled_time,stop_time,camp_status FROM tb_core_mailcamp_list");
 	$stmt->execute();
 	$result = $stmt->get_result();
 	if($result->num_rows > 0)
 		$campaign_info['mailcamp'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
+	else
+		$campaign_info['mailcamp'] = [];
 	
-
-	$stmt = $conn->prepare("SELECT tracker_id,tracker_name,date,start_time,stop_time,active FROM tb_core_simple_tracker_list");
+	$stmt = $conn->prepare("SELECT tracker_id,tracker_name,date,start_time,stop_time,active FROM tb_core_quick_tracker_list");
 	$stmt->execute();
 	$result = $stmt->get_result();
 	if($result->num_rows > 0)
-		$campaign_info['simpletracker'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
+		$campaign_info['quicktracker'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
+	else
+		$campaign_info['quicktracker'] = [];
 
-	header('Content-Type: application/json');
 	echo json_encode($campaign_info);
 	$stmt->close();
 }
@@ -54,13 +60,13 @@ function getHomeGraphsData($conn){
 function checkSniperPhishProcess($conn,$quite){
 	if(isProcessRunning($conn,getOSType($conn))){
 		if($quite == false)
-	    	echo ("success");
+			echo json_encode(['result' => true]);
 	    else
 	    	return true;
 	}
 	else{
 		if($quite == false)
-	    	echo ("failed");
+	    	echo json_encode(['result' => false]);
 	    else
 	    	return false;
 	}
@@ -74,10 +80,11 @@ function startSniperPhishProcess($conn){
 		sleep(1);	//wait for process start
 
 		if(isProcessRunning($conn,$os))
-			die("success");
-		else
-			die("failed");
+			echo json_encode(['result' => true]);
+		else			
+	    	echo json_encode(['result' => false, 'error'=> 'Error starting service!']);
 	}
-	die("success");	//Already running
+	else
+		echo json_encode(['result' => true]);	//Already running
 }
 ?>

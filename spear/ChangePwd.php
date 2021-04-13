@@ -3,7 +3,7 @@
    require_once(dirname(__FILE__) . '/common_functions.php');
    if(isset($_GET['token'])){  
       if(!isTokenValid($conn,$_GET['token']))
-        die("Incorrect request");
+        die("Incorrect request. Token may be inavlid");
    }
    else
     die();
@@ -21,7 +21,6 @@
       <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
       <title>SniperPhish - The Web-Email Spear Phishing Toolkit</title>
       <!-- Custom CSS -->
-      <link rel="stylesheet" type="text/css" href="css/select2.min.css">
       <link rel="stylesheet" type="text/css" href="css/style.min.css">
    </head>
    <body>
@@ -91,48 +90,45 @@
       <!-- ============================================================== -->
       <!-- All Required js -->
       <!-- ============================================================== -->
-      <script src="js/libs/jquery/jquery-3.5.1.min.js"></script>
-      <script src="js/libs/js.cookie.min.js"></script>
+      <script src="js/libs/jquery/jquery-3.6.0.min.js"></script>
       <!-- Bootstrap tether Core JavaScript -->
-      <script src="js/libs/popper.min.js"></script>
-      <script src="js/libs/bootstrap.min.js"></script>
       <!-- ============================================================== -->
       <!-- This page plugin js -->
       <!-- ============================================================== -->
-      <script src="js/libs/select2.min.js"></script>
-      <script src="js/libs/moment.min.js"></script>
-      <script src="js/libs/moment-timezone-with-data.min.js"></script>
       <script>
-        $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
         $(".preloader").fadeOut();
         // ============================================================== 
 
         $("#doPwdReset").submit(function(event) {
             event.preventDefault();
-            
+
             if($("#tb_pwd").val() != $("#tb_pwd_confirm").val()){
               $("#lb_msg").html('<span class="text-danger">Passwords are not matching.</span>');
               return;
             }
 
+            if($("#tb_pwd").val().length <8 ){
+              $("#lb_msg").html('<span class="text-danger">Password minimum length 8 is required.</span>');
+              return;
+            }
+
             $("#bt_reset_pwd i").toggleClass('fa-spinner fa-spin');
-            $.post("pwd_manager", {
+            $.post({
+                url: "pwd_manager",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ 
                     action_type: "do_change_pwd",
                     new_pwd: $("#tb_pwd").val(),
                     token: location.search.split("?token=")[1],
-                },
-                function(data, status) {
-                    $("#bt_reset_pwd i").toggleClass('fa-spinner fa-spin');
-
-                    if (data != "success")
-                        $("#lb_msg").html('<span class="text-danger">' + data + '</span>');
-                    else {
-                        $("#lb_msg").html('<span class="text-success">Password reset successs. SniperPhish will rediect to login screen in few seconds..</span>');
-                        setTimeout(function() {
-                            document.location = location.origin + '/spear';
-                        }, 3000);
-                    }   
-                });
+                })
+            }).done(function (data) {
+                $("#bt_reset_pwd i").toggleClass('fa-spinner fa-spin');
+                if(data.result == "success"){ 
+                    $("#lb_msg").html('<span class="text-success">Password reset successs. Click <a href="/spear">here</a> to login</span>');
+                }
+                else
+                    $("#lb_msg").html('<span class="text-danger">' + data.error + '</span>');
+              });
         });
       </script>
    </body>

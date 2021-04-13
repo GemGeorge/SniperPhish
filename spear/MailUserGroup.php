@@ -1,12 +1,11 @@
 <?php
     @ob_start();
     session_start();
+//-----------------
+   require_once(dirname(__FILE__) . '/session_manager.php');
+   checkSession();
 ?>
 <!DOCTYPE html>
-<?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession(false);
-?>
 <html dir="ltr" lang="en">
    <head>
       <meta charset="utf-8">
@@ -19,18 +18,13 @@
       <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
       <title>SniperPhish - The Web-Email Spear Phishing Toolkit</title>
       <!-- Custom CSS -->
-      <link type="text/css" href="css/jquery.steps.css" rel="stylesheet">
-      <link type="text/css" href="css/steps.css" rel="stylesheet">
+      <link rel="stylesheet" type="text/css" href="css/select2.min.css">
       <link rel="stylesheet" type="text/css" href="css/style.min.css">
       <link rel="stylesheet" type="text/css" href="css/dataTables.foundation.min.css">
       <style> 
          .tab-header{ list-style-type: none; }
       </style>
       <link rel="stylesheet" type="text/css" href="css/toastr.min.css">
-      <script src="js/libs/clipboard.min.js"></script>  
-      <link href="css/prism.css" rel="stylesheet" />
-      <script src="js/libs/prism.js"></script>
-      <script src="js/libs/jszip.min.js"></script>        
    </head>
    <body>
       <!-- ============================================================== -->
@@ -81,7 +75,7 @@
                   <div class="card-body">
                       <div class="row">
                         <div class="col-md-12">
-                           <button type="button" class="btn btn-info" onclick="document.location='MailUserGroup?action=add&user=new'"><i class="fas fa-plus"></i> New User Group</button>
+                           <button type="button" class="btn btn-info btn-sm" onclick="document.location='MailUserGroup?action=add&user=new'"><i class="fas fa-plus"></i> New User Group</button>
                         </div>
                      </div>
                      <div class="row">
@@ -127,34 +121,34 @@
                      <!--<h5 class="card-title">Tracker Templates</h5>-->
                      <div class="row">
                         <div class="col-md-12">
-                           <div class="form-group row col-md-12">
-                              <label for="user_group_name" class="text-left control-label col-form-label">User Group Name: </label>
-                              <div class="col-md-4">
+                           <div class="form-group row">                                              
+                              <label for="user_group_name" class="col-md-2 text-left control-label col-form-label">User Group Name: </label>
+                              <div class="col-md-5">              
                                  <input type="text" class="form-control" id="user_group_name">
                               </div>
-                              <div class="align-items-right ml-auto">
+                              <div class="col-md-5 text-right">
                                  <button type="button" class="btn btn-info" onclick="saveUserGroup($(this))"><i class="fa fas fa-save"></i> Save</button>
-                              </div>
-                           </div>
+                              </div>                             
+                           </div>                    
                         </div>
                      </div>
-
+                     <hr/>
                      <div class="row">
                         <div class="col-md-12">
-                           <div class="form-group col-md-12 row">
+                           <div class="form-group row">
                               
-                                 <label for="tablevalue_name" class="text-left control-label col-form-label">Name: </label>
-                                 <div class="col-md-3">
+                                 <label for="tablevalue_name" class="col-md-1 text-left control-label col-form-label">Name: </label>
+                                 <div class="col-md-2">
                                     <input type="text" class="form-control" id="tablevalue_name">
                                  </div>
                              
-                                 <label for="tablevalue_email" class="text-left control-label col-form-label">Email: </label>
+                                 <label for="tablevalue_email" class="col-md-1 text-left control-label col-form-label">Email: </label>
                                  <div class="col-md-3">
                                     <input type="email" class="form-control" id="tablevalue_email">
                                  </div>
                               
 
-                                 <label for="tablevalue_notes" class="text-left control-label col-form-label">Notes: </label>
+                                 <label for="tablevalue_notes" class="col-md-1 text-left control-label col-form-label">Notes: </label>
                                  <div class="col-md-2">
                                     <input type="text" class="form-control" id="tablevalue_notes">
                                  </div>
@@ -163,27 +157,36 @@
                                     <button type="button" class="btn btn-success" id="bt_add_email_tracker" onclick="addUserToTable()"><i class="mdi mdi-plus-outline"></i> Add</button>
                                  </div>
 
-                                 <div class="align-items-right ml-auto">
-                                    <button type="button" class="btn btn-success" onclick="addUserFromFile()"><i class="mdi mdi-file-import"></i> Import</button><input type="file" id="fileinput" hidden />
+                                 <div class="col-md-1 text-right">
+                                    <div class="btn-group"  id="bt_save_config" >
+                                        <button type="button" class="btn btn-success" onclick="addUserFromFile()" title="Import users" data-toggle="tooltip"><i class="mdi mdi-file-import"></i></button>
+                                        <input type="file" id="fileinput" accept=".txt, .csv, .lst, .rtf" hidden />
+                                        <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#ModalExport">Export</a>
+                                        </div>
+                                    </div>   
                                  </div>
                               
                            </div>
                         </div>
                      </div>
-                     <div class="table-responsive m-t-40">
-                        <table id="table_user_list" class="table table-striped table-bordered">
-                           <thead>
-                              <tr>
-                                 <th>#</th>
-                                 <th>Name</th>
-                                 <th>Email</th>
-                                 <th>Notes</th>
-                                 <th>Actions</th>
-                              </tr>
-                           </thead>
-                           <tbody>
-                           </tbody>
-                        </table>
+                     <div class="row">
+                        <div class="table-responsive">
+                           <table id="table_user_list" class="table table-striped table-bordered">
+                              <thead>
+                                 <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                 </tr>
+                              </thead>
+                              <tbody>
+                              </tbody>
+                           </table>
+                        </div>
                      </div>
                   </div>
                </div>
@@ -283,6 +286,39 @@
                   </div>
                </div>
             </div>
+            <!-- Modal -->
+            <div class="modal fade" id="ModalExport" tabindex="-1" role="dialog" aria-hidden="true">
+               <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                     <div class="modal-header">
+                        <h5 class="modal-title">Export Report</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                     </div>
+                     <div class="modal-body">
+                        <div class="form-group row">
+                           <label for="Modal_export_file_name" class="col-sm-3 text-left control-label col-form-label">File Name: </label>
+                           <div class="col-sm-9 custom-control">
+                              <input type="text" class="form-control m-t-5" id="Modal_export_file_name" placeholder="File Name">
+                           </div>
+                        </div>
+                        <div class="form-group row">
+                           <label for="modal_export_report_selector" class="col-sm-3 text-left control-label col-form-label">File Format: </label>
+                           <div class="col-sm-9 custom-control">
+                              <select class="select2 form-control"  style="height: 36px;width: 100%;" id="modal_export_report_selector">
+                                 <option value="csv">Export as CSV</option>
+                                 <option value="excel">Export as XLS</option>
+                              </select>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="modal-footer">
+                        <button type="button" class="btn btn-success" onclick="$('.buttons-' + $('#modal_export_report_selector').val()).click()" data-dismiss="modal"><i class=" mdi mdi-file-export"></i> Export</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
             <?php include_once 'z_footer.php' ?>
             <!-- ============================================================== -->
             <!-- End footer -->
@@ -298,46 +334,39 @@
       <!-- ============================================================== -->
       <!-- All Jquery -->
       <!-- ============================================================== -->
-      <script src="js/libs/jquery/jquery-3.5.1.min.js"></script> 
+      <script src="js/libs/jquery/jquery-3.6.0.min.js"></script> 
       <script src="js/libs/js.cookie.min.js"></script>
-      <!-- Bootstrap tether Core JavaScript -->
-      <script src="js/libs/popper.min.js"></script>
-      <script src="js/libs/bootstrap.min.js"></script>
-      <!-- slimscrollbar scrollbar JavaScript -->
-      <script src="js/libs/sparkline.js"></script>
-      <!--Wave Effects -->
-      <script src="js/libs/waves.js"></script>
       <!--Menu sidebar -->
       <script src="js/libs/sidebarmenu.js"></script>
       <script src="js/libs/perfect-scrollbar.jquery.min.js"></script>
       <!--Custom JavaScript -->
       <script src="js/libs/custom.min.js"></script>
       <!-- this page js -->
-      <script src="js/libs/jquery/jquery.steps.min.js"></script>
-      <script src="js/libs/jquery/jquery.validate.min.js"></script>
-      <script src="js/libs/jquery/datatables.js"></script> 
+      <script src="js/libs/jquery/datatables.js"></script>
       <script src="js/libs/moment.min.js"></script>
       <script src="js/libs/moment-timezone-with-data.min.js"></script>
+      <script src="js/libs/jquery/dataTables.buttons.min.js"></script>
+      <script src="js/libs/jquery/buttons.html5.min.js"></script>
       <script src="js/common_scripts.js"></script>
       <script src="js/mail_user_group.js"></script>
-      <script src="js/libs/toastr.min.js"></script>
       <?php
          echo '<script>';
          if(isset($_GET['action'])){
             if(isset($_GET['action']) && isset($_GET['user'])){ 
                if($_GET['action'] == 'add' || $_GET['action'] == 'edit'){
                   echo '$("#section_view_list").hide();
-                  $(document).ready(function() {getUserGroupFromGroupId("' . $_GET['user'] . '");});';
+                        getUserGroupFromGroupId("' . doFilter($_GET['user'],'ALPHA_NUM') . '");';
                }
             }
          }
          else
             echo '$("#section_adduser").hide();
-                  $(document).ready(function() {loadTableUserGroupList();});';
+                  loadTableUserGroupList();';
          echo '</script>';
-      ?>
-
-
-     
+      ?>     
+      <script defer src="js/libs/popper.min.js"></script>
+      <script defer src="js/libs/bootstrap.min.js"></script>
+      <script defer src="js/libs/select2.min.js"></script>
+      <script defer src="js/libs/toastr.min.js"></script>
    </body>
 </html>

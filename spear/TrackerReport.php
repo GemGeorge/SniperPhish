@@ -1,12 +1,11 @@
 <?php
     @ob_start();
     session_start();
+//-----------------
+   require_once(dirname(__FILE__) . '/session_manager.php');
+   checkSession();
 ?>
 <!DOCTYPE html>
-<?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession(false);
-?>
 <html dir="ltr" lang="en">
    <head>
       <meta charset="utf-8">
@@ -20,15 +19,12 @@
       <title>SniperPhish - The Web-Email Spear Phishing Toolkit</title>
       <!-- Custom CSS -->
       <link rel="stylesheet" type="text/css" href="css/select2.min.css">
-      <link type="text/css" href="css/jquery.steps.css" rel="stylesheet">
-      <link type="text/css" href="css/steps.css" rel="stylesheet">
       <link rel="stylesheet" type="text/css" href="css/style.min.css">
       <link rel="stylesheet" type="text/css" href="css/dataTables.foundation.min.css">
       <style> 
          .tab-header{ list-style-type: none; }
       </style>
       <link rel="stylesheet" type="text/css" href="css/toastr.min.css">
-      <link href="css/prism.css" rel="stylesheet" />
    </head>
    <body>
       <!-- ============================================================== -->
@@ -58,12 +54,12 @@
             <!-- ============================================================== -->
             <!-- Bread crumb and right sidebar toggle -->
             <!-- ============================================================== -->
-            <div class="page-breadcrumb">
+            <div class="page-breadcrumb breadcrumb-withbutton">
                <div class="row">
                   <div class="col-12 d-flex no-block align-items-center">
                      <h4 class="page-title">Web Tracker Reports</h4>
                      <div class="ml-auto text-right">
-                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#ModalTracker"><i class="mdi mdi-auto-fix"></i> Select Tracker</button>
+                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#ModalTracker"><i class="mdi mdi-auto-fix"></i> Select Tracker</button>
                      </div>
                   </div>
                </div>
@@ -202,21 +198,24 @@
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
-                           <div class="col-sm-6">
-                              <input type="text" class="form-control m-t-5" id="Modal_export_file_name" placeholder="File Name">
+                           <label for="Modal_export_file_name" class="col-sm-3 text-left control-label col-form-label">File Name: </label>
+                           <div class="col-sm-9 custom-control">
+                              <input type="text" class="form-control" id="Modal_export_file_name">
                            </div>
-                           <div class="col-sm-5 m-t-5">
+                        </div>
+                        <div class="form-group row">
+                           <label for="modal_export_report_selector" class="col-sm-3 text-left control-label col-form-label">File Format: </label>
+                           <div class="col-sm-9 custom-control">
                               <select class="select2 form-control"  style="height: 36px;width: 100%;" id="modal_export_report_selector">
-                                 <option selected>Export file type</option>
-                                 <option id="csv">Export as CSV</option>
-                                 <option id="excel">Export as XLS</option>
-                                 <option id="pdf">Export as PDF</option>
+                                 <option value="csv">Export as CSV</option>
+                                 <option value="excel">Export as XLS</option>
+                                 <option value="pdf">Export as PDF</option>
                               </select>
                            </div>
                         </div>
                      </div>
                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" onclick="$('.buttons-' + $('#modal_export_report_selector').val()).click()" data-dismiss="modal"><i class=" mdi mdi-file-export"></i> Export</button>
                      </div>
                   </div>
                </div>
@@ -236,48 +235,36 @@
       <!-- ============================================================== -->
       <!-- All Jquery -->
       <!-- ============================================================== -->
-      <script src="js/libs/jquery/jquery-3.5.1.min.js"></script>  
-      <script src="js/libs/clipboard.min.js"></script>  
-      <script src="js/libs/prism.js"></script>
-      <script src="js/libs/jszip.min.js"></script>      
+      <script src="js/libs/jquery/jquery-3.6.0.min.js"></script> 
       <!-- Bootstrap tether Core JavaScript -->
       <script src="js/libs/jquery/jquery-ui.min.js"></script>
       <script src="js/libs/js.cookie.min.js"></script>
       <script src="js/libs/popper.min.js"></script>
       <script src="js/libs/bootstrap.min.js"></script>
-      <!-- slimscrollbar scrollbar JavaScript -->
-      <script src="js/libs/sparkline.js"></script>
-      <!--Wave Effects -->
-      <script src="js/libs/waves.js"></script>
-      <!--Menu sidebar -->
-      <script src="js/libs/sidebarmenu.js"></script>
       <script src="js/libs/perfect-scrollbar.jquery.min.js"></script>
       <!--Custom JavaScript -->
       <script src="js/libs/custom.min.js"></script>
       <!-- this page js -->
-      <script src="js/libs/jquery/jquery.steps.min.js"></script>
-      <script src="js/libs/jquery/jquery.validate.min.js"></script>
       <script src="js/libs/jquery/datatables.js"></script>
-      <script src="js/libs/toastr.min.js"></script>
       <script src="js/libs/select2.min.js"></script>
-      <script src="js/libs/jquery/dataTables.buttons.min.js"></script>
-      <script src="js/libs/jquery/buttons.html5.min.js"></script>
-      <script src="js/libs/pdfmake.min.js"></script>    
-      <script src="js/libs/vfs_fonts.js"></script>     
-      <script src="js/libs/moment.min.js"></script>
-      <script src="js/libs/moment-timezone-with-data.min.js"></script>
       <script src="js/common_scripts.js"></script>  
       <script src="js/web_tracker_report_functions.js"></script>
       <script>
-         $(document).ready(function() {
-
-            <?php 
-
-               if(isset($_GET['tracker']))
-                  echo ('webTrackerSelected("'.$_GET['tracker'].'")');           
-            ?>
-         
-          });          
-      </script>
+         <?php 
+            if(isset($_GET['tracker']))
+               echo ('webTrackerSelected("'.doFilter($_GET['tracker'],'ALPHA_NUM').'")');  
+            else
+               echo '$("#ModalTracker").modal("toggle");';         
+         ?>     
+      </script>  
+      <script defer src="js/libs/moment.min.js"></script>
+      <script defer src="js/libs/moment-timezone-with-data.min.js"></script>
+      <script defer src="js/libs/sidebarmenu.js"></script>
+      <script defer src="js/libs/toastr.min.js"></script>
+      <script defer src="js/libs/jquery/dataTables.buttons.min.js"></script>
+      <script defer src="js/libs/jquery/buttons.html5.min.js"></script>
+      <script defer src="js/libs/vfs_fonts.js"></script>  
+      <script defer src="js/libs/jszip.min.js"></script>   
+      <script defer src="js/libs/pdfmake.min.js"></script>    
    </body>
 </html>

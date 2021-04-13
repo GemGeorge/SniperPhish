@@ -1,24 +1,25 @@
 <?php
     @ob_start();
     session_start();
+//-----------------
+   require_once(dirname(__FILE__) . '/session_manager.php');
+   setcookie("PHPSESSID", session_id(), ["path" => "/", "SameSite" => "Strict", "HttpOnly" => true]);
+   if(isSessionRefreshed() == true){
+    header("Location: Home");
+    die();
+  }
+   
+  if (!empty($_POST['username']) && !empty($_POST['password'])) {
+    if(validateLogin($_POST['username'],$_POST['password']) == true){
+      $_SESSION['valid'] = true;
+      $_SESSION['lastaccess'] = time();
+      $_SESSION['username'] = $_POST['username'];
+      setInfoCookie();  //c_data cookie sets
+      header("Location: Home");
+    }  
+  }
 ?>
 <!DOCTYPE html>
-<?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
-   setcookie("PHPSESSID", session_id(), ["path" => "/", "samesite" => "strict", "httponly" => true]);
-   checkSession(true);
-?>
-<?php            
-if (!empty($_POST['username'])&& !empty($_POST['password'])) {
-	if(validateLogin($_POST['username'],$_POST['password']) == true){
-		$_SESSION['valid'] = true;
-		$_SESSION['timeout'] = time();
-		$_SESSION['username'] = $_POST['username'];
- 
-		header("Location: Home");
-	}  
-}
-?>
 <html dir="ltr">
    <head>
       <meta charset="utf-8">
@@ -54,7 +55,7 @@ if (!empty($_POST['username'])&& !empty($_POST['password'])) {
             <div class="auth-box bg-dark border-top border-secondary">
                <div id="loginform">
                   <div class="text-center p-t-20 p-b-20">
-                     <span class="db"><img src="images/logo-icon2x.png" alt="logo" /><img src="images/logo.png" alt="logo" /> v0.4.1 beta</span>
+                     <span class="db"><img src="images/logo-icon2x.png" alt="logo" /><img src="images/logo.png" alt="logo" /> v<?php getSniperPhishVersion(); ?></span>
                   </div>
                   <!-- Form -->
                   <form class="form-horizontal m-t-20" id="loginform" action="index" method="post" onsubmit="doLogin()">
@@ -132,16 +133,11 @@ if (!empty($_POST['username'])&& !empty($_POST['password'])) {
       <!-- ============================================================== -->
       <!-- All Required js -->
       <!-- ============================================================== -->
-      <script src="js/libs/jquery/jquery-3.5.1.min.js"></script>
-      <script src="js/libs/js.cookie.min.js"></script>
-      <!-- Bootstrap tether Core JavaScript -->
-      <script src="js/libs/popper.min.js"></script>
-      <script src="js/libs/bootstrap.min.js"></script>
+      <script src="js/libs/jquery/jquery-3.6.0.min.js"></script>
       <!-- ============================================================== -->
       <!-- This page plugin js -->
       <!-- ============================================================== -->
       <script>
-         $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
          $(".preloader").fadeOut();
          // ============================================================== 
          // Login and Recover Password 
@@ -169,21 +165,24 @@ if (!empty($_POST['username'])&& !empty($_POST['password'])) {
         $("#recoveryform").submit(function(e) {
             e.preventDefault();
             $('[name ="recovery"]').children(":first").toggleClass('fa-spinner fa-spin');
-            $.post("pwd_manager", {
+
+            $.post({
+                url: "pwd_manager",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ 
                     action_type: "send_pwd_reset",
                     contact_mail: $("#tb_recoverymail").val()
-               },
-               function(data, status) {
-                 $('[name ="recovery"]').children(":first").toggleClass('fa-spinner fa-spin');
-                 if (data != "success")
-                     $("#lb_msg").html('<span class="text-danger">' + data + '</span>');
-                 else {
-                     $("#lb_msg").html('<span class="text-success">If the email is valid, you will receive a password reset link now. Please note the link is valid for 48hrs only.</span>');
-                     $("#tb_recoverymail").val('');
-                 }             
-                 
-               });
-         });
+                })
+            }).done(function (data) {
+                $('[name ="recovery"]').children(":first").toggleClass('fa-spinner fa-spin');
+                if(data.result == "success"){
+                    $("#lb_msg").html('<span class="text-success">If the email is valid, you will receive a password reset link now. Please note the link is valid for 48hrs only.</span>');
+                    $("#tb_recoverymail").val('');
+                }
+                else
+                    $("#lb_msg").html('<span class="text-danger">' + data.error + '</span>');
+              });
+            }); 
       </script>
    </body>
 </html>

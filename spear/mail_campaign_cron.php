@@ -1,206 +1,315 @@
 <?php 
-ini_set('max_execution_time', 18000);
+ini_set('max_execution_time', 0);
 require_once(dirname(__FILE__) . '/db.php');
-require_once(dirname(__FILE__,2) . '/vendor/autoload.php');
+require_once(dirname(__FILE__) . '/common_functions.php');
+require_once(dirname(__FILE__) . '/libs/swiftmailer/autoload.php');
+require_once(dirname(__FILE__) . '/libs/qr_barcode/qrcode.php');
+require_once(dirname(__FILE__) . '/libs/qr_barcode/barcode.php');
 date_default_timezone_set('UTC');
 $entry_time = (new DateTime())->format('d-m-Y h:i A');
 
-function changeCampaignStatus($conn, $campaign_id, $status){
-	$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET camp_status = ? where campaign_id=?");
-	$stmt->bind_param('ss', $status, $campaign_id);
-	if ($stmt->execute() === TRUE)
-		return true; 
-	else 
-		return false;
+function getMC($conn, $campaign_id){
+	$stmt = $conn->prepare("SELECT campaign_name,campaign_data,date,scheduled_time,camp_status FROM tb_core_mailcamp_list WHERE campaign_id = ?");
+	$stmt->bind_param("s", $campaign_id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($row = $result->fetch_assoc()){
+		$row["campaign_data"] = json_decode($row["campaign_data"],true);	//avoid double json encoding
+		return ($row) ;
+	}
+	else
+		die(json_encode(['result' => 'Invalid campaign id '.$campaign_id]));	
+}
+
+function getUSERGROUP($conn,$user_group_id){
+	$stmt = $conn->prepare("SELECT user_group_name,user_data FROM tb_core_mailcamp_user_group WHERE user_group_id = ?");
+	$stmt->bind_param("s", $user_group_id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($row = $result->fetch_assoc()){
+		$row['user_data'] = json_decode($row["user_data"],true);	//avoid double json encoding
+		return ($row) ;
+	}
+	else
+		die(json_encode(['result' => 'Invalid user group id '.$user_group_id]));	
+}
+
+function getMTEMPLATE($conn, $mail_template_id){
+	$stmt = $conn->prepare("SELECT mail_template_name,mail_template_subject,mail_template_content,timage_type,mail_content_type,attachment FROM tb_core_mailcamp_template_list WHERE mail_template_id = ?");
+	$stmt->bind_param("s", $mail_template_id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($result->num_rows != 0){
+		$row = $result->fetch_assoc() ;
+		$row['attachment'] = json_decode($row['attachment'],true);
+		return $row;
+	}
+	else
+		die(json_encode(['result' => 'Invalid mailtemplate id '.$mail_template_id]));	
+}
+
+function getMSENDER($conn, $mail_sender_id){
+	$stmt = $conn->prepare("SELECT sender_name,sender_SMTP_server,sender_from,sender_acc_username,sender_acc_pwd,smtp_enc_level,cust_headers FROM tb_core_mailcamp_sender_list WHERE sender_list_id = ?");
+	$stmt->bind_param("s", $mail_sender_id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($result->num_rows != 0){
+		$row = $result->fetch_assoc() ;
+		$row["cust_headers"] = json_decode($row["cust_headers"],true);	//avoid double json encoding
+		return $row;
+	}
+	else
+		die(json_encode(['result' => 'Invalid mailtemplate id '.$mail_sender_id]));	
+}
+
+function getCONFIG($conn, $mconfig_id){
+	$stmt = $conn->prepare("SELECT mconfig_name,mconfig_data FROM tb_core_mailcamp_config WHERE mconfig_id = ?");
+	$stmt->bind_param("s", $mconfig_id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($result->num_rows != 0){
+		$row = $result->fetch_assoc();
+		$row["mconfig_data"] = json_decode($row["mconfig_data"],true);	//avoid double json encoding
+		return $row;
+	}
+	else
+		die(json_encode(['result' => 'Invalid mail campaign configuration id '.$mconfig_id]));	
 }
 
 function InitMailCampaign($conn, $campaign_id){
 	$keyword_vals = array();
-	$stmt = $conn->prepare("SELECT campaign_name,user_group,mail_template,mail_sender,date,scheduled_time,msg_interval,msg_fail_retry,camp_status FROM tb_core_mailcamp_list where campaign_id = ?");
-	$stmt->bind_param("s", $campaign_id);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	if($rowMC = $result->fetch_assoc()){
-		$MC_name = $rowMC['campaign_name'];
-		$MC_user_group_id = explode(',',$rowMC['user_group'])[0];
-		$MC_user_group_name = explode(',',$rowMC['user_group'])[1];
-		$MC_mail_template_id = explode(',',$rowMC['mail_template'])[0];
-		$MC_mail_template_name = explode(',',$rowMC['mail_template'])[1];
-		$MC_mail_sender_id = explode(',',$rowMC['mail_sender'])[0];
-		$MC_mail_sender_name = explode(',',$rowMC['mail_sender'])[1];
-		$MC_scheduled_time = $rowMC['scheduled_time'];
-		$MC_msg_interval = $rowMC['msg_interval'];
-		$MC_msg_fail_retry = $rowMC['msg_fail_retry'];
-		$MC_status = $rowMC['camp_status'];
 
-		//------------------
-		$stmt = $conn->prepare("SELECT mail_template_name,mail_template_subject,mail_template_content,mail_content_type,attachment FROM tb_core_mailcamp_template_list where mail_template_id = ?");
-		$stmt->bind_param("s", $MC_mail_template_id);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		if($row = $result->fetch_assoc()){
-			$mail_template_name = $row['mail_template_name'];
-			$mail_template_subject = $row['mail_template_subject'];
-			$mail_template_content = $row['mail_template_content'];
-			$mail_content_type = $row['mail_content_type'];
-			$mail_attachment = json_decode($row['attachment'], true);
+	$MC_DATA = getMC($conn, $campaign_id);
+	$MC_name = $MC_DATA['campaign_name'];
+	$MC_user_group_id = $MC_DATA['campaign_data']['user_group']['id'];
+	$MC_user_group_name = $MC_DATA['campaign_data']['user_group']['name'];
+	$MC_mail_template_id = $MC_DATA['campaign_data']['mail_template']['id'];
+	$MC_mail_template_name = $MC_DATA['campaign_data']['mail_template']['name'];
+	$MC_mail_sender_id = $MC_DATA['campaign_data']['mail_sender']['id'];
+	$MC_mail_sender_name = $MC_DATA['campaign_data']['mail_sender']['name'];
+	$MC_mail_config_id = $MC_DATA['campaign_data']['mail_config']['id'];
+	$MC_mail_config_name = $MC_DATA['campaign_data']['mail_config']['name'];
+	$MC_scheduled_time = $MC_DATA['scheduled_time'];
+	$MC_msg_interval = $MC_DATA['campaign_data']['msg_interval'];
+	$MC_msg_fail_retry = $MC_DATA['campaign_data']['msg_fail_retry'];
+	$MC_status = $MC_DATA['camp_status'];
+
+	$MUSERGROUP_DATA =  getUSERGROUP($conn,$MC_user_group_id);
+	$arr_user_data =  $MUSERGROUP_DATA['user_data'];
+
+	$MTEMPLATE_DATA = getMTEMPLATE($conn, $MC_mail_template_id);
+	$mail_template_name = $MTEMPLATE_DATA['mail_template_name'];
+	$mail_template_subject = $MTEMPLATE_DATA['mail_template_subject'];
+	$mail_timage_type = $MTEMPLATE_DATA['timage_type'];
+	$mail_template_content = $MTEMPLATE_DATA['mail_template_content'];
+	$mail_content_type = $MTEMPLATE_DATA['mail_content_type'];
+	$mail_attachment = $MTEMPLATE_DATA['attachment'];
+
+	$MSENDER_DATA = getMSENDER($conn, $MC_mail_sender_id);
+	$sender_name = $MSENDER_DATA['sender_name'];
+	$sender_SMTP_server_ip = explode(":",$MSENDER_DATA['sender_SMTP_server'])[0];
+	$sender_SMTP_server_port = explode(":",$MSENDER_DATA['sender_SMTP_server'])[1];
+	$sender_from_name = explode("<", $MSENDER_DATA['sender_from'])[0];
+	$sender_from_mail = preg_match("/[\._a-zA-Z0-9-]+@[\._a-zA-Z0-9-]+/i", $MSENDER_DATA['sender_from'], $matches);
+	$sender_from_mail = $matches[0];
+	$sender_acc_username = $MSENDER_DATA['sender_acc_username'];
+	$sender_acc_pwd = $MSENDER_DATA['sender_acc_pwd'];
+	$sender_smtp_enc_level = $MSENDER_DATA['smtp_enc_level'];
+	$cust_headers = $MSENDER_DATA['cust_headers'];
+
+	$MCONFIG_DATA = getCONFIG($conn, $MC_mail_config_id);
+	$config_mconfig_name = $MCONFIG_DATA['mconfig_name'];
+	$config_batch_mail_limit = $MCONFIG_DATA['mconfig_data']['batch_mail_limit'];
+	$config_recipient_type = $MCONFIG_DATA['mconfig_data']['recipient_type'];
+	$config_read_receipt = $MCONFIG_DATA['mconfig_data']['read_receipt'];
+	$config_non_ascii_support = $MCONFIG_DATA['mconfig_data']['non_ascii_support'];
+	$config_signed_mail = $MCONFIG_DATA['mconfig_data']['signed_mail'];
+	$config_encrypted_mail = $MCONFIG_DATA['mconfig_data']['encrypted_mail'];
+	$config_antiflood_limit = $MCONFIG_DATA['mconfig_data']['antiflood']['limit'];
+	$config_antiflood_pause = $MCONFIG_DATA['mconfig_data']['antiflood']['pause'];
+	$config_msg_priority = $MCONFIG_DATA['mconfig_data']['msg_priority'];
+	if($config_signed_mail){
+		$config_mail_sign_cert_name = $MCONFIG_DATA['mconfig_data']['mail_sign']['cert']['name'];
+		$config_mail_sign_cert_fb64 = $MCONFIG_DATA['mconfig_data']['mail_sign']['cert']['fb64'];
+		$config_mail_sign_pvk_name = $MCONFIG_DATA['mconfig_data']['mail_sign']['pvk']['name'];
+		$config_mail_sign_pvk_fb64 = $MCONFIG_DATA['mconfig_data']['mail_sign']['pvk']['fb64'];
+	}
+	if($config_encrypted_mail){
+		$config_mail_enc_cert_name = $MCONFIG_DATA['mconfig_data']['mail_enc']['cert']['name'];
+		$config_mail_enc_cert_fb64 = $MCONFIG_DATA['mconfig_data']['mail_enc']['cert']['fb64'];
+	}
+
+	$serv_variables = getServerVariable($conn);
+	//----------------------------------------------------------------------------------------
+		
+	if($sender_smtp_enc_level == 0)
+		$transport = (new Swift_SmtpTransport($sender_SMTP_server_ip, $sender_SMTP_server_port)) ->setUsername($sender_acc_username) ->setPassword($sender_acc_pwd);
+	else
+		$transport = (new Swift_SmtpTransport($sender_SMTP_server_ip, $sender_SMTP_server_port, $sender_smtp_enc_level==1?"ssl":"tls")) ->setUsername($sender_acc_username) ->setPassword($sender_acc_pwd);
+	$mailer = new Swift_Mailer($transport);
+
+	//Internationalized Email Addresses
+	if($config_non_ascii_support){
+		$smtpUtf8 = new Swift_Transport_Esmtp_SmtpUtf8Handler();
+		$transport->setExtensionHandlers([$smtpUtf8]);
+		$utf8Encoder = new Swift_AddressEncoder_Utf8AddressEncoder();
+		$transport->setAddressEncoder($utf8Encoder);
+	}
+	
+	// Antiflood plugin
+	$mailer->registerPlugin(new Swift_Plugins_AntiFloodPlugin($config_antiflood_limit, $config_antiflood_pause));
+
+	$message = new Swift_Message();
+  	$headers = $message->getHeaders();
+	$message->setFrom([$sender_from_mail => $sender_from_name]);
+
+	//Msg priority
+	$message->setPriority($config_msg_priority);
+
+	//Requesting a Read Receipt
+	if($config_read_receipt)
+		$message->setReadReceiptTo($sender_from_mail);
+
+	//Adding headers
+  	foreach ($cust_headers as $header_name => $header_val) {
+  		if(strcasecmp($header_name, "Return-Path") == 0)
+			$message->setReturnPath($header_val);
+		else
+			$headers->addTextHeader($header_name, $header_val);
+	}
+
+	//Add attachments
+	foreach ($mail_attachment as $attachment) {
+		$file_path = 'uploads/attachments/'.$attachment['file_id'].'.att';
+	    if($attachment['inline'])
+	    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($attachment['file_name'])->setDisposition('inline'));
+	    else
+	    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($attachment['file_name']));
+	}
+
+	//-------------Start Signing & Encryption-------------
+	if($config_signed_mail || $config_encrypted_mail)
+  		$smimeSigner = new Swift_Signers_SMimeSigner();
+  	//Signed mail
+  	if($config_signed_mail){
+	  	$temp_mail_sign_cert = tmpfile();
+	  	fwrite($temp_mail_sign_cert, base64_decode($config_mail_sign_cert_fb64));
+	  	$temp_mail_sign_cert_path = stream_get_meta_data($temp_mail_sign_cert)['uri'];
+
+	  	$temp_mail_sign_pvk = tmpfile();
+	  	fwrite($temp_mail_sign_pvk, base64_decode($config_mail_sign_pvk_fb64));
+	  	$temp_mail_sign_pvk_path = stream_get_meta_data($temp_mail_sign_pvk)['uri'];
+	  	
+		$smimeSigner->setSignCertificate($temp_mail_sign_cert_path, $temp_mail_sign_pvk_path);
+	}
+	//Encrypted mail
+	if($config_encrypted_mail){
+		$temp_mail_enc_cert = tmpfile();
+	  	fwrite($temp_mail_enc_cert, base64_decode($config_mail_enc_cert_fb64));
+	  	$temp_mail_enc_cert_path = stream_get_meta_data($temp_mail_enc_cert)['uri'];
+
+		$smimeSigner->setEncryptCertificate($temp_mail_enc_cert_path);		
+	}
+
+	if($config_signed_mail || $config_encrypted_mail)
+		$message->attachSigner($smimeSigner);
+	//-------------End Signing & Encryption-------------
+
+	foreach ($arr_user_data as $i  => $arr_user) {
+		$send_time = round(microtime(true) * 1000); //milli-seconds
+    	$msg_fail_retry_counter = 0;
+	    $CID = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyz', ceil(10/strlen($x)) )),1,10);
+
+	    $keyword_vals['{{CID}}'] = $CID;
+	    $keyword_vals['{{MID}}'] = $campaign_id;
+	    $keyword_vals['{{NAME}}'] = $arr_user['name'];
+	    $keyword_vals['{{FNAME}}'] = explode(' ', $arr_user['name'])[0];
+	    $keyword_vals['{{LNAME}}'] = count(explode(' ', $arr_user['name'],2)) == 2?explode(' ', $arr_user['name'],2)[1]:"";
+	    $keyword_vals['{{NOTES}}'] = $arr_user['notes'];
+	    $keyword_vals['{{EMAIL}}'] = $arr_user['email'];
+	    $keyword_vals['{{FROM}}'] = $sender_from_mail;
+	    $keyword_vals['{{TRACKINGURL}}'] = $serv_variables['baseurl'].'/tmail?mid='.$campaign_id.'&cid='.$CID;
+	    $keyword_vals['{{TRACKER}}'] = '<img src="'.$keyword_vals['{{TRACKINGURL}}'].'"/>';
+	    $keyword_vals['{{BASEURL}}'] = $serv_variables['baseurl'];
+	    $keyword_vals['{{MUSERNAME}}'] = explode('@', $arr_user['email'])[0];
+	    $keyword_vals['{{MDOMAIN}}'] = explode('@', $arr_user['email'])[1];
+	
+		// Create a message
+		$message->setSubject((filterKeywords($mail_template_subject,$keyword_vals)));	  	
+		$msg_body = filterKeywords($mail_template_content,$keyword_vals);  	
+		$msg_body = filterQRBarCode($msg_body,$keyword_vals,$message);
+	  	$message->setBody($msg_body,$mail_content_type);
+
+	  	statusEntryCreate($conn,$CID,$campaign_id,$MC_name,$send_time,$arr_user['name'],$arr_user['email']); 
+	  	try{
+		  	if($config_recipient_type == "to")
+		  		$message->setTo([$arr_user['email']]);
+		  	if($config_recipient_type == "cc")
+		  		$message->setCc([$arr_user['email']]);
+		  	if($config_recipient_type == "bcc")
+		  		$message->setBcc([$arr_user['email']]);
+		  	}catch(Exception $e) {
+		  		statusEntryUpdate($conn, $CID, 3, json_encode([$e->getMessage()]));	//3=Error in sending
+				continue;
 		}
-		else
-			die("Unable to find email template ".$MC_mail_template_name);	
-		//------------------
-		$stmt = $conn->prepare("SELECT sender_name,sender_SMTP_server,sender_from,sender_acc_username,sender_acc_pwd,cust_headers FROM tb_core_mailcamp_sender_list where sender_list_id = ?");
-		$stmt->bind_param("s", $MC_mail_sender_id);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		if($row = $result->fetch_assoc()){
-			$sender_name = $row['sender_name'];
-			$sender_SMTP_server_ip = explode(":",$row['sender_SMTP_server'])[0];
-			$sender_SMTP_server_port = explode(":",$row['sender_SMTP_server'])[1];
-			$sender_from_name = explode("<",$row['sender_from'])[0];
-			$sender_from_mail = str_replace(">","",explode("<", $row['sender_from'])[1]);
-			$sender_acc_username = $row['sender_acc_username'];
-			$sender_acc_pwd = $row['sender_acc_pwd'];
-			$cust_headers = array_filter(explode("$#$",$row['cust_headers']));
-		}	
-		else
-			die("Unable to find email sender ".$MC_mail_sender_name);	
-		//--------------------------------------
-		$stmt = $conn->prepare("SELECT user_name,user_email,user_notes FROM tb_core_mailcamp_user_group where user_group_id = ?");
-		$stmt->bind_param("s", $MC_user_group_id);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		$row = $result->fetch_assoc() ;
-		if(!$row)
-			die("Unable to find email user email accounts in user group ". $MC_user_group_name);
-
-		$arr_names =  explode(",",$row['user_name']); // no filter since likely contains empty value
-		$arr_emails =  array_filter(explode(",",$row['user_email']));
-		$arr_notes =  explode(",",$row['user_notes']);// no filter since likely contains empty value
-		
-		foreach ($arr_emails as $index  => $mailto_user_email) {
-
-			$delay_val = rand(explode("-",$MC_msg_interval)[0]*1000,explode("-",$MC_msg_interval)[1]*1000); //milli-seconds
-		    $id = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyz', ceil(10/strlen($x)) )),1,10);
-		    $send_time = round(microtime(true) * 1000); //milli-seconds
-		    $send_err = '';
-		    $msg_fail_retry_tmp = 0;
-
-		    $serv_variables = getServerVariable($conn);
-		    $keyword_vals['{{cid}}'] = $id;
-		    $keyword_vals['{{mid}}'] = $campaign_id;
-		    $keyword_vals['{{name}}'] = $arr_names[$index];
-		    $keyword_vals['{{notes}}'] = $arr_notes[$index];
-		    $keyword_vals['{{email}}'] = $mailto_user_email;
-		    $keyword_vals['{{from}}'] = $sender_from_mail;
-		    $keyword_vals['{{trackingurl}}'] = $serv_variables['baseurl'].'/trackmail?mid='.$campaign_id.'&cid='.$id;
-		    $keyword_vals['{{tracker}}'] = '<img src="'.$keyword_vals['{{trackingurl}}'].'"/>';
-		    $keyword_vals['{{baseurl}}'] = $serv_variables['baseurl'];
-		    ////////////////Updating start status///////////////
-		    $stmt = $conn->prepare("INSERT INTO tb_data_mailcamp_live(id,campaign_id,campaign_name,sending_status,send_time,mailto_user_name,mailto_user_email) VALUES(?,?,?,1,?,?,?)"); //1= in progress
-			$stmt->bind_param('ssssss', $id,$campaign_id,$MC_name,$send_time,$arr_names[$index],$mailto_user_email);
-			$stmt->execute();
-		
-			////////////////Sending email////////////////
-			$transport = (new Swift_SmtpTransport($sender_SMTP_server_ip, $sender_SMTP_server_port, 'ssl')) ->setUsername($sender_acc_username) ->setPassword($sender_acc_pwd);
-
-			// Create the Mailer using your created Transport
-			$mailer = new Swift_Mailer($transport);
-			// Create a message
-			$message = (new Swift_Message(filterKeywords($mail_template_subject,$keyword_vals)))
-		  		->setFrom([$sender_from_mail => $sender_from_name])
-		  		->setTo([$mailto_user_email])
-		  		->setBody(filterKeywords($mail_template_content,$keyword_vals),$mail_content_type);
-
-		  	//Set headers
-			$headers = $message->getHeaders();	
-			foreach ($cust_headers as $header) {
-				$header_name = trim(explode(":",$header)[0]);
-				$header_val = trim(explode(":",$header)[1]);
-				if ($headers->has($header_name)) {			// check if header exist
-					if(strcasecmp($header_name, "return-path") == 0)
-						$headers->get('Return-Path')->setAddress($header_val);
-					else
-		    			$headers->get($header_name)->setValue($header_val);
-		    	}
-		    	else{
-		    		if(strcasecmp($header_name, "return-path") == 0)
-						$headers->addPathHeader('Return-Path', $header_val);
-					else
-		    			$headers->addTextHeader($header_name, $header_val);
-		    	}
-
+	  	
+	  	while($msg_fail_retry_counter <= $MC_msg_fail_retry){
+			// Send the message
+			$result = $mailer->send($message,$failures);	//$failures will store the rejected addresses
+			if($result){
+				statusEntryUpdate($conn, $CID, 2, json_encode($failures));	//2= mail sent successfully
+				break;
 			}
-
-			//Add attachments
-			foreach ($mail_attachment as $file_id => $file_name) {
-				$file_path = 'uploads/attachments/'.$MC_mail_template_id.'_'.$file_id.'.att';
-			    $message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($file_name));
+			else{			
+				statusEntryUpdate($conn, $CID, 3, json_encode($failures));	//3=Error in sending
+				$msg_fail_retry_counter++;
+				sleep(1); // give 1 sec delay before next attempt
 			}
+		}
 
-			//echo $headers->toString();
-			while($msg_fail_retry_tmp <= $MC_msg_fail_retry){
-				try {
-					// Send the message
-					$result = $mailer->send($message);
-					updateLiveStatus($conn,$id,2,$send_err);	//2= mail sent successfully
-					break;					
-				} catch (Exception $e) {
-					$send_err .= "Attempt ".(++$msg_fail_retry_tmp).': '.$e->getMessage().'<br/><br/>';
-					if($msg_fail_retry_tmp > $MC_msg_fail_retry){
-			  			updateLiveStatus($conn,$id,3,$send_err);	//3=Error in sending
-			  			break;
-					}
-					else
-						slee(1); // give some delay nefore next attempt
-				}
-			}
+		statusEntryUpdate($conn, $CID, 2);	//4=mail sending completed
 
-			$delay_took = round(microtime(true) * 1000) - $send_time; //now-sent time
+		//sleep for next email
+		$delay_val = rand(explode("-",$MC_msg_interval)[0]*1000,explode("-",$MC_msg_interval)[1]*1000); //milli-seconds
+		if(($i+1)%$config_batch_mail_limit == 0){
+			$delay_took = round(microtime(true) * 1000) - $send_time; //now (after send time)
 			if($delay_took < $delay_val)
 				usleep(($delay_val - $delay_took)*1000); //usleep is in microseconds
-
 		}
-		$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET camp_status=4 WHERE campaign_id=?"); //4=mail sending completed
-		$stmt->bind_param('s', $campaign_id);
-		$stmt->execute();
 
-		//---------------------------------------
-		$stmt->close();
-	}	
+		//Exit if campaign is stopped by user
+		if(isCampaignStopped($conn, $campaign_id))
+			break;
+	}
+	changeCampaignStatus($conn, $campaign_id, 4); //4=Mail sending completed (But campaign in progress (2))
+}
+
+function isCampaignStopped($conn, $campaign_id){
+	$stmt = $conn->prepare("SELECT camp_status FROM tb_core_mailcamp_list WHERE campaign_id=?");
+	$stmt->bind_param('s', $campaign_id);
+	$stmt->execute();
+	$row = $stmt->get_result()->fetch_assoc();
+	if ($row['camp_status'] != 2)	// 2 - In Progress (mail progress and tracking progress)
+		return true;	//stop
 	else
-		echo("Unable to find mail campaign ".$campaign_id);		
+		return false;	//continue
 }
-function filterKeywords($content,$keyword_vals){
-	$keywords = array("{{cid}}", "{{mid}}", "{{name}}", "{{notes}}", "{{email}}", "{{from}}", "{{trackingurl}}", "{{tracker}}", "{{baseurl}}");
 
-	foreach($keywords as $keword) {
-		switch(strtolower($keword))
-		{
-			case "{{cid}}" : $r_val = $keyword_vals['{{cid}}']; break;
-			case "{{mid}}" : $r_val = $keyword_vals['{{mid}}']; break;
-			case "{{name}}" : $r_val = $keyword_vals['{{name}}']; break;
-			case "{{notes}}" : $r_val = $keyword_vals['{{notes}}']; break;
-			case "{{email}}" : $r_val = $keyword_vals['{{email}}']; break;
-			case "{{from}}" : $r_val = $keyword_vals['{{from}}']; break;
-			case "{{trackingurl}}" : $r_val = $keyword_vals['{{trackingurl}}']; break;
-			case "{{tracker}}" : $r_val = $keyword_vals['{{tracker}}']; break;
-			case "{{baseurl}}" : $r_val = $keyword_vals['{{baseurl}}']; break;
-		}
-	  	$content = str_ireplace($keword,$r_val,$content);
+function statusEntryCreate(&$conn,$cid,$campaign_id,$MC_name,$send_time,$user_name,$user_email){
+	$stmt = $conn->prepare("INSERT INTO tb_data_mailcamp_live(id,campaign_id,campaign_name,sending_status,send_time,user_name,user_email) VALUES(?,?,?,1,?,?,?)"); //1= in progress
+	$stmt->bind_param('ssssss', $cid,$campaign_id,$MC_name,$send_time,$user_name,$user_email);
+	$stmt->execute();
+}
+
+function statusEntryUpdate(&$conn,$cid,$sending_status,$send_error=null){
+	if($send_error == null){
+		$stmt = $conn->prepare("UPDATE tb_data_mailcamp_live SET sending_status=? WHERE id=?");
+		$stmt->bind_param('ss', $sending_status, $cid);
 	}
-	return $content;
-}
-
-function getServerVariable($conn){
-	$result = mysqli_query($conn, "SELECT server_protocol,domain,baseurl FROM tb_main_variables");
-		if(mysqli_num_rows($result) > 0){
-		return mysqli_fetch_all($result, MYSQLI_ASSOC)[0];
+	else{
+		$stmt = $conn->prepare("UPDATE tb_data_mailcamp_live SET sending_status=?, send_error=? WHERE id=?");
+		$stmt->bind_param('sss', $sending_status, $send_error, $cid);
 	}
-}
-
-function updateLiveStatus($conn,$id,$sending_status,$send_error){
-	$stmt = $conn->prepare("UPDATE tb_data_mailcamp_live SET sending_status=?, send_error=? WHERE id=?");
-	$stmt->bind_param('sss', $sending_status,$send_error,$id);
 	$stmt->execute();
 }
 
@@ -220,9 +329,10 @@ function lockAndWaitProcess($conn, $campaign_id){
 
 		while($scheduled_time>$current_time){
 			//wait time scheduled time comes
-			usleep(10000);	//0.001 seconds. (in ms)
+			usleep(1000);	//0.001 seconds. (in ms)
 			$current_time = (new DateTime())->format('d-m-Y h:i:s:u A');
 		}
+		$stmt->close();
 
 		//Run campaign
 		changeCampaignStatus($conn, $campaign_id, 2);//Set status in-progress
@@ -230,8 +340,15 @@ function lockAndWaitProcess($conn, $campaign_id){
 	}
 }
 
-//checkMailCampaign($conn, $argv[1]);
+function changeCampaignStatus($conn, $campaign_id, $status){
+	$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET camp_status = ? WHERE campaign_id=?");
+	$stmt->bind_param('ss', $status, $campaign_id);
+	if ($stmt->execute() === TRUE)
+		return true; 
+	else 
+		return false;
+}
 
 lockAndWaitProcess($conn, $argv[1]);
-
+//InitMailCampaign($conn, $argv[1]);
 ?>

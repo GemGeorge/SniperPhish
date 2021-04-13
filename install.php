@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <?php
-   require_once(dirname(__FILE__) . '/spear/common_functions.php');
-   checkInstallation();
+    require_once(dirname(__FILE__) . '/spear/common_functions.php');
+    checkInstallation();
 ?>
 <html dir="ltr">
    <head>
@@ -38,7 +38,7 @@
          <div class=" d-flex no-block justify-content-center align-items-center bg-dark">
             <div class="bg-dark border-top border-secondary">
                <div class="text-center p-t-20 p-b-20">
-                  <span class="db"><img src="spear/images/logo-icon2x.png" alt="logo" /><img src="spear/images/logo.png" alt="logo" /> v0.4.1 beta</span>
+                  <span class="db"><img src="spear/images/logo-icon2x.png" alt="logo" /><img src="spear/images/logo.png" alt="logo" /> v<?php getSniperPhishVersion(); ?></span>
                </div>
             </div>
          </div>
@@ -55,6 +55,7 @@
                               </tr>
                            </tbody>
                         </table>
+                        <div id="comm_error" class="text-danger" hidden=""></div>
                      </div>
                   </div>
                </div>
@@ -67,31 +68,31 @@
                                  <div class="input-group-prepend">
                                     <span class="input-group-text bg-info text-white" id="basic-addon1"><i class="fa fas fa-database"></i></span>
                                  </div>
-                                 <input type="text" class="form-control form-control-lg" placeholder="MySQL DB Name" id="tb_db_name" aria-label="Username" aria-describedby="basic-addon1" required>
+                                 <input type="text" class="form-control form-control" placeholder="MySQL DB Name" id="tb_db_name" aria-label="Username" aria-describedby="basic-addon1" required>
                               </div>
                               <div class="input-group mb-3">
                                  <div class="input-group-prepend">
                                     <span class="input-group-text bg-info text-white" id="basic-addon2"><i class="fa fas fa-server"></i></span>
                                  </div>
-                                 <input type="text" class="form-control form-control-lg" placeholder="MySQL DB Host" id="tb_db_host" value="localhost" aria-label="MySQL DB Host" aria-describedby="basic-addon1" required>
+                                 <input type="text" class="form-control form-control" placeholder="MySQL DB Host" id="tb_db_host" value="localhost" aria-label="MySQL DB Host" aria-describedby="basic-addon1" required>
                               </div>
                               <div class="input-group mb-3">
                                  <div class="input-group-prepend">
                                     <span class="input-group-text bg-info text-white" id="basic-addon1"><i class="fa fas fa-user"></i></span>
                                  </div>
-                                 <input type="text" class="form-control form-control-lg" placeholder="DB Username" id="tb_db_user_name" aria-label="Username" aria-describedby="basic-addon1" required>
+                                 <input type="text" class="form-control form-control" placeholder="DB Username" id="tb_db_user_name" aria-label="Username" aria-describedby="basic-addon1" required>
                               </div>
                               <div class="input-group mb-3">
                                  <div class="input-group-prepend">
                                     <span class="input-group-text bg-info text-white" id="basic-addon2"><i class="fa fas fa-key"></i></span>
                                  </div>
-                                 <input type="password" class="form-control form-control-lg" placeholder="DB User Password" id="tb_db_user_pwd" aria-label="Password" aria-describedby="basic-addon1">
+                                 <input type="password" class="form-control form-control" placeholder="DB User Password" id="tb_db_user_pwd" aria-label="Password" aria-describedby="basic-addon1">
                               </div>
                               <div class="input-group mb-3">
                                  <div class="input-group-prepend">
-                                    <span class="input-group-text bg-warning text-white" id="basic-addon2"><i class="fa fa-envelope"></i></span>
+                                    <span class="input-group-text bg-info text-white" id="basic-addon2"><i class="fa fa-envelope"></i></span>
                                  </div>
-                                 <input type="email" class="form-control form-control-lg" placeholder="Your Email" id="tb_contact_mail" aria-label="Your Email" aria-describedby="basic-addon1" required>
+                                 <input type="email" class="form-control form-control" placeholder="Your Email" id="tb_contact_mail" aria-label="Your Email" aria-describedby="basic-addon1" required>
                               </div>
                               <div class="input-group mb-3">
                                  <select class="select2 form-control custom-select" id="sniperphish_timezoneSelector" style="height: 36px;width: 100%;">
@@ -105,7 +106,7 @@
                      <div class="col-12">
                         <div class="form-group">
                            <div class="p-t-20">
-                              <button class="btn btn-info float-right" id="bt_install" type="submit" disabled><i class="fa fas"></i> Install</button>
+                              <button class="btn btn-info float-right" id="bt_install" type="submit"><i class="fa fas"></i> Install</button>
                            </div>
                         </div>
                      </div>
@@ -121,7 +122,7 @@
       <!-- ============================================================== -->
       <!-- All Required js -->
       <!-- ============================================================== -->
-      <script src="spear/js/libs/jquery/jquery-3.5.1.min.js"></script>
+      <script src="spear/js/libs/jquery/jquery-3.6.0.min.js"></script>
       <script src="spear/js/libs/js.cookie.min.js"></script>
       <!-- Bootstrap tether Core JavaScript -->
       <script src="spear/js/libs/popper.min.js"></script>
@@ -140,67 +141,84 @@
         });
         // ============================================================== 
         $(function() {
-            $("#inst_fields").hide();
-            $.post("install_manager", {
+            $.post({
+                url: "install_manager",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ 
                     action_type: "check_requirements",
-                },
-                function(data, status) {
-                    $.each(data, function(req, val) {
-                        if (req != 'code')
-                            $("#tb_install tbody").append("<tr><td>" + req + "</td><td>" + val + "</td></tr>");
-                    })
-                    if (data['code'] == true) //Error 
-                        $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-exclamation-triangle text-danger'></i>");
-                    else {
-                        $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-check fa-lg text-success'></i>");
-                        $("#inst_fields").show(500);
-                        $("#bt_install").attr('disabled', false);
-                    }   
-                });
+              }),
+            }).done(function (data) {
+                if(data.permissions.length == 0)
+                    $("#tb_install tbody").append("<tr><td>Directory permissions</td><td><i class='fas fa-check fa-lg text-success'></i></td></tr>");
+                else
+                    $("#tb_install tbody").append('<tr><td>Directory permissions</td><td><i class="fas fa-times fa-lg text-danger cursor-pointer" data-container="body" data-toggle="popover" data-placement="top" data-html="true" data-content="Enable write permission for:<br/>' + data.permissions.join('<br/>') + '"></i></td></tr>');
+
+                $.each(data.requirements, function(req_name, error_info) {
+                  if(error_info == true)
+                    $("#tb_install tbody").append('<tr><td>' + req_name + '</td><td><i class="fas fa-check fa-lg text-success"></i></td></tr>');
+                    else
+                      $("#tb_install tbody").append('<tr><td>' + req_name + '</td><td><i class="fas fa-times fa-lg text-danger cursor-pointer" data-container="body" data-toggle="popover" data-placement="top" data-html="true" data-content="' + error_info + '"></i></td></tr>');
+                })
+
+                if(data.error){
+                    $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-exclamation-triangle text-danger'></i>");
+                    $("#bt_install").attr('disabled', true);
+                }
+                else{
+                    $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-check fa-lg text-success'></i>");console.log(9)
+                    $("#bt_install").attr('disabled', false);
+                }  
+
+                $('[data-toggle="popover"]').popover();
+            }).fail(function(error) {
+                $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-exclamation-triangle text-danger'></i>");
+                $("#comm_error").attr("hidden",false);
+                $("#comm_error").text('Can not access /install_manager. Common reason for the error is that the .htaccess is not properly working for your web server. Check the web server support for .htaccess and if needed, configure it correctly to remove .php from URLs. Error code: ' + error.status);
+            });
         });
 
         $("#doInstall").submit(function(event) {
             event.preventDefault();
+            var time_zone = { "timezone":$("#sniperphish_timezoneSelector").val(), "value":moment.tz($("#sniperphish_timezoneSelector").val()).utcOffset() * 60};
             
             $("#bt_install").attr('disabled', true);
             $("#bt_install i").toggleClass('fa-spinner fa-spin');
-            $.post("install_manager", {
+            $.post({
+                url: "install_manager",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ 
                     action_type: "do_install",
                     db_name: $("#tb_db_name").val(),
                     db_host: $("#tb_db_host").val(),
                     db_user_name: $("#tb_db_user_name").val(),
                     db_user_pwd: $("#tb_db_user_pwd").val(),
                     user_contact_mail: $("#tb_contact_mail").val(),
-                    timezone_format: $("#sniperphish_timezoneSelector").val() + ',' + moment.tz($("#sniperphish_timezoneSelector").val()).utcOffset() * 60,
-                },
-                function(data, status) {
-                    $("#bt_install i").toggleClass('fa-spinner fa-spin');
+                    time_zone: time_zone,
+                 }),
+            }).done(function (data) {
+                $("#bt_install i").toggleClass('fa-spinner fa-spin');
 
-                    if (data != "success")
-                        $("#lb_error").html('<span class="text-danger">' + data + '</span>');
-                    else {
-                        $("#lb_error").html('<span class="text-success">Installation successs. SniperPhish will rediect to login screen in few seconds..</span>');
-                        setTimeout(function() {
-                            document.location = location.origin + '/spear';
-                        }, 3000);
-                    }              
-                    $("#bt_install").attr('disabled', false);
-                });
+                if(!data.error){
+                  $("#lb_error").html('<span class="text-success">Installation successs. SniperPhish will rediect to login page in few seconds..</span>');
+                    setTimeout(function() {
+                        document.location = location.origin + '/spear';
+                    }, 3000);
+                }
+                else
+                  $("#lb_error").html('<span class="text-danger">' + data.error + '</span>');
+           
+                $("#bt_install").attr('disabled', false);
+            }); 
         });
 
 
 
-
+        $('html').on('click', function(e) {
+          if (!$(e.target).is('.fa-times') && $(e.target).closest('.popover').length !=1 )
+                $('[data-toggle="popover"]').popover('hide');  
+        });
         //------------------------Timezone Section----------------------------
         $(document).ready(function() {
-            const _t = (s) => {
-                if (i18n !== void 0 && i18n[s]) {
-                    return i18n[s];
-                }
-
-                return s;
-            };
-
             const timezones = [
                 "Etc/GMT+12",
                 "Pacific/Midway",
@@ -358,6 +376,13 @@
                 "Pacific/Auckland": "Auckland, Wellington",
                 "Pacific/Tongatapu": "Nuku'alofa"
             }
+            const _t = (s) => {
+                if (i18n !== void 0 && i18n[s]) {
+                    return i18n[s];
+                }
+                return s;
+            };
+
             const dateTimeUtc = moment("2017-06-05T19:41:03Z").utc();
 
             const selectorOptions = moment.tz.names()
@@ -381,8 +406,8 @@
                     return memo.concat(`<option value="${tz.name}">(GMT${timezone}) ${_t(tz.name)}</option>`);
                 }, "");
 
-            document.querySelector("#sniperphish_timezoneSelector").innerHTML = selectorOptions;
-            document.querySelector("#sniperphish_timezoneSelector").value = "Asia/Kuala_Lumpur";
+            $("#sniperphish_timezoneSelector").html(selectorOptions);
+            $("#sniperphish_timezoneSelector").val("Asia/Kuala_Lumpur");   
         });
 
       </script>

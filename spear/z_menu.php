@@ -53,7 +53,7 @@
                 <span class="d-block d-md-none"><i class="fa fa-plus"></i></span>   
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                   <a class="dropdown-item" href="SimpleTracker">Simple Tracker</a>
+                   <a class="dropdown-item" href="QuickTracker">Quick Tracker</a>
                    <a class="dropdown-item" href="TrackerGenerator">Web Tracker</a>
                    <a class="dropdown-item" href="MailCampaignList?action=add&campaign=new">Email Campaign</a>
                 </div>
@@ -108,10 +108,10 @@
           <ul id="sidebarnav" class="p-t-30">
              <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="Home" aria-expanded="false"><i class="mdi mdi-home"></i><span class="hide-menu">Home</span></a></li>
              <li class="sidebar-item">
-                <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-watch-vibrate"></i><span class="hide-menu">Simple Tracker </span></a>
+                <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-watch-vibrate"></i><span class="hide-menu">Quick Tracker </span></a>
                 <ul aria-expanded="false" class="collapse  first-level">
-                   <li class="sidebar-item"><a href="SimpleTracker" class="sidebar-link"><i class="mdi mdi-playlist-plus"></i><span class="hide-menu"> Tracker List</span></a></li>
-                   <li class="sidebar-item"><a href="SimpleTrackerReport" class="sidebar-link"><i class="mdi mdi-book-open"></i><span class="hide-menu"> Reports </span></a></li>
+                   <li class="sidebar-item"><a href="QuickTracker" class="sidebar-link"><i class="mdi mdi-playlist-plus"></i><span class="hide-menu"> Tracker List</span></a></li>
+                   <li class="sidebar-item"><a href="QuickTrackerReport" class="sidebar-link"><i class="mdi mdi-book-open"></i><span class="hide-menu"> Reports </span></a></li>
                 </ul>
              </li>
              <li class="sidebar-item">
@@ -129,10 +129,30 @@
                    <li class="sidebar-item"><a href="MailUserGroup" class="sidebar-link"><i class="fas fa-users"></i><span class="hide-menu"> User Group </span></a></li>
                    <li class="sidebar-item"><a href="MailTemplate" class="sidebar-link"><i class="mdi mdi-credit-card"></i><span class="hide-menu"> Email Template </span></a></li>
                    <li class="sidebar-item"><a href="MailSender" class="sidebar-link"><i class="fas fa-user-secret"></i><span class="hide-menu"> Sender List </span></a></li>
+                   <li class="sidebar-item"><a href="MailConfig" class="sidebar-link"><i class="fas fa-cogs"></i><span class="hide-menu"> Configuration</span></a></li>
                 </ul>
              </li>
              <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="MailCmpDashboard" aria-expanded="false"><i class="mdi mdi-view-dashboard"></i><i class="icon-right-corn mdi mdi-email-outline"></i><span class="hide-menu">Email Campaign Dashboard</span></a></li>
              <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="WebMailCmpDashboard" aria-expanded="false"><i class="mdi mdi-view-dashboard"></i><i class="icon-bottom mdi mdi-email-outline"></i><i class="icon-right mdi mdi-web"></i><span class="hide-menu">Web-MailCamp Dashboard</span></a></li>
+
+             <?php
+              if(is_dir('payloads'))
+                echo '<li class="sidebar-item">
+                        <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="fas fa-bomb pcolor"></i><span class="hide-menu pcolor">Payloads</span></a>
+                        <ul aria-expanded="false" class="collapse  first-level">
+                           <li class="sidebar-item"><a href="payloads/Reflective" class="sidebar-link"><i class="mdi mdi-blender pcolor"></i><span class="hide-menu pcolor"> Reflective PE/DLL </span></a></li>                           
+                        </ul>
+                     </li>';
+              if(is_dir('sniperhost'))
+                echo '<li class="sidebar-item">
+                        <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-cloud pcolor"></i><span class="hide-menu pcolor">SniperHost</span></a>
+                        <ul aria-expanded="false" class="collapse  first-level">
+                           <li class="sidebar-item"><a href="sniperhost/PlainText" class="sidebar-link"><i class="mdi mdi-format-text pcolor"></i><span class="hide-menu pcolor"> Plain-Text </span></a></li>      
+                           <li class="sidebar-item"><a href="sniperhost/FileHost" class="sidebar-link"><i class="mdi mdi-file-multiple pcolor"></i><span class="hide-menu pcolor"> Files </span></a></li>                           
+                        </ul>
+                     </li>';
+              ?>
+              
              <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="Settings" aria-expanded="false"><i class="mdi mdi-settings"></i><span class="hide-menu">Settings</span></a></li>
           </ul>
        </nav>
