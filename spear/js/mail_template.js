@@ -349,6 +349,10 @@ function loadTableMailTemplateList() {
         $("label>select").select2({
             minimumResultsForSearch: -1,
         });
+
+        $('[data-toggle="tooltip"]').tooltip({
+            trigger : 'hover'
+        })  
     });   
 }
 
@@ -557,6 +561,7 @@ $('#summernote').summernote({
 $('#summernote').summernote('fontName', 'Arial');
 $('#summernote').summernote('reset');
 $(window).scrollTop(0); //avoids focus
+$('.dropdown-tooltip').tooltip(); //add tooltip for custom menu
 
 function addMoreOptions(val){
     if(val == "web_tracker_link")
