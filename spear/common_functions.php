@@ -18,7 +18,7 @@ function checkInstallation(){
 }
 
 //------------------------------------------------------
-function getOSType($conn){
+function getOSType(){
 	if(stripos(PHP_OS, 'WIN') === 0)
 		return "windows";
 	else

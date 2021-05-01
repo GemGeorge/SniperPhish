@@ -128,7 +128,6 @@ function applyDataMask(field) {
 }
 //----------------------------------------------
 
-
 //----------------------------------------------
 function checkSniperPhishProcess(){
     if(window.location.href.indexOf('?') == -1){    // works only in main pages
@@ -250,3 +249,19 @@ function isValidURL(url) {
   }
   return true;
 }
+
+/*Idle Timer*/
+var idleMax = 25; // Logout after 25 minutes of IDLE
+var idleTime = 0;
+
+var idleInterval = setInterval("timerIncrement()", 60000);  // 1 minute interval    
+$("body").mousemove(function( event ) {
+    idleTime = 0; // reset to zero
+});
+
+function timerIncrement() {
+    idleTime++;
+    $.get(window.location.origin + '/spear/home_manager.php', function() {});   //A kinda keep-alive req
+    if (idleTime > idleMax)
+        location.replace(window.location.origin + '/spear/logout');
+} 

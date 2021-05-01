@@ -58,7 +58,7 @@ function getHomeGraphsData($conn){
 
 //-------------SniperPhish Process----------
 function checkSniperPhishProcess($conn,$quite){
-	if(isProcessRunning($conn,getOSType($conn))){
+	if(isProcessRunning($conn,getOSType())){
 		if($quite == false)
 			echo json_encode(['result' => true]);
 	    else
@@ -73,7 +73,7 @@ function checkSniperPhishProcess($conn,$quite){
 }
 
 function startSniperPhishProcess($conn){
-	$os = getOSType($conn);
+	$os = getOSType();
 	if(!isProcessRunning($conn,$os)){	//if process not running
 		startProcess($os);
 		

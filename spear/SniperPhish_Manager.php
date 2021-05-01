@@ -5,7 +5,7 @@ require_once(dirname(__FILE__) . '/common_functions.php');
 date_default_timezone_set("UTC");
 //---------------------------------------------------------
 
-$os = getOSType($conn);
+$os = getOSType();
 
 //Register cron, since cron not runnign already
 $current_pid = getmypid();

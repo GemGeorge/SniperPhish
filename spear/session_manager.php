@@ -16,7 +16,7 @@ function validateLogin($username,$pwd){
 	$row = $stmt->get_result()->fetch_row();
 	if($row[0] > 0){
 		setServerVariables($conn);
-		startProcess(getOSType($conn));
+		startProcess(getOSType());
 		return true;
 	}
 	else

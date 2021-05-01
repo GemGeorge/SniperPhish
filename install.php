@@ -165,7 +165,7 @@
                     $("#bt_install").attr('disabled', true);
                 }
                 else{
-                    $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-check fa-lg text-success'></i>");console.log(9)
+                    $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-check fa-lg text-success'></i>");
                     $("#bt_install").attr('disabled', false);
                 }  
 
@@ -173,7 +173,15 @@
             }).fail(function(error) {
                 $("#tb_install tbody tr:first th:nth-child(2)").html("<i class='fas fa-exclamation-triangle text-danger'></i>");
                 $("#comm_error").attr("hidden",false);
-                $("#comm_error").text('Can not access /install_manager. Common reason for the error is that the .htaccess is not properly working for your web server. Check the web server support for .htaccess and if needed, configure it correctly to remove .php from URLs. Error code: ' + error.status);
+
+                $.get("install_manager.php", function(data2) {     
+                    $("#comm_error").text(data2);             
+                }).fail(function(error2) {
+                    if(error2.status == 200)
+                        $("#comm_error").text('Can not access /install_manager without using .php extension in the URL. SniperPhish requires web server configuration to ignore .php from URLs. A common reason for the error is that your web server is not detecting the .htaccess file. Check .htaccess file in the SniperPhish root directory and enable .htaccess support in your web server.<br/>Error: ' + error.status + ' ' + error.statusText);
+                    else
+                        $("#comm_error").text('Can not access /install_manager.php. Error:' + error2.status + ' ' + error2.statusText);
+                });
             });
         });
 
@@ -199,7 +207,7 @@
                 $("#bt_install i").toggleClass('fa-spinner fa-spin');
 
                 if(!data.error){
-                  $("#lb_error").html('<span class="text-success">Installation successs. SniperPhish will rediect to login page in few seconds..</span>');
+                  $("#lb_error").html('<span class="text-success">Installation successs. SniperPhish will rediect to <a href="/spear">login page</a> in few seconds..</span>');
                     setTimeout(function() {
                         document.location = location.origin + '/spear';
                     }, 3000);
@@ -210,8 +218,6 @@
                 $("#bt_install").attr('disabled', false);
             }); 
         });
-
-
 
         $('html').on('click', function(e) {
           if (!$(e.target).is('.fa-times') && $(e.target).closest('.popover').length !=1 )
@@ -409,7 +415,6 @@
             $("#sniperphish_timezoneSelector").html(selectorOptions);
             $("#sniperphish_timezoneSelector").val("Asia/Kuala_Lumpur");   
         });
-
       </script>
    </body>
 </html>

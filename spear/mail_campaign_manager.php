@@ -214,7 +214,7 @@ function kickStartCampaign($conn,$campaign_id){
 			$scheduled_time = strtotime($row['scheduled_time']);
 			$current_time = strtotime("now");
 			if($scheduled_time <= $current_time)
-				executeCron($conn,getOSType($conn),$campaign_id);
+				executeCron($conn,getOSType(),$campaign_id);
 		}
 	}
 	$stmt->close();
