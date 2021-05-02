@@ -1,9 +1,16 @@
+<h1 align="center">
+  <a href=""><img src="https://user-images.githubusercontent.com/15928266/116805514-9e3a6c00-ab59-11eb-9caa-71794673b926.png" ></img></a>
+</h1>
+<p align="center"> 
+  <a href=""><img src="https://img.shields.io/static/v1?label=php&message=>=7.3&color=green&style=flat&logo=php"></a>
+  <a href=""><img src="https://img.shields.io/static/v1?label=Platform&message=Linux/Windows&color=orange&style=flat"></a>
+  <a href=""><img src="https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat"></a>
+   <a href=""><img src="https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg?style=flat"></a>
+</p>
+
 # SniperPhish
 [SniperPhish](https://sniperphish.com/) is a phishing toolkit for pentester or security professionals to enhance user awareness by simulating real-world phishing attacks. SniperPhish helps to combine both phishing emails and phishing websites you created to centrally track user actions. The tool is designed in a view of performing professional phishing exercise and would be reminded to take prior permission from the targeted organization to avoid legal implications.
 
-![PHP](https://img.shields.io/static/v1?label=php&message=>=7.3&color=green&style=flat&logo=php)
-![Platform](https://img.shields.io/static/v1?label=Platform&message=Linux/Windows&color=orange&style=flat)
-![License](https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat)
 ## Installation
 1. Clone the repo or download the latest release
 2. Put the contents in your web root folder
