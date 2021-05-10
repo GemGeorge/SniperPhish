@@ -1473,10 +1473,10 @@ function auxData_form_fields(column,m_item){
         if(hit_items[0] == false)
             tb_data = "<td><center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span></center></td>";
         else
-            tb_data += "<td>" + hit_items[0] + "</td>";  
+            tb_data += "<td>" + escapeHtml(hit_items[0]) + "</td>";  
     }
     else
-        tb_data += hit_items.length>0 ? "<td>"+hit_items.join(",\r\n")+"</td>":"<td>-</td>";
+        tb_data += hit_items.length>0 ? "<td>"+ escapeHtml(hit_items.join(",\r\n")) + "</td>":"<td>-</td>";
 
     return tb_data;
 }
@@ -1555,6 +1555,15 @@ function applyCellColors(){
                                     $(cell).addClass('ccl-4');
             }     
         });     
+    });
+}
+
+//==========XSS Temp fix=========================
+
+function escapeHtml(text) {
+    'use strict';
+    return text.replace(/[\"&<>]/g, function (a) {
+        return { '"': '&quot;', '&': '&amp;', '<': '&lt;', '>': '&gt;' }[a];
     });
 }
 

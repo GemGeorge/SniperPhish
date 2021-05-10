@@ -67,6 +67,10 @@ Go to `Web-MailCamp Dashboard -> Select Campaign`. Then selct the web tracker an
 ## SniperPhish honors contributions of
 Joseph Nygil ([@j_nygil](https://twitter.com/j_nygil)) and Sreehari Haridas ([@sr33h4ri](https://twitter.com/sr33h4ri))
 
+#Come let's connect and collabrate
+Join on our SniperPhish discord community to engage with us!
+* Discord: https://sniperphish.com/discord/
+
 ## Donation
 If this project help you 'Phish', you can give me a cup of coffee :) 
 
