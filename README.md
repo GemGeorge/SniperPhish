@@ -11,6 +11,11 @@
 # SniperPhish
 [SniperPhish](https://sniperphish.com/) is a phishing toolkit for pentester or security professionals to enhance user awareness by simulating real-world phishing attacks. SniperPhish helps to combine both phishing emails and phishing websites you created to centrally track user actions. The tool is designed in a view of performing professional phishing exercise and would be reminded to take prior permission from the targeted organization to avoid legal implications.
 
+## Basic Requirements
+* Operating System: Windows or Linux. The macOS support is not verified.
+* Web Server: Any web server supporting PHP with minimum v7.3 (well, you have Apache).
+* Database: MySQL
+
 ## Installation
 1. Clone the repo or download the latest release
 2. Put the contents in your web root folder
