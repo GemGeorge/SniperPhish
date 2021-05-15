@@ -3,7 +3,7 @@ var g_tracker_image_type = ''; //0=no tracker image, 1= default tracker image, 2
 var g_sender_list;
 
 var bt_media = `<div class="note-btn-group btn-group note-style">
-        <button type="button" class="note-btn btn btn-light btn-sm note-btn-bold" tabindex="-1" title="Link" data-toggle="tooltip" data-placement="bottom" onclick="$('#modal_media_link').modal('toggle');">
+        <button type="button" class="note-btn btn btn-light btn-sm note-btn-bold" tabindex="-1" title="Link" data-toggle="tooltip" data-placement="bottom" onclick="$('#modal_media_link_text').val($('#summernote').summernote('createRange').toString());$('#modal_media_link').modal('toggle');">
             <i class="note-icon-link"></i>
         </button>
         <button type="button" class="note-btn btn btn-light btn-sm note-btn-italic" tabindex="-1" title="Picture" data-toggle="tooltip" data-placement="bottom" onclick="$('#modal_media_pic').modal('toggle');">
@@ -452,6 +452,7 @@ function uploadMailBodyFiles(fname,fsize,ftype,fb64,el){
 }
 
 function linkWebTracker(){
+    $('#summernote').summernote('restoreRange');
     var url = $("#web_tracker_selector").val();
     if(url == "Empty")
         toastr.error('', 'Error: Please create web tracker first');
@@ -570,7 +571,8 @@ function addMoreOptions(val){
         $('#summernote').summernote('pasteHTML', `<img src="` + location.protocol + `//` + document.domain + `/mod?type=` + val + `&content=<your text here>&img_name=code.png"></img>`);
 }
 
-function insertMedia(type){
+function insertMedia(type){    
+    $('#summernote').summernote('restoreRange');
     if(type == "link")
     {
         if(isValidURL($("#modal_media_link_url").val())){
@@ -640,7 +642,7 @@ function insertMailTemplate(){
             name: $("#selector_sample_mailtemplates").val()
          })
     }).done(function (data) {
-        if(!data['error']){  // no data
+        if(!data.error){ 
             $('#mail_template_name').val($("#selector_sample_mailtemplates").val());
             $('#mail_template_subject').val(data.mail_template_subject);
             $('#summernote').summernote('code', data.mail_template_content.replace("http://localhost", location.protocol + `//` + document.domain));
