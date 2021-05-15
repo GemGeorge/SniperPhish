@@ -263,8 +263,8 @@
       <script defer src="js/libs/toastr.min.js"></script>
       <script defer src="js/libs/jquery/dataTables.buttons.min.js"></script>
       <script defer src="js/libs/jquery/buttons.html5.min.js"></script>
+      <script defer src="js/libs/pdfmake.min.js"></script>  
       <script defer src="js/libs/vfs_fonts.js"></script>  
-      <script defer src="js/libs/jszip.min.js"></script>   
-      <script defer src="js/libs/pdfmake.min.js"></script>    
+      <script defer src="js/libs/jszip.min.js"></script>     
    </body>
 </html>

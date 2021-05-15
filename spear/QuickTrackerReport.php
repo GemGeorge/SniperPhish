@@ -273,8 +273,8 @@
       <script defer src="js/libs/jquery/buttons.html5.min.js"></script>
       <script defer src="js/libs/moment.min.js"></script>
       <script defer src="js/libs/moment-timezone-with-data.min.js"></script>
+      <script defer src="js/libs/pdfmake.min.js"></script> 
       <script defer src="js/libs/vfs_fonts.js"></script>  
-      <script defer src="js/libs/jszip.min.js"></script>
-      <script defer src="js/libs/pdfmake.min.js"></script>       
+      <script defer src="js/libs/jszip.min.js"></script>      
    </body>
 </html>
