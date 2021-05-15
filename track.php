@@ -12,17 +12,17 @@ else
     die();
 
 if(isset($POSTJ['cid']) && !empty($POSTJ['cid']))
-    $cid = $POSTJ['cid'];
+    $cid = doFilter($POSTJ['cid'],'ALPHA_NUM');
 else
     die("No cid");
     
 if(isset($POSTJ['sess_id']))
-    $session_id = $POSTJ['sess_id'];
+    $session_id = doFilter($POSTJ['sess_id'],'ALPHA_NUM');
 else
     $session_id = 'Failed';
 
 if(isset($POSTJ['trackerId']))
-    $trackerId = $POSTJ['trackerId'];
+    $trackerId = doFilter($POSTJ['trackerId'],'ALPHA_NUM');
 else
     $trackerId = 'Failed';
 
@@ -33,28 +33,19 @@ getenv('HTTP_X_FORWARDED')?:
 getenv('HTTP_FORWARDED_FOR')?:
 getenv('HTTP_FORWARDED')?:
 getenv('REMOTE_ADDR');
+$public_ip = htmlspecialchars($public_ip);
 
-$user_agent = $_SERVER['HTTP_USER_AGENT'];    
+$user_agent = htmlspecialchars($_SERVER['HTTP_USER_AGENT']);    
 
-$date_time = round(microtime(true) * 1000); //(new DateTime())->format('d-m-Y H:i:s.u');    
+$date_time = round(microtime(true) * 1000);
 $user_browser = $ua_info->getName().' '.($ua_info->getVersion() == "unknown"?"":$ua_info->getVersion());
 $user_os = $ua_info->getPlatformVersion();
 $ip_info = getIPInfo($conn, $public_ip);
 $device_type = $ua_info->isMobile()?"Mobile":"Desktop";
 
 //-----------------------------------
-if(isset($POSTJ['login_username']))
-    $login_username = $POSTJ['login_username'];
-else
-    $login_username = 'Failed';
-
-if(isset($POSTJ['login_pwd']))
-    $login_pwd = $POSTJ['login_pwd'];
-else
-    $login_pwd = 'Failed';    
-
 if(isset($POSTJ['screen_res']))
-    $screen_res = $POSTJ['screen_res'];
+    $screen_res = htmlspecialchars($POSTJ['screen_res']);
 else
     $screen_res = 'Failed'; 
 
@@ -76,7 +67,10 @@ if($page == 0){  //page visit
 		die("failed"); 
 }  
 elseif(is_numeric($page)){
-  $form_field_data = json_encode($POSTJ['form_field_data']);
+    foreach ($POSTJ['form_field_data'] as $i => $field_data) {
+        $POSTJ['form_field_data'][$i] = htmlspecialchars($POSTJ['form_field_data']);
+    }
+    $form_field_data = json_encode($POSTJ['form_field_data']);
 	
 	$stmt = $conn->prepare("INSERT INTO tb_data_webform_submit(tracker_id,session_id,cid,public_ip,ip_info,user_agent,screen_res,time,browser,platform,device_type,page,form_field_data) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
 	$stmt->bind_param('sssssssssssss', $trackerId,$session_id,$cid,$public_ip,$ip_info,$user_agent,$screen_res,$date_time,$user_browser,$user_os,$device_type,$page,$form_field_data);
