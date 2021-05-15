@@ -33,7 +33,7 @@ $public_ip = htmlspecialchars($public_ip);
 //Verify campaign is active
 $user_details = verifyMailCmapaignUser($conn, $campaign_id, $user_id);
 if(verifyMailCmapaign($conn, $campaign_id) == true && $user_details != 'empty'){
-    $user_agent = $_SERVER['HTTP_USER_AGENT'];   
+    $user_agent = htmlspecialchars($_SERVER['HTTP_USER_AGENT']);   
     $date_time = round(microtime(true) * 1000); //(new DateTime())->format('d-m-Y H:i:s.u');    
     $user_os = $ua_info->getPlatformVersion();
     $device_type = $ua_info->isMobile()?"Mobile":"Desktop";
