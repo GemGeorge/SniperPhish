@@ -76,6 +76,20 @@ function getCONFIG($conn, $mconfig_id){
 		die(json_encode(['result' => 'Invalid mail campaign configuration id '.$mconfig_id]));	
 }
 
+function generateCID(&$conn, &$campaign_id){ //this make 100% unique CID
+	do{
+		$CID = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyz', ceil(10/strlen($x)) )),1,10);
+
+		$stmt = $conn->prepare("SELECT COUNT(*) FROM tb_data_mailcamp_live WHERE id=? AND campaign_id=?");
+		$stmt->bind_param("ss", $CID,$campaign_id);
+		$stmt->execute();
+		$row = $stmt->get_result()->fetch_row();
+		if($row[0] == 0)
+			break;
+	}while(true);
+	return $CID;
+}
+
 function InitMailCampaign($conn, $campaign_id){
 	$keyword_vals = array();
 
@@ -218,7 +232,7 @@ function InitMailCampaign($conn, $campaign_id){
 	foreach ($arr_user_data as $i  => $arr_user) {
 		$send_time = round(microtime(true) * 1000); //milli-seconds
     	$msg_fail_retry_counter = 0;
-	    $CID = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyz', ceil(10/strlen($x)) )),1,10);
+	    $CID = generateCID($conn, $campaign_id); 
 
 	    $keyword_vals['{{CID}}'] = $CID;
 	    $keyword_vals['{{MID}}'] = $campaign_id;
@@ -239,6 +253,7 @@ function InitMailCampaign($conn, $campaign_id){
 		$msg_body = filterKeywords($mail_template_content,$keyword_vals);  	
 		$msg_body = filterQRBarCode($msg_body,$keyword_vals,$message);
 	  	$message->setBody($msg_body,$mail_content_type);
+	  	$message->setId($CID.'@sniperphish.generated');
 
 	  	statusEntryCreate($conn,$CID,$campaign_id,$MC_name,$send_time,$arr_user['name'],$arr_user['email']); 
 	  	try{
@@ -249,25 +264,30 @@ function InitMailCampaign($conn, $campaign_id){
 		  	if($config_recipient_type == "bcc")
 		  		$message->setBcc([$arr_user['email']]);
 		  	}catch(Exception $e) {
-		  		statusEntryUpdate($conn, $CID, 3, json_encode([$e->getMessage()]));	//3=Error in sending
+		  		statusEntryUpdate($conn, $CID, 3, json_encode([$e->getMessage()]));	//3=Error in sending due to address format
 				continue;
 		}
 	  	
 	  	while($msg_fail_retry_counter <= $MC_msg_fail_retry){
 			// Send the message
-			$result = $mailer->send($message,$failures);	//$failures will store the rejected addresses
-			if($result){
-				statusEntryUpdate($conn, $CID, 2, json_encode($failures));	//2= mail sent successfully
-				break;
-			}
-			else{			
-				statusEntryUpdate($conn, $CID, 3, json_encode($failures));	//3=Error in sending
+			try{
+				$result = $mailer->send($message,$failures);	//$failures will store the rejected addresses
+				if($result){
+					statusEntryUpdate($conn, $CID, 2, json_encode($failures));	//2= mail sent successfully
+					break;
+				}
+				else{			
+					statusEntryUpdate($conn, $CID, 3, json_encode($failures));	//3=Error in sending
+					$msg_fail_retry_counter++;
+					sleep(1); // give 1 sec delay before next attempt
+				}
+			}catch(Exception $e) {
+				statusEntryUpdate($conn, $CID, 3, json_encode([$e->getMessage()]));	//3=Error in sending due to transport exception
 				$msg_fail_retry_counter++;
+				$transport->stop();	//should stop if exception happen
 				sleep(1); // give 1 sec delay before next attempt
 			}
 		}
-
-		statusEntryUpdate($conn, $CID, 2);	//4=mail sending completed
 
 		//sleep for next email
 		$delay_val = rand(explode("-",$MC_msg_interval)[0]*1000,explode("-",$MC_msg_interval)[1]*1000); //milli-seconds
@@ -281,7 +301,7 @@ function InitMailCampaign($conn, $campaign_id){
 		if(isCampaignStopped($conn, $campaign_id))
 			break;
 	}
-	changeCampaignStatus($conn, $campaign_id, 4); //4=Mail sending completed (But campaign in progress (2))
+	changeCampaignStatus($conn, $campaign_id, 4); //4=Mail sending completed (But campaign is in progress (2))
 }
 
 function isCampaignStopped($conn, $campaign_id){

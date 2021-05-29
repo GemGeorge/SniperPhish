@@ -68,7 +68,7 @@ if($page == 0){  //page visit
 }  
 elseif(is_numeric($page)){
     foreach ($POSTJ['form_field_data'] as $i => $field_data) {
-        $POSTJ['form_field_data'][$i] = htmlspecialchars($POSTJ['form_field_data']);
+        $POSTJ['form_field_data'][$i] = htmlspecialchars($POSTJ['form_field_data'][$i]);
     }
     $form_field_data = json_encode($POSTJ['form_field_data']);
 	

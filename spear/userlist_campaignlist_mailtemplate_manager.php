@@ -57,12 +57,12 @@ if (isset($_POST)) {
 		if($POSTJ['action_type'] == "make_copy_sender_list")
 			makeCopyMailSenderList($conn,$POSTJ['sender_list_id'],$POSTJ['new_sender_list_id'],$POSTJ['new_sender_list_name']);
 		if($POSTJ['action_type'] == "verify_mailbox_access")
-			verifyMailboxAccess($conn,$POSTJ['mail_sender_acc_username'],$POSTJ['mail_sender_acc_pwd'],$POSTJ['mail_sender_mailbox']);
+			verifyMailboxAccess($conn,$POSTJ);
 
 		if($POSTJ['action_type'] == "send_test_mail_verification")
-			sendTestMailVerification($POSTJ,$conn);
+			sendTestMailVerification($conn,$POSTJ);
 		if($POSTJ['action_type'] == "send_test_mail_sample")
-			sendTestMailSample($POSTJ,$conn);
+			sendTestMailSample($conn,$POSTJ);
 	}
 }
 
@@ -223,7 +223,7 @@ function deleteMailTemplateFromTemplateId($conn,$mail_template_id){
 }
 
 function makeCopyMailTemplate($conn, $old_mail_template_id, $new_mail_template_id, $new_mail_template_name){
-	$stmt = $conn->prepare("INSERT INTO tb_core_mailcamp_template_list (mail_template_id,mail_template_name,mail_template_subject,mail_template_content,attachment,date) SELECT ?, ?, mail_template_subject,mail_template_content,attachment,? FROM tb_core_mailcamp_template_list WHERE mail_template_id=?");
+	$stmt = $conn->prepare("INSERT INTO tb_core_mailcamp_template_list (mail_template_id,mail_template_name,mail_template_subject,mail_template_content,timage_type,mail_content_type,attachment,date) SELECT ?, ?, mail_template_subject,mail_template_content,timage_type,mail_content_type,attachment,? FROM tb_core_mailcamp_template_list WHERE mail_template_id=?");
 	$stmt->bind_param("ssss", $new_mail_template_id, $new_mail_template_name, $GLOBALS['entry_time'], $old_mail_template_id);
 	
 	if ($stmt->execute() === TRUE)
@@ -382,17 +382,29 @@ function makeCopyMailSenderList($conn, $old_sender_list_id, $new_sender_list_id,
 	$stmt->close();
 }
 
-function verifyMailboxAccess($conn, $sender_acc_username, $sender_acc_pwd, $mail_sender_mailbox){
-	try{
-		$imap_obj = imap_open($mail_sender_mailbox,$sender_acc_username,$sender_acc_pwd);		
-    	$resp = ['result' => 'success', 'total_msg_count' => imap_num_msg($imap_obj)];
-	} catch (Exception $e) {
-  		$resp = ['result' => 'failed', 'error' =>$e->getMessage()];
-	}
+function verifyMailboxAccess($conn, $POSTJ){
+	$sender_list_id = $POSTJ['sender_list_id'];
+	$sender_username = $POSTJ['mail_sender_acc_username'];
+	$sender_pwd = $POSTJ['mail_sender_acc_pwd'];
+	$sender_mailbox = $POSTJ['mail_sender_mailbox'];
 
-	$imap_err = imap_errors(); //required to capture imap errors
-	if(!empty($imap_err))
-		$resp = ['result' => 'failed', 'error' => $imap_err];		
+	if(empty($sender_pwd))
+		$sender_pwd = getSenderPwd($conn, $sender_list_id);
+
+	if(empty($sender_pwd))
+		die(json_encode(['result' => 'failed', 'error' => "Sender list does not exist. Please fill the password field"]));	
+	else{
+		try{
+			$imap_obj = imap_open($sender_mailbox,$sender_username,$sender_pwd);		
+	    	$resp = ['result' => 'success', 'total_msg_count' => imap_num_msg($imap_obj)];
+		} catch (Exception $e) {
+	  		$resp = ['result' => 'failed', 'error' =>$e->getMessage()];
+		}
+
+		$imap_err = imap_errors(); //required to capture imap errors
+		if(!empty($imap_err))
+			$resp = ['result' => 'failed', 'error' => $imap_err];	
+	}	
 
 	echo json_encode($resp);
 }
@@ -409,7 +421,7 @@ function checkSenderListIdExist($conn,$sender_list_id){
 }
 //---------------------------------------End Sender List Section --------------------------------
 //====================================================================================================
-function sendTestMailVerification($POSTJ,$conn){
+function sendTestMailVerification($conn,$POSTJ){
 	$sender_list_id = $POSTJ['sender_list_id'];
 	$smtp_server = $POSTJ['sender_list_mail_sender_SMTP_server'];
 	$sender_from = $POSTJ['sender_list_mail_sender_from'];
@@ -424,21 +436,16 @@ function sendTestMailVerification($POSTJ,$conn){
 	$message = new Swift_Message();
 
 	//-----------------------------------
-	if(empty($sender_pwd)){
-		$stmt = $conn->prepare("SELECT sender_acc_pwd FROM tb_core_mailcamp_sender_list WHERE sender_list_id = ?");
-		$stmt->bind_param("s", $sender_list_id);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		if($row = $result->fetch_assoc())
-			$sender_pwd = $row['sender_acc_pwd'];
-		else
-			die(json_encode(['result' => 'failed', 'error' => "Sender list does not exist. Please fill the password field"]));	
-	}
-	//---------------------------
-	shootMail($message,$smtp_server,$sender_username,$sender_pwd,$sender_from,$test_to_address,$smtp_enc_level,$cust_headers,$mail_subject,$mail_body,$mail_content_type);
+	if(empty($sender_pwd))
+		$sender_pwd = getSenderPwd($conn, $sender_list_id);
+
+	if(empty($sender_pwd))
+		die(json_encode(['result' => 'failed', 'error' => "Sender list does not exist. Please fill the password field"]));	
+	else
+		shootMail($message,$smtp_server,$sender_username,$sender_pwd,$sender_from,$test_to_address,$smtp_enc_level,$cust_headers,$mail_subject,$mail_body,$mail_content_type);
 }
 
-function sendTestMailSample($POSTJ,$conn){
+function sendTestMailSample($conn,$POSTJ){
 	$sender_list_id = $POSTJ['sender_list_id'];
 	$smtp_server = $POSTJ['smtp_server'];
 	$sender_from = $POSTJ['sender_from'];
@@ -490,4 +497,14 @@ function sendTestMailSample($POSTJ,$conn){
 	shootMail($message,$smtp_server,$sender_username,$sender_pwd,$sender_from,$test_to_address,$smtp_enc_level,$cust_headers,$mail_subject,$mail_body,$mail_content_type);  
 }
 //===================================================================================================
+function getSenderPwd(&$conn, &$sender_list_id){
+	$stmt = $conn->prepare("SELECT sender_acc_pwd FROM tb_core_mailcamp_sender_list WHERE sender_list_id = ?");
+	$stmt->bind_param("s", $sender_list_id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($row = $result->fetch_assoc())
+		return $row['sender_acc_pwd'];
+	else
+		return "";
+}
 ?>

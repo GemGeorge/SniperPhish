@@ -457,26 +457,12 @@ function verifyMailBoxAccess(){
     } else
         $("#mail_sender_SMTP_server").removeClass("is-invalid");
 
-    if (mail_sender_from == '') {
-        $("#mail_sender_from").addClass("is-invalid");
-        toastr.error('', 'Empty/unsupported character!');
-        return;
-    } else
-        $("#mail_sender_from").removeClass("is-invalid");
-
     if (validateEmailAddress(mail_sender_acc_username) == false) {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
     } else
         $("#mail_sender_acc_username").removeClass("is-invalid");
-
-    if (mail_sender_acc_pwd == '') {
-        $("#mail_sender_acc_pwd").addClass("is-invalid");
-        toastr.error('', 'Empty/unsupported character!');
-        return;
-    } else
-        $("#mail_sender_acc_pwd").removeClass("is-invalid");
 
     if ($("#cb_auto_mailbox").is(':checked')){
         $('#mail_sender_mailbox').val("{"+mail_sender_SMTP_server.split(":")[0]+":993/imap/ssl}INBOX");
@@ -508,6 +494,7 @@ function verifyMailBoxAccess(){
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "verify_mailbox_access",
+            sender_list_id: nextRandomId,
             mail_sender_acc_username: mail_sender_acc_username,
             mail_sender_acc_pwd: mail_sender_acc_pwd,
             mail_sender_mailbox: mail_sender_mailbox
@@ -516,7 +503,7 @@ function verifyMailBoxAccess(){
         $("#modal_verifier_body").attr("hidden", false);
         $("#modal_verifier_body").parent().children().remove('.loadercust');
         if(response.result == "success")
-            $("#modal_verifier_body").html("<strong>Successfully verified.<br/>Total inbox messages: " + response.total_msg_count + "</strong>");
+            $("#modal_verifier_body").html("<strong>Successfully verified.<br/>A total of " + response.total_msg_count + " messages detected in the mailbox path provided.</strong>");
         else
             $("#modal_verifier_body").html("<strong>Error:</strong><br/>" + response.error);
     });   

@@ -358,7 +358,7 @@ function updateProgressbar(mailcamp_status, sender_list_id, user_group_id, mail_
             updatePieTotalMailOpen(total_user_email_count, open_mail_count, open_mail_percent);
             updatePieOverViewEmail(sent_mail_success_percent, open_mail_percent);
             if (mailcamp_status != 0)
-                updatePieTotalMailReplied(sender_list_id, user_group_id, mail_template_id);
+                updatePieTotalMailReplied(total_user_email_count);
 
             //-------------------------------------------------------
             var total_pv = Object.keys(data_matched.page_visit).length;
@@ -716,8 +716,8 @@ function updatePieTotalSent(total_user_email_count, sent_mail_count, sent_failed
     $("#piechart_mail_total_sent").attr("hidden", false);
     $("#piechart_mail_total_sent").parent().children().remove('.loadercust');
 
-    var sent_percent = +((sent_mail_count-sent_failed_count) / total_user_email_count * 100).toFixed(2);;
-    var non_sent_percent = 100 - sent_percent;
+    var sent_percent = +((sent_mail_count-sent_failed_count) / total_user_email_count * 100).toFixed(2);
+    var non_sent_percent = +(100 - sent_percent).toFixed(2);
     var options = {
         series: [sent_percent, non_sent_percent],
         chart: {
@@ -745,7 +745,7 @@ function updatePieTotalSent(total_user_email_count, sent_mail_count, sent_failed
                             show: true,
                             label: 'Total',
                             formatter: function(w) {
-                                return +(sent_mail_count/total_user_email_count*100).toFixed(2) + "% (" + sent_mail_count + "/" + total_user_email_count + ")";
+                                return +(sent_mail_count/total_user_email_count*100).toFixed(2) + "% (" + (sent_mail_count-sent_failed_count) + "/" + total_user_email_count + ")";
                             }
                         }
                     }
@@ -797,7 +797,7 @@ function updatePieTotalMailOpen(total_user_email_count, open_mail_count, open_ma
     $("#piechart_mail_total_mail_open").attr("hidden", false);
     $("#piechart_mail_total_mail_open").parent().children().remove('.loadercust');
 
-    var non_open_percent = 100 - open_mail_percent;
+    var non_open_percent = +(100 - open_mail_percent).toFixed(2);
     var options = {
         series: [open_mail_percent, non_open_percent],
         chart: {
@@ -873,7 +873,7 @@ function updatePieTotalMailOpen(total_user_email_count, open_mail_count, open_ma
     piechart_mail_total_mail_open.render();
 }
 
-function updatePieTotalMailReplied(sender_list_id, user_group_id, mail_template_id) {
+function updatePieTotalMailReplied(total_user_email_count) {
     $.post({
         url: "mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
@@ -890,10 +890,9 @@ function updatePieTotalMailReplied(sender_list_id, user_group_id, mail_template_
             $("#piechart_mail_total_replied").parent().children().remove('.loadercust');
             loadTableCampaignResult();
 
-            var total_user_email_count = data['total_user_email_count'];
             var reply_count_unique = Object.keys(data['msg_info']).length;
             var reply_percent = +(reply_count_unique / total_user_email_count * 100).toFixed(2);
-            var non_reply_percent = 100 - reply_percent;
+            var non_reply_percent = +(100 - reply_percent).toFixed(2);
             var options = {
                 series: [reply_percent, non_reply_percent],
                 chart: {
@@ -1638,7 +1637,7 @@ function updatePieTotalPV(total_user_email_count, total_pv, pv_percent) {
     $("#piechart_total_pv").attr("hidden", false);
     $("#piechart_total_pv").parent().children().remove('.loadercust');
 
-    var lpv_not_percent = 100 - pv_percent;
+    var lpv_not_percent = +(100 - pv_percent).toFixed(2);
     var options = {
         series: [pv_percent, lpv_not_percent],
         chart: {
@@ -1719,7 +1718,7 @@ function updatePieTotalFS(total_user_email_count, lps_count) {
     $("#piechart_total_fs").parent().children().remove('.loadercust');
 
     var lps_percent = +(lps_count / total_user_email_count * 100).toFixed(2);
-    var lps_not_percent = 100 - lps_percent;
+    var lps_not_percent = +(100 - lps_percent).toFixed(2);
     var options = {
         series: [lps_percent, lps_not_percent],
         chart: {

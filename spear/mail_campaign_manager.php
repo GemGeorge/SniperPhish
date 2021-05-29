@@ -196,7 +196,7 @@ function checkCampaignListIdExist($conn,$campaign_id){
 	$stmt->execute();
 	if($row = $stmt->get_result()->fetch_assoc()){
 		if($row['camp_status'] == 2 || $row['camp_status'] == 4)	//Cancel update operation update if 2-In Progress or 4-Mail sending only completed
-			die('Error: campaign is running');
+			die(json_encode(['result' => 'failed', 'error' => 'Error: campaign is running']));	
 		else
 			return true;
 	}
@@ -285,9 +285,8 @@ function getMailReplied($conn, $campaign_id){
 	$campaign_data = getCampaignDataFromCampaignID($conn, $campaign_id);
 	$sender_list_id = $campaign_data['mail_sender']['id'];
 	$user_group_id = $campaign_data['user_group']['id'];
-	$mail_template_id = $campaign_data['mail_template']['id'];
 
-	$stmt = $conn->prepare("SELECT sender_name,sender_SMTP_server,sender_from,sender_acc_username,sender_acc_pwd,sender_mailbox,cust_headers FROM tb_core_mailcamp_sender_list where sender_list_id = ?");
+	$stmt = $conn->prepare("SELECT sender_name,sender_SMTP_server,sender_from,sender_acc_username,sender_acc_pwd,sender_mailbox,cust_headers FROM tb_core_mailcamp_sender_list WHERE sender_list_id = ?");
 	$stmt->bind_param("s", $sender_list_id);
 	$stmt->execute();
 	$result = $stmt->get_result();
@@ -296,55 +295,38 @@ function getMailReplied($conn, $campaign_id){
 		$reply_email = str_ireplace(">","",explode("<",$row['sender_from'])[1]); //xxx <username@domain.com> => username@domain.com 
 		$sender_acc_pwd = $row['sender_acc_pwd'];
 		$sender_mailbox = $row['sender_mailbox'];
-		$sender_list_cust_headers = explode("$#$",$row['cust_headers']);
-		foreach($sender_list_cust_headers as $header){
-		    $header_split = explode(':', $header);
-		    if(strtoupper($header_split[0]) == 'REPLY-TO'){
-		    	$header_split = $header_split[1];
-		    	break;
-		    }
-		}
 
 		//------------------Get mail subject---------
-		$stmt = $conn->prepare("SELECT mail_template_subject FROM tb_core_mailcamp_template_list where mail_template_id = ?");
-		$stmt->bind_param("s", $mail_template_id);
+		$stmt = $conn->prepare("SELECT id FROM tb_data_mailcamp_live WHERE campaign_id = ?");
+		$stmt->bind_param("s", $campaign_id);
 		$stmt->execute();
 		$result = $stmt->get_result();
-		if($row = $result->fetch_assoc())
-			$mail_template_subject = preg_replace('/{{.+}}/', '', $row['mail_template_subject']);
-		else
-			die(json_encode(['error'=>'Unable to find email template']));
+		$CIDs = [];
+		while($row = $result->fetch_assoc())
+			array_push($CIDs,$row['id']);
+		
+		//print_r($CIDs);
 
-		//----------------------Get user emails----------
-		$stmt = $conn->prepare("SELECT user_data FROM tb_core_mailcamp_user_group where user_group_id = ?");
-		$stmt->bind_param("s", $user_group_id);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		if($row = $result->fetch_assoc()){
-			$user_data=json_decode($row['user_data'],true);
-			$arr_emails=[];
-			foreach($user_data as $user)
-			    array_push($arr_emails,$user['email']);
-		}
-		else
-			die(json_encode(['error'=>'User group is empty']));
 		//-----------
 		$arr_msg_info =[];
 
 		try{
 			if($read = imap_open($sender_mailbox,$reply_email,$sender_acc_pwd)){			 
-				$array = imap_search($read,'SUBJECT "Re:" SUBJECT "'.$mail_template_subject.'"'); // search subject and "re:" in subject
+				$array = imap_search($read,'TEXT "@sniperphish.generated"'); // match for Message-ID header {{CID}}@sniperphish.generated
 				if($array) {
 					foreach($array as $result) {
-						$overview = imap_fetch_overview($read,$result,0);//var_dump($overview);
+						$overview = imap_fetch_overview($read,$result,0); //var_dump($overview[0]->references);
 						$reply_mail_subject = $overview[0]->subject;
+						preg_match("/([A-Za-z0-9])+(@sniperphish.generated)/", $overview[0]->references,$matches);
+						$tmp = explode("@sniperphish.generated",$overview[0]->references)[0];
+						$references_header_val = explode("<",$tmp)[1];	//xxx {{CID}}@sniperphish.generated> => {{CID}} 
 
 						if (filter_var($overview[0]->from, FILTER_VALIDATE_EMAIL))
 		                    $msg_from = $overview[0]->from;
 		                else
 		                    $msg_from = str_ireplace(">","",explode("<",$overview[0]->from)[1]);	//xxx <username@domain.com> => username@domain.com 
-							
-					    if(in_array($msg_from, array_map('strtolower', $arr_emails))){
+
+					    if(in_array($references_header_val, $CIDs)){
 					    	$msg_time = $overview[0]->date;			
 					    	$msg_body = imap_fetchbody ($read,$result,1);
 					    	if (!array_key_exists($msg_from, $arr_msg_info))
@@ -364,9 +346,9 @@ function getMailReplied($conn, $campaign_id){
 		
 		
 		if(empty($arr_err) || $arr_err[0] == false)
-			echo json_encode(['total_user_email_count'=>count($arr_emails), 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
+			echo json_encode(['reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
 		else
-			echo json_encode(['error'=>$arr_err, 'total_user_email_count'=>count($arr_emails), 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
+			echo json_encode(['error'=>$arr_err, 'reply_count_unique'=>count($arr_msg_info), 'msg_info'=>$arr_msg_info]);
 	}			
 	$stmt->close();
 }
