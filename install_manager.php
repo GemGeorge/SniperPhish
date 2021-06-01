@@ -32,6 +32,14 @@ function checkRequirements()
         $resp_arr['PHP version ' . phpversion() ] = "PHP version >= 7.3 is required"; 
         $f_error = true;
     }
+	
+	if (in_array("mysqli", $extensions)) 
+        $resp_arr['PHP extension mysqli'] = true;
+    else
+    {
+        $resp_arr['PHP extension mysqli'] = "mysqli extension should be loaded";
+        $f_error = true;
+    }
 
     if (in_array("imap", $extensions)) 
         $resp_arr['PHP extension imap'] = true;
