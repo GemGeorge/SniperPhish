@@ -1231,7 +1231,7 @@ function loadTableCampaignResult() {
                 if(item.ip_info[column] == null)
                     tb_data += "<td>-</td>";
                 else
-                    tb_data += "<td>" + item[column] + "</td>";
+                    tb_data += "<td>" + item.ip_info[column] + "</td>";
             }
             else
             if(column.startsWith('wcm_') || column.startsWith('wpv_') || column.startsWith('wfs_') || column.startsWith('Page-'))

@@ -33,10 +33,12 @@ $public_ip = htmlspecialchars($public_ip);
 //Verify campaign is active
 $user_details = verifyMailCmapaignUser($conn, $campaign_id, $user_id);
 if(verifyMailCmapaign($conn, $campaign_id) == true && $user_details != 'empty'){
+
     $user_agent = htmlspecialchars($_SERVER['HTTP_USER_AGENT']);   
     $date_time = round(microtime(true) * 1000); //(new DateTime())->format('d-m-Y H:i:s.u');    
     $user_os = $ua_info->getPlatformVersion();
     $device_type = $ua_info->isMobile()?"Mobile":"Desktop";
+	$ip_info = getIPInfo($conn, $public_ip);
     $mail_open_times ='';
     $allHeaders ='';
 
@@ -59,6 +61,9 @@ if(verifyMailCmapaign($conn, $campaign_id) == true && $user_details != 'empty'){
         array_push($tmp,$public_ip);
         $public_ip = json_encode($tmp);
     }
+
+    if(!empty($user_details['ip_info']))
+        $ip_info = $user_details['ip_info'];
 
     if(empty($user_details['user_agent']))
         $user_agent = json_encode(array($user_agent));
@@ -103,8 +108,8 @@ if(verifyMailCmapaign($conn, $campaign_id) == true && $user_details != 'empty'){
         $allHeaders = json_encode($tmp);
     }
 
-    $stmt = $conn->prepare("UPDATE tb_data_mailcamp_live SET mail_open_times=?,public_ip=?,user_agent=?,mail_client=?,platform=?,device_type=?,all_headers=? WHERE campaign_id=? AND id=?");
-    $stmt->bind_param('sssssssss', $mail_open_times, $public_ip, $user_agent,$mail_client,$user_os,$device_type,$allHeaders,$campaign_id,$user_id);
+    $stmt = $conn->prepare("UPDATE tb_data_mailcamp_live SET mail_open_times=?,public_ip=?,ip_info=?,user_agent=?,mail_client=?,platform=?,device_type=?,all_headers=? WHERE campaign_id=? AND id=?");
+    $stmt->bind_param('ssssssssss', $mail_open_times,$public_ip,$ip_info,$user_agent,$mail_client,$user_os,$device_type,$allHeaders,$campaign_id,$user_id);
     $stmt->execute();
 }
 
