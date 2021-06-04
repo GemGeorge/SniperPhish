@@ -313,31 +313,31 @@ function getMailReplied($conn, $campaign_id){
 		try{
 			if($read = imap_open($sender_mailbox,$reply_email,$sender_acc_pwd)){			 
 				$array = imap_search($read,'TEXT "@sniperphish.generated"'); // match for Message-ID header {{CID}}@sniperphish.generated
-				if($array) {
-					foreach($array as $result) {
-						$overview = imap_fetch_overview($read,$result,0); //var_dump($overview[0]->references);
-						$reply_mail_subject = $overview[0]->subject;
-						preg_match("/([A-Za-z0-9])+(@sniperphish.generated)/", $overview[0]->references,$matches);
-						$tmp = explode("@sniperphish.generated",$overview[0]->references)[0];
-						$references_header_val = explode("<",$tmp)[1];	//xxx {{CID}}@sniperphish.generated> => {{CID}} 
+				foreach($array as $result) {
+					$overview = imap_fetch_overview($read,$result,0); //var_dump($overview[0]->references);
+					if($overview[0]->references == NULL)	
+						$tmp = explode("@sniperphish.generated",$overview[0]->in_reply_to)[0]; //check reply mail header in_reply_to
+					else
+						$tmp = explode("@sniperphish.generated",$overview[0]->references)[0]; //check reply mail header references
+					$header_to_check = explode("<",$tmp)[1];	//xxx {{CID}}@sniperphish.generated> => {{CID}} 
 
-						if (filter_var($overview[0]->from, FILTER_VALIDATE_EMAIL))
-		                    $msg_from = $overview[0]->from;
-		                else
-		                    $msg_from = str_ireplace(">","",explode("<",$overview[0]->from)[1]);	//xxx <username@domain.com> => username@domain.com 
+					//get email address part only
+					if (filter_var($overview[0]->from, FILTER_VALIDATE_EMAIL))
+	                    $msg_from = $overview[0]->from;
+	                else
+	                    $msg_from = str_ireplace(">","",explode("<",$overview[0]->from)[1]);	//xxx <username@domain.com> => username@domain.com 
 
-					    if(in_array($references_header_val, $CIDs)){
-					    	$msg_time = $overview[0]->date;			
-					    	$msg_body = imap_fetchbody ($read,$result,1);
-					    	if (!array_key_exists($msg_from, $arr_msg_info))
-							    $arr_msg_info[$msg_from] = ['msg_time'=>[$msg_time],'msg_body'=>[$msg_body]];
-							else{
-								array_push($arr_msg_info[$msg_from]['msg_time'],$msg_time);
-								array_push($arr_msg_info[$msg_from]['msg_body'],$msg_body);
-							}	
-					    }
-					}
-				}	
+				    if(in_array($header_to_check, $CIDs)){
+				    	$msg_time = $overview[0]->date;			
+				    	$msg_body = imap_fetchbody ($read,$result,1);
+				    	if (!array_key_exists($msg_from, $arr_msg_info))
+						    $arr_msg_info[$msg_from] = ['msg_time'=>[$msg_time],'msg_body'=>[$msg_body]];
+						else{
+							array_push($arr_msg_info[$msg_from]['msg_time'],$msg_time);
+							array_push($arr_msg_info[$msg_from]['msg_body'],$msg_body);
+						}	
+				    }
+				}
 			}
 		}catch(Exception $e) {
 			array_push($arr_err,$e->getMessage());
