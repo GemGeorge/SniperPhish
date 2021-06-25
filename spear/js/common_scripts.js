@@ -7,7 +7,10 @@ $(function() {
     checkSniperPhishProcess();
     $('[data-toggle="tooltip"]').tooltip({
         trigger : 'hover'
-    })  
+    });
+    $('[data-toggle="tooltip"]').on('click mouseleave', function () {console.log(9)
+      $('[data-toggle="tooltip"]').tooltip('hide');
+    });
 });
 function displayLoader(dis_val,type="normal"){
     if(type == "small")

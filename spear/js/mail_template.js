@@ -418,6 +418,7 @@ function addAttachmentLabel(file_id,file_name, file_disp_name, inline){
 }
 
 function removeAttachment(e){
+    $('[data-toggle="tooltip"]').tooltip("hide");
     $(e).closest('.row').remove();
     triggerAttachmentChanges();
 }
