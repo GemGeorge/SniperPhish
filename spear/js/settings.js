@@ -23,6 +23,12 @@ function modifyAccount(e){
 	var setting_field_new_pwd = $("#setting_field_new_pwd").val();
 	var setting_field_confirm_pwd = $("#setting_field_confirm_pwd").val();
 
+    if(RegTest(setting_field_mail, 'EMAIL') == false){
+        $("#setting_field_mail").addClass("is-invalid");
+        return;
+    } else
+        $("#setting_field_mail").removeClass("is-invalid");
+
     if (setting_field_old_pwd == "") {
         $("#setting_field_old_pwd").addClass("is-invalid");
         return;

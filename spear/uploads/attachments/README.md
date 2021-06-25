@@ -1,0 +1,1 @@
+This folder contains files used in email message such as attachments.

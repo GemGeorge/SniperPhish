@@ -1,9 +1,6 @@
 <?php
-    @ob_start();
-    session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession();
+   isSessionValid(true);
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">

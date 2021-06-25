@@ -1,7 +1,4 @@
 <?php
-   @ob_start();
-   session_start();
-
    require_once(dirname(__FILE__) . '/session_manager.php');
 ?>
 <!DOCTYPE html>
@@ -223,7 +220,7 @@
                                     </div>
                                     <div class="col-md-4">
                                        <h5 class="card-title text-center"><span>Email Replied</span></h5>
-                                       <div id="piechart_mail_total_replied" ></div>
+                                       <div id="piechart_mail_total_replied" class="center"></div>
                                     </div>
                                  </div>
                                  <div class="row m-t-30">
@@ -296,9 +293,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Select Campaign</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true ">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -378,9 +373,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Export Report</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -412,9 +405,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Reply Emails</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body" id="modal_reply_mails_body" >
                         <ul class="nav nav-tabs" role="tablist">  
@@ -432,9 +423,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Dashboard Display Settings</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -551,9 +540,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Dashboard Access Link</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -631,7 +618,7 @@
                <script defer src="js/libs/pdfmake.min.js"></script>
                <script defer src="js/libs/vfs_fonts.js"></script>    
                <script defer src="js/libs/jszip.min.js"></script>';            
-            checkSession();
+            isSessionValid(true);
          }
       ?>   
       <?php
@@ -642,7 +629,8 @@
                   loadTableCampaignList("' . doFilter($_GET['mcamp'],'ALPHA_NUM') . '","' . doFilter($_GET['tracker'],'ALPHA_NUM') . '");';
          else
             echo 'var g_campaign_id ="", g_tracker_id="";
-                  loadTableCampaignList("",""); $("#ModalCampaignList").modal("toggle");';
+                  loadTableCampaignList("",""); 
+                  $(function() { $("#ModalCampaignList").modal("toggle"); });';
          echo '</script>';
       ?>
 

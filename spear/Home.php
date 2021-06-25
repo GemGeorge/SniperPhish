@@ -1,9 +1,6 @@
 <?php
-    @ob_start();
-    session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');   
-   checkSession();
+   isSessionValid(true);
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
@@ -17,7 +14,6 @@
       <!-- Favicon icon -->
       <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
       <title>SniperPhish - The Web-Email Spear Phishing Toolkit</title>
-      <!-- Custom CSS -->
       <!-- Custom CSS -->
       <link rel="stylesheet" type="text/css" href="css/style.min.css">
       <link rel="stylesheet" type="text/css" href="css/toastr.min.css">

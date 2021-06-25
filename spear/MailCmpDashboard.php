@@ -1,7 +1,4 @@
 <?php
-   @ob_start();
-   session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');
 ?>
 <!DOCTYPE html>
@@ -39,7 +36,8 @@
       <!-- ============================================================== -->
       <!-- Main wrapper - style you can find in pages.scss -->
       <!-- ============================================================== -->
-      <div id="main-wrapper">
+      <div id="main-wrapper" data-layout="vertical" data-navbarbg="skin5" data-sidebartype="full"
+        data-sidebar-position="absolute" data-header-position="absolute" data-boxed-layout="full">
          <!-- ============================================================== -->
          <!-- Topbar header - style you can find in pages.scss -->
          <!-- ============================================================== -->
@@ -141,7 +139,7 @@
                               </div>
                               <div class="col-md-3">                           
                                  <h5 class="card-title text-center"><span>Email Replied</span></h5>
-                                 <div id="piechart_mail_total_replied" ></div>
+                                 <div id="piechart_mail_total_replied" class="center"></div>
                               </div>
                            </div>
                         </div>
@@ -219,9 +217,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Select Email Campaign</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true ">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -251,9 +247,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Export Report</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -285,9 +279,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Reply Emails</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body" id="modal_reply_mails_body" >
                         <ul class="nav nav-tabs" role="tablist">  
@@ -306,9 +298,7 @@
                   <div class="modal-content" style="width: 120%;">
                      <div class="modal-header">
                         <h5 class="modal-title">Dashboard Display Settings</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -339,9 +329,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Dashboard Access Link</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -419,7 +407,7 @@
                <script defer src="js/libs/pdfmake.min.js"></script>
                <script defer src="js/libs/vfs_fonts.js"></script>    
                <script defer src="js/libs/jszip.min.js"></script>';            
-            checkSession();
+            isSessionValid(true);
          }
       //------------------------------------------
          echo '<script>';
@@ -429,7 +417,7 @@
                   campaignSelected("' . doFilter($_GET['mcamp'],'ALPHA_NUM') . '");';
          else
             echo 'var g_campaign_id ="", g_tracker_id="";
-                  $("#ModalCampaignList").modal("toggle");';
+                  $(function() {$("#ModalCampaignList").modal("toggle");});';
          
          echo '</script>';
       ?>

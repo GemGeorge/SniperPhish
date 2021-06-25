@@ -884,10 +884,10 @@ function updatePieTotalMailReplied(total_user_email_count) {
             tracker_id: g_tracker_id
         }),
     }).done(function (data) {
+        $("#piechart_mail_total_replied").attr("hidden", false);
+        $("#piechart_mail_total_replied").parent().children().remove('.loadercust');
         if (!data.error) {
             window.reply_emails = data;
-            $("#piechart_mail_total_replied").attr("hidden", false);
-            $("#piechart_mail_total_replied").parent().children().remove('.loadercust');
             loadTableCampaignResult();
 
             var reply_count_unique = Object.keys(data['msg_info']).length;
@@ -971,8 +971,10 @@ function updatePieTotalMailReplied(total_user_email_count) {
             arr_chart_data[2] = reply_percent;
             radialchart_overview_mailcamp.updateSeries(arr_chart_data);   
         }
-        else
+        else{
             toastr.error('', data.error);
+            $("#piechart_mail_total_replied").text('Loading error!');
+        }
     });
 }
 

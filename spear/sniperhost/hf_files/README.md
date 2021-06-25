@@ -1,0 +1,1 @@
+This folder contains files used for SniperHost file hosting.

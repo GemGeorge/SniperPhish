@@ -52,7 +52,7 @@ function addUserToTable() {
     if (field_name == "")
         field_name = "Empty";
 
-    if (validateEmailAddress(field_email) == false) {
+    if (RegTest(field_email, "EMAIL") == false) {
         $("#tablevalue_email").addClass("is-invalid");
         return;
     } else
@@ -90,7 +90,7 @@ function editRow_action() {
     if (field_name == "")
         field_name = "Empty";
 
-    if (validateEmailAddress(field_email) == false) {
+    if (RegTest(field_email, "EMAIL") == false) {
         $("#modal_tablevalue_email").addClass("is-invalid");
         return;
     } else
@@ -126,13 +126,13 @@ $('input[type=file]').change(function() {
 
                 var arr_row_contents = arr_full_contents[i].split(',');
 
-                if (validateEmailAddress(arr_row_contents[0]) == true) { //if no name
+                if (RegTest(arr_row_contents[0], "EMAIL") == true) { //if no name
                     data_email = arr_row_contents[0];
                     if (arr_row_contents[1] != undefined) //2nd colum value is in notes section
                         data_notes = arr_row_contents[1];
                 }
                 else
-                    if (validateEmailAddress(arr_row_contents[1]) == true) { //if 2nd column is email
+                    if (RegTest(arr_row_contents[1], "EMAIL") == true) { //if 2nd column is email
                         if (arr_row_contents[0] != undefined) //set empty if 1st colum is empty
                             data_name = arr_row_contents[0];
                         data_email = arr_row_contents[1];
@@ -152,7 +152,7 @@ $('input[type=file]').change(function() {
 });
 
 function saveUserGroup(e) {
-    if (!$('#user_group_name').val().match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest($('#user_group_name').val(),'COMMON') == false) {
         $("#user_group_name").addClass("is-invalid");
         toastr.error('', 'Empty/Unsupported character!');
         return;
@@ -247,7 +247,7 @@ function promptUserGroupCopy(id) {
 }
 
 function UserGroupCopy() {
-    if (!$('#modal_new_user_group_name').val().match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest($('#modal_new_user_group_name').val(), 'COMMON') == false) {
         $("#modal_new_user_group_name").addClass("is-invalid");
         toastr.error('', 'Empty/Unsupported character!');
         return;

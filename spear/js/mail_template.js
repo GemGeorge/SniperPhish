@@ -43,13 +43,8 @@ var bt_more_tools = `<div class="note-btn-group btn-group">
 
 
 $(function() {
-    $('.accordion .panel-default .panel-heading').click(function (e) {    
-        if($('#collapseOne').hasClass('show'))
-            $('.accordion').removeClass("according-manage");
-        else
-            $('.accordion').addClass("according-manage");
-
-        $('.accordion .panel-collapse').collapse('toggle');
+    $('.accordion .panel-default .panel-heading').click(function (e) {
+        $(this).parent().find('.panel-collapse').collapse('toggle');
     });
 
     $("#mail_content_type_selector").select2({
@@ -78,7 +73,7 @@ $(function() {
             action_type: "get_sender_list"
          })
     }).done(function (data) {
-        if(!data['error']){
+        if(!data.error){
             g_sender_list = data;
             $.each(g_sender_list, function() {
                 $("#mail_sender_selector").append("<option value='" + this.sender_list_id + "'>" + this.sender_name + "</option>");
@@ -173,7 +168,7 @@ function getTrackerImageType(){
 }
 
 function saveMailTemplate(e) {
-    if (!$('#mail_template_name').val().match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest($('#mail_template_name').val(), "COMMON") == false) {
         $("#mail_template_name").addClass("is-invalid");
         toastr.error('', 'Empty/Unsupported character!');
         return;
@@ -230,7 +225,7 @@ function getMailTemplateFromTemplateId(id) {
         $('#summernote').summernote('code', data.mail_template_content);//.replace(/\n/gi, "<br/>"));
         $("#mail_content_type_selector").val(data.mail_content_type).trigger("change");
         $.each(data.attachment, function(i,file) {
-            addAttachmentLabel(file.file_id,file.file_name);
+            addAttachmentLabel(file.file_id, file.file_name, file.file_disp_name, file.inline);
         });
 
         if(data.timage_type == 0)
@@ -276,7 +271,7 @@ function promptMailTemplateCopy(id) {
 }
 
 function mailTemplateCopy() {
-    if (!$('#modal_new_mail_template_name').val().match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest($('#modal_new_mail_template_name').val(), "COMMON") == false) {
         $("#modal_new_mail_template_name").addClass("is-invalid");
         toastr.error('', 'Empty/Unsupported character!');
         return;
@@ -374,7 +369,7 @@ function uploadAttachments(fname,fsize,ftype,fb64){
         })
     }).done(function (response) {
         if(response.result == "success"){
-            addAttachmentLabel(response.file_id,fname);                
+            addAttachmentLabel(response.file_id, fname, fname, false);                
             triggerAttachmentChanges();      
         }
         else
@@ -386,27 +381,39 @@ function catchAttachments(){
     var attachments = [];
     $($("#attachments_area").children()).each(function(){
         $(this).data('att_info').inline=$(this).find('input[name="cb_att_inline"]').is(':checked');
+        $(this).data('att_info').file_disp_name=$(this).find('input[name="disp_name"]').val();
         attachments.push($(this).data('att_info'));
     });
     return attachments;
 }
 
-function addAttachmentLabel(file_id,file_name){
-    $("#attachments_area").append(`<div class="col-md-12 row">
-                                    <div class="alert alert-success alert-rounded col-md-11">
-                                    <i class="mdi mdi-attachment m-r-5"></i> 
-                                    <span>` + file_name + `</span>
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true" onclick="removeAttachment(this)">×</span> </button>
-                                 </div>
+function addAttachmentLabel(file_id,file_name, file_disp_name, inline){
+    if(inline)
+        var inline_attr = 'checked';
+    else
+        var inline_attr = '';
 
-                                 <div class="custom-control custom-switch col-md-1 m-t-10 text-right">
-                                  <label class="switch">
-                                      <input type="checkbox" name="cb_att_inline">
-                                      <span class="slider round" data-toggle="tooltip" title="Inline attachment" data-placement="top"></span>
-                                  </label>
-                                </div>
-                              </div>`);
-    $("#attachments_area").children(":last").data('att_info', { file_id: file_id, file_name: file_name});
+    $("#attachments_area").append(`<div class="row">
+                                    <div class="col-md-5">
+                                       <div class="form-control alert alert-success alert-rounded ">
+                                          <i class="mdi mdi-attachment m-r-5"></i> 
+                                          <span>` + file_name + `</span>
+                                       </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                       <input type="text" name="disp_name" class="form-control" placeholder="Name to show" value="` + file_disp_name + `">
+                                    </div>
+                                    <div class="custom-control custom-switch col-md-1 m-t-5 text-right">
+                                     <label class="switch">
+                                         <input type="checkbox" name="cb_att_inline" ` + inline_attr + `>
+                                         <span class="slider round" data-toggle="tooltip" title="Inline attachment" data-placement="top"></span>
+                                     </label>
+                                   </div>
+                                   <div class="col-md-1 text-right">
+                                       <button type="button" class="btn btn-danger btn-sm" title="Remove attachment" data-toggle="tooltip" onclick="removeAttachment(this)"><i class="mdi mdi-close"></i></button>
+                                    </div>
+                                 </div>`);
+    $("#attachments_area").children(":last").data('att_info', { file_id: file_id, file_name: file_name});   //remaining info is added from catchAttachments()
     $('[data-toggle="tooltip"]').tooltip();
 }
 
@@ -476,7 +483,7 @@ function modalTestDeliveryAction(e){
         return;
     }
 
-    if (validateEmailAddress(test_to_address) == false) {
+    if (RegTest(test_to_address, "EMAIL") == false) {
         $("#modal_mail_sender_test_mail_to").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;

@@ -1,12 +1,13 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+   @ob_start();
+   session_start();
+}
 require_once(dirname(__FILE__) . '/db.php');
 require_once(dirname(__FILE__) . '/common_functions.php');
+error_reporting(E_ERROR | E_PARSE); //Disable warnings
 //-----------------------------
 
-function checkSession($redirection=true){	
-	if(isSessionRefreshed() == false)
-		terminateSession();
-}
 function validateLogin($username,$pwd){	
 	global $conn;
 	$pwdhash = hash("sha256", $pwd, false);
@@ -16,31 +17,24 @@ function validateLogin($username,$pwd){
 	$row = $stmt->get_result()->fetch_row();
 	if($row[0] > 0){
 		setServerVariables($conn);
-		startProcess(getOSType());
+		$os = getOSType();
+		if(!isProcessRunning($conn,$os))
+			startProcess($os);
 		return true;
 	}
 	else
 		return false;
 }
 
-function isSessionRefreshed(){
-	if(isset($_SESSION['username']) && isset($_SESSION['lastaccess'])){
-		if(time()-intval($_SESSION['lastaccess']) > 3600 )	//expire session if more than x seconds
-			return false; //session expired
-		else
-			$_SESSION['lastaccess'] = time();
+function isSessionValid($f_redirection=false){	//this check refreshes session expiry
+	if (isset($_SESSION['username'])) {
+		createSession(false,$_SESSION['username']);
+		return true;
 	}
-	else
-		return false; //session expired
-	return true;
-}
-
-function terminateSession(){
-	session_unset();
-	session_destroy();
-	ob_end_clean();   // clear output buffer
-	header("Location: /spear/");
-	die();
+	else{
+		terminateSession($f_redirection); //redirect to home if true
+		return false;
+	}
 }
 
 function setServerVariables($conn){
@@ -85,27 +79,35 @@ function amIPublic($tk_id,$campaign_id,$tracker_id=""){
 		return false;
 }
 
-//------
+//====================================
 
 if (isset($_POST)) {
 	$POSTJ = json_decode(file_get_contents('php://input'),true);
 
-	if(isset($POSTJ['action_type']) && isset($POSTJ['tk_id']))
-		if($POSTJ['action_type'] == "manage_dashboard_access"){
-			if(isset($POSTJ['campaign_id']) && isset($POSTJ['tracker_id']))
-				manageDashboardAccess($POSTJ['tk_id'],$POSTJ['ctrl_val'],$POSTJ['campaign_id'],$POSTJ['tracker_id']);
+	if(isset($POSTJ['action_type'])){ 
+
+		if(isset($POSTJ['tk_id']))
+			if($POSTJ['action_type'] == "manage_dashboard_access"){
+				if(isset($POSTJ['campaign_id']) && isset($POSTJ['tracker_id']))
+					manageDashboardAccess($POSTJ['tk_id'],$POSTJ['ctrl_val'],$POSTJ['campaign_id'],$POSTJ['tracker_id']);
+				else
+					if(isset($POSTJ['campaign_id']))
+						manageDashboardAccess($POSTJ['tk_id'],$POSTJ['ctrl_val'],$POSTJ['campaign_id']);
+			}
 			else
-				if(isset($POSTJ['campaign_id']))
-					manageDashboardAccess($POSTJ['tk_id'],$POSTJ['ctrl_val'],$POSTJ['campaign_id']);
-		}
-		else
-		if($POSTJ['action_type'] == "get_access_info"){
-			if(isset($POSTJ['campaign_id']) && isset($POSTJ['tracker_id']))
-				getAccessInfo($POSTJ['tk_id'],$POSTJ['campaign_id'],$POSTJ['tracker_id']);
-			else
-				if(isset($POSTJ['campaign_id']))
-					getAccessInfo($POSTJ['tk_id'],$POSTJ['campaign_id']);
-		}
+			if($POSTJ['action_type'] == "get_access_info"){
+				if(isset($POSTJ['campaign_id']) && isset($POSTJ['tracker_id']))
+					getAccessInfo($POSTJ['tk_id'],$POSTJ['campaign_id'],$POSTJ['tracker_id']);
+				else
+					if(isset($POSTJ['campaign_id']))
+						getAccessInfo($POSTJ['tk_id'],$POSTJ['campaign_id']);
+			}
+
+		if($POSTJ['action_type'] == "re_login")
+			doReLogin($POSTJ['username'], $POSTJ['pwd']);
+		if($POSTJ['action_type'] == "terminate_session")
+			terminateSession(false);
+	}
 }
 
 function manageDashboardAccess($tk_id,$ctrl_val,$campaign_id,$tracker_id=""){	// For web-email camp
@@ -160,4 +162,44 @@ function getAccessInfo($tk_id, $campaign_id, $tracker_id=""){
 }
 //-----------------------------------End Public Access-------------------------------
 
+function doReLogin($username, $pwd){
+	header('Content-Type: application/json');
+	global $conn;
+
+	$pwdhash = hash("sha256", $pwd, false);
+	$stmt = $conn->prepare("SELECT COUNT(*) FROM tb_main where username=? AND password=?");
+	$stmt->bind_param('ss', $username,$pwdhash);
+	$stmt->execute();
+	$row = $stmt->get_result()->fetch_row();
+	if($row[0] > 0){
+		createSession(true,$username);
+		echo json_encode(['result' => 'success']);	
+	}
+	else
+		echo json_encode(['result' => 'failed']);	
+}
+
+function createSession($f_regenerate,$username){
+	session_destroy();
+	session_set_cookie_params([
+            'lifetime' => 86400,	//86400=1 day
+            'secure' => false,
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
+	session_start();
+
+	if($f_regenerate)
+		session_regenerate_id(true);
+	$_SESSION['username'] = $username;
+}
+
+function terminateSession($redirection=true){
+	session_destroy();
+	if($redirection){
+		ob_end_clean();   // clear output buffer
+		header("Location: /spear/");
+		die();
+	}
+}
 ?>

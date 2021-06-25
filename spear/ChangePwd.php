@@ -3,10 +3,10 @@
    require_once(dirname(__FILE__) . '/common_functions.php');
    if(isset($_GET['token'])){  
       if(!isTokenValid($conn,$_GET['token']))
-        die("Incorrect request. Token may be inavlid");
+        die("Incorrect request. Token may be invalid");
    }
    else
-    die();
+      die();
 ?>
 <!DOCTYPE html>
 <html dir="ltr">

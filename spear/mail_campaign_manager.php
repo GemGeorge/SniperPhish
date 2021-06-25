@@ -1,7 +1,4 @@
 <?php
-//-------------------Session check-----------------------
-@ob_start();
-session_start();
 require_once(dirname(__FILE__) . '/session_manager.php');
 //-------------------------------------------------------
 date_default_timezone_set('UTC');
@@ -13,7 +10,7 @@ if (isset($_POST)) {
 
 	if(isset($POSTJ['action_type'])){
 
-		if(isSessionRefreshed() == false){
+		if(isSessionValid() == false){
 			$OPS = ['multi_get_mcampinfo_from_mcamp_list_id_get_live_mcamp_data','get_user_group_data','get_mail_replied'];	//permited requests
 			if(isset($POSTJ['tk_id']) && in_array($POSTJ['action_type'],$OPS)){
 				if(isset($POSTJ['campaign_id']) && isset($POSTJ['tracker_id'])){

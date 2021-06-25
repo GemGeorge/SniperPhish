@@ -1,9 +1,6 @@
 <?php
-//-------------------Session check-----------------------
-@ob_start();
-session_start();
 require_once(dirname(__FILE__) . '/session_manager.php');
-if(isSessionRefreshed() == false)
+if(isSessionValid() == false)
 	die("Access denied");
 //-------------------------------------------------------
 date_default_timezone_set('UTC');

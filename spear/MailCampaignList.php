@@ -1,9 +1,6 @@
 <?php
-    @ob_start();
-    session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession();
+   isSessionValid(true);
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
@@ -236,9 +233,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Are you sure?</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body" id="modal_prompts_body">
                         content...
@@ -255,9 +250,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Enter new Email campaign name</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row  m-t-20">

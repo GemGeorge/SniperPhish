@@ -1,13 +1,10 @@
 <?php
-//-------------------Session check-----------------------
-@ob_start();
-session_start();
 require_once(dirname(__FILE__) . '/session_manager.php');
 require_once(dirname(__FILE__) . '/common_functions.php');
 require_once(dirname(__FILE__) . '/libs/swiftmailer/autoload.php');
 require_once(dirname(__FILE__) . '/libs/qr_barcode/qrcode.php');
 require_once(dirname(__FILE__) . '/libs/qr_barcode/barcode.php');
-if(isSessionRefreshed() == false)
+if(isSessionValid() == false)
 	die("Access denied");
 //-------------------------------------------------------
 date_default_timezone_set('UTC');
@@ -260,9 +257,17 @@ function uploadAttachment($conn,&$POSTJ){
 	$file_id = $mail_template_id.'_'.time();
 
 	$target_file = 'uploads/attachments/'.$file_id.'.att';
+
+	if (!is_dir('uploads/attachments/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory uploads/attachments/ does not exist']));
+	if (!is_writable('uploads/attachments/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory uploads/attachments/ has no write permission']));
+
 	try{
-    	file_put_contents($target_file,$binary_data);
-    	echo(json_encode(['result' => 'success', 'file_id' => $file_id]));	
+    	if(file_put_contents($target_file,$binary_data))
+    		echo(json_encode(['result' => 'success', 'file_id' => $file_id]));	
+    	else
+			echo(json_encode(['result' => 'failed', 'error' => 'File upload failed!']));	
     }catch(Exception $e) {
 		echo(json_encode(['result' => 'failed', 'error' => $e->getMessage()]));	
 	}       
@@ -277,11 +282,19 @@ function uploadMailBodyFiles($conn,&$POSTJ){
 	$file_id = $mail_template_id.'_'.$file_id_part;
 
 	$target_file = 'uploads/attachments/'.$file_id.'.mbf';
+
+	if (!is_dir('uploads/attachments/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory uploads/attachments/ does not exist']));
+	if (!is_writable('uploads/attachments/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory uploads/attachments/ has no write permission']));
+
 	try{
-    	file_put_contents($target_file,$binary_data);
-    	echo(json_encode(['result' => 'success', 'file_id' => $file_id, "mbf" => $file_id_part]));	
+    	if(file_put_contents($target_file,$binary_data))
+    		echo(json_encode(['result' => 'success', 'file_id' => $file_id, "mbf" => $file_id_part]));	
+    	else
+    		echo(json_encode(['result' => 'failed', 'error' => $e->getMessage()]));	
     }catch(Exception $e) {
-		echo(json_encode(['result' => 'failed', 'error' => $e->getMessage()]));	
+		echo(json_encode(['result' => 'failed', 'error' =>'File upload failed!']));	
 	}       
 }
 
@@ -457,11 +470,12 @@ function sendTestMailSample($conn,$POSTJ){
 	$mail_subject = $POSTJ['mail_subject'];
 	$mail_body = $POSTJ['mail_body'];
 	$mail_content_type = $POSTJ['mail_content_type'];
+	$mail_attachment = $POSTJ['attachments'];
 
 
 	$keyword_vals = array();
 	$serv_variables = getServerVariable($conn);
-	$CID = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyz', ceil(10/strlen($x)) )),1,10);
+	$CID = getRandomStr(10);
 
     $keyword_vals['{{CID}}'] = $CID;
     $keyword_vals['{{MID}}'] = "MailCampaign_id";
@@ -481,6 +495,16 @@ function sendTestMailSample($conn,$POSTJ){
 	$mail_subject = filterKeywords($mail_subject,$keyword_vals);
 	$mail_body = filterKeywords($mail_body,$keyword_vals);  	
 	$mail_body = filterQRBarCode($mail_body,$keyword_vals,$message);
+
+	foreach ($mail_attachment as $attachment) {
+		$file_path = 'uploads/attachments/'.$attachment['file_id'].'.att';
+		$file_disp_name = filterKeywords($attachment['file_disp_name'],$keyword_vals);
+
+		if($attachment['inline'])
+	    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($file_disp_name)->setDisposition('inline'));
+	    else
+	    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($file_disp_name));
+	}
 
 	//-----------------------------------
 	if(empty($sender_pwd)){

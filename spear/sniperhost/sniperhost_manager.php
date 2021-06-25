@@ -1,13 +1,11 @@
 <?php
 //-------------------Session check-----------------------
-@ob_start();
-session_start();
 require_once(dirname(__FILE__,2) . '/db.php');
 require_once(dirname(__FILE__,2) . '/session_manager.php');
 require_once(dirname(__FILE__,2) . '/common_functions.php');
 require_once("lib/Base32.php");
 require_once("lib/base85.class.php");
-if(isSessionRefreshed() == false)
+if(isSessionValid() == false)
 	die("Access denied");
 //-------------------------------------------------------
 use Base32\Base32;
@@ -81,6 +79,11 @@ function savePlaintext($conn, &$POSTJ){
 	$in_data_path = 'ht_files/'.$ht_id.'_in.ptdata';
 	$out_data_path = 'ht_files/'.$ht_id.'_out.ptdata';
 
+	if (!is_dir('ht_files/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory sniperhost/ht_files/ does not exist']));
+	if (!is_writable('ht_files/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory sniperhost/ht_files/ has no write permission']));
+
 	file_put_contents($in_data_path, $in_data);	//$in_data in base64 encoded
 	file_put_contents($out_data_path, getResultAlg(true, $POSTJ));	//$out_data_path in base64 encoded
 
@@ -153,6 +156,11 @@ function saveFile($conn, &$POSTJ){
 	$file_header = $POSTJ['file_header'];
 	$file_original_name = $POSTJ['file_name'];	//uploading file name
 	$save_path = "hf_files/".$hf_id.".hfile";
+
+	if (!is_dir('hf_files/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory sniperhost/hf_files/ does not exist']));
+	if (!is_writable('hf_files/')) 
+		die(json_encode(['result' => 'failed', 'error' => 'Directory sniperhost/hf_files/ has no write permission']));
 
 	if(checkFileIDExist($conn,$hf_id)){
 		if(empty($POSTJ['file_b64'])){

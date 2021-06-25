@@ -136,7 +136,7 @@ function saveMailCampaignAction() {
     else
         var cb_act_deact_campaign = 0;
 
-    if (!campaign_name.match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest(campaign_name, 'COMMON') == false) {
         $("#mail_campaign_name").addClass("is-invalid");
         toastr.error('', 'Empty/Unsupported character!');
         return;
@@ -272,7 +272,7 @@ function promptMailCampaignCopy(id) {
 function mailCampaignCopyAction() {
     var modal_mail_campaign_name = $('#modal_mail_campaign_name').val();
 
-    if (!modal_mail_campaign_name.match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest(modal_mail_campaign_name, 'COMMON') == false) {
         $("#modal_mail_campaign_name").addClass("is-invalid");
         toastr.error('', 'Empty/Unsupported character!');
         return;

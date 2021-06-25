@@ -1,9 +1,6 @@
 <?php
-    @ob_start();
-    session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession();
+   isSessionValid(true);
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
@@ -169,9 +166,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Select Quick Tracker</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true ">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -201,9 +196,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Export Report</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
@@ -262,7 +255,7 @@
             if(isset($_GET['tracker']))
                echo '$(function() { QuickTrackerSelected("' . doFilter($_GET['tracker'],'ALPHA_NUM') . '"); });';
               else
-            echo '$("#ModalQuickTracker").modal("toggle");';
+            echo '$(function() { $("#ModalQuickTracker").modal("toggle"); });';
          ?>
       </script>  
 

@@ -1,23 +1,17 @@
 <?php
-    @ob_start();
-    session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');
-   setcookie("PHPSESSID", session_id(), ["path" => "/", "SameSite" => "Strict", "HttpOnly" => true]);
-   if(isSessionRefreshed() == true){
-    header("Location: Home");
-    die();
+   if(isSessionValid() == true){
+      header("Location: Home");
+      die();
   }
    
   if (!empty($_POST['username']) && !empty($_POST['password'])) {
-    if(validateLogin($_POST['username'],$_POST['password']) == true){
-      $_SESSION['valid'] = true;
-      $_SESSION['lastaccess'] = time();
-      $_SESSION['username'] = $_POST['username'];
-      setInfoCookie();  //c_data cookie sets
-      header("Location: Home");
-    }  
-  }
+      if(validateLogin($_POST['username'],$_POST['password']) == true){
+         createSession(true,$_POST['username']);
+         setInfoCookie();  //c_data cookie sets
+         header("Location: Home");
+      }  
+   }
 ?>
 <!DOCTYPE html>
 <html dir="ltr">

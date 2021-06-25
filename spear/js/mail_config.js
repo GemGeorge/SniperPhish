@@ -125,7 +125,7 @@ function saveConfigAction(e) {
     if(nextRandomId == "new")
         nextRandomId = getRandomId();   
 
-    if (!$('#tb_config_name').val().match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest($('#tb_config_name').val(), "COMMON") == false) {
         $("#tb_config_name").addClass("is-invalid");
         if($('#modal_new_config').hasClass('show') == false)
             $('#modal_new_config').modal('toggle');

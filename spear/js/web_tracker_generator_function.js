@@ -71,23 +71,23 @@ var webpages = `<div class="new_webpage sort-blur m-t-5">
                             </div>`;
 
 var beauty_op = {
-  "indent_size": "4",
-  "indent_char": " ",
-  "max_preserve_newlines": "5",
-  "preserve_newlines": true,
-  "keep_array_indentation": false,
-  "break_chained_methods": false,
-  "indent_scripts": "normal",
-  "brace_style": "collapse",
-  "space_before_conditional": true,
-  "unescape_strings": false,
-  "jslint_happy": false,
-  "end_with_newline": false,
-  "wrap_line_length": "0",
-  "indent_inner_html": false,
-  "comma_first": false,
-  "e4x": false,
-  "indent_empty_lines": false
+    "indent_size": "4",
+    "indent_char": " ",
+    "max_preserve_newlines": "5",
+    "preserve_newlines": true,
+    "keep_array_indentation": false,
+    "break_chained_methods": false,
+    "indent_scripts": "normal",
+    "brace_style": "collapse",
+    "space_before_conditional": true,
+    "unescape_strings": false,
+    "jslint_happy": false,
+    "end_with_newline": false,
+    "wrap_line_length": "0",
+    "indent_inner_html": false,
+    "comma_first": false,
+    "e4x": false,
+    "indent_empty_lines": false
 };
 
 function deletePageAction(){
@@ -317,33 +317,34 @@ $(function() {
     $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
 });
 
-function updateFieldChanges(){
-  $('[data-toggle="tooltip"]').tooltip('hide');
-  $(".new_webpage").each(function(i,page){
-      $(page).find(".webpage_count").text(i+1);
-      $(page).find(".bt_delete_page").prop('disabled', false);
-  });
+function updateFieldChanges() {
+    $('[data-toggle="tooltip"]').tooltip('hide');
+    $(".new_webpage").each(function(i, page) {
+        $(page).find(".webpage_count").text(i + 1);
+        $(page).find(".bt_delete_page").prop('disabled', false);
+    });
 
-  $(".form_fields_area").each(function(i,field){
-    if($(field).find(".HTML_form_field").length==1)
-      $(field).find(".remove_field:first").prop('disabled', true);
-    else
-      $(field).find(".remove_field:first").prop('disabled', false);
-  });
+    $(".form_fields_area").each(function(i, field) {
+        if ($(field).find(".HTML_form_field").length == 1)
+            $(field).find(".remove_field:first").prop('disabled', true);
+        else
+            $(field).find(".remove_field:first").prop('disabled', false);
+    });
 
-  if($("#webpages_area div").children().length == 0){
-    $("#phising_site_final_page_url").attr('disabled', true);
-    $(".bt_delete_page_first").attr("hidden",false);
-  }   
-  else{
-    $("#phising_site_final_page_url").attr('disabled', false);
-    $(".bt_delete_page_first").attr("hidden",true);
-  }   
+    if ($("#webpages_area div").children().length == 0) {
+        $("#phising_site_final_page_url").attr('disabled', true);
+        $(".bt_delete_page_first").attr("hidden", false);
+    } else {
+        $("#phising_site_final_page_url").attr('disabled', false);
+        $(".bt_delete_page_first").attr("hidden", true);
+    }
 
-  $(".select2").select2({
-      minimumResultsForSearch: -1,
-  });
-  $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+    $(".select2").select2({
+        minimumResultsForSearch: -1,
+    });
+    $('[data-toggle="tooltip"]').tooltip({
+        trigger: "hover"
+    });
 }
 
 function generateFormFields() {
@@ -440,14 +441,14 @@ function generateTrackerCode() {
     });
 
     //-----------JS--------
-    if ($("#cb_screen_res").is(':checked'))
-        req_par += `screen_res : screen.width + "x" + screen.height,`;
+    req_par += `screen_res : screen.width + "x" + screen.height,`;
 
     code_output['js'] += `var sess_id ="";
     var comp_name = "";
     var comp_username = "";
     var tracker_id = "` + g_tracker_id + `";
     var form_field_data;
+    var ip_info;
     var xhr = new XMLHttpRequest();
 
     //geting cid
@@ -467,17 +468,34 @@ function generateTrackerCode() {
     
     var curr_page = (window.location.host+window.location.pathname).toLowerCase();
     var first_page = "` + (new URL(webpage_data.data[0].page_url).host+new URL(webpage_data.data[0].page_url).pathname).toLowerCase() + `";
-    if(curr_page == first_page) //if starting page
-        do_track_req_visit();`;
+    getIPInfo();`;
       
-    code_output['js'] += `function do_track_req_visit() {
+    code_output['js'] += `function getIPInfo(){
+                            var xhr1 = new XMLHttpRequest();
+                            xhr1.open('GET', 'https://ipapi.co/json', true);
+                            xhr1.onload = function () {
+                                if (xhr1.readyState === xhr1.DONE) {
+                                    ip_info = xhr1.response;
+                                    if(curr_page == first_page) //if starting page
+                                        do_track_req_visit();
+                                }
+                            };
+                            xhr1.onerror = function() { 
+                                if(curr_page == first_page) //if starting page, send even error occurred.
+                                        do_track_req_visit();
+                            };
+                            xhr1.send(null);
+                        }
+
+                        function do_track_req_visit() {
                           xhr.open("POST", "` + location.origin + `/track", true);
                           xhr.send(JSON.stringify({
                             page: 0,
                             trackerId: tracker_id,
                             sess_id : sess_id,` + 
                             req_par + `
-                            cid : cid
+                            cid : cid,
+                            ip_info: ip_info
                           }));
                         }\r\n//-----------------------------------------------------------\r\n
                         if( document.readyState !== 'loading' )
@@ -540,7 +558,8 @@ function generateTrackerCode() {
                         sess_id : sess_id,` + 
                         req_par + `
                         form_field_data : form_field_data,
-                        cid : cid
+                        cid : cid,
+                        ip_info: ip_info
                       }));    
 
                       if(next_page_url !="#")
@@ -639,21 +658,6 @@ function saveWebTracker(tracker_id) {
 
     tracker_step_data['start']['tb_tracker_name'] = $('#tb_tracker_name').val();
     tracker_step_data['start']['cb_auto_ativate'] = $("#cb_auto_ativate").is(':checked');
-
-    //------------------------------------------
-
-    tracker_step_data['trackers']['cb_public_ip'] = $("#cb_public_ip").is(':checked');
-    tracker_step_data['trackers']['cb_browser'] = $("#cb_browser").is(':checked');
-    tracker_step_data['trackers']['cb_os'] = $("#cb_os").is(':checked');
-    tracker_step_data['trackers']['cb_device_type'] = $("#cb_device_type").is(':checked');
-    tracker_step_data['trackers']['cb_ua'] = $("#cb_ua").is(':checked');
-    tracker_step_data['trackers']['cb_screen_res'] = $("#cb_screen_res").is(':checked');
-    tracker_step_data['trackers']['cb_country'] = $("#cb_country").is(':checked');
-    tracker_step_data['trackers']['cb_city'] = $("#cb_city").is(':checked');
-    tracker_step_data['trackers']['cb_zip_code'] = $("#cb_zip_code").is(':checked');
-    tracker_step_data['trackers']['cb_isp'] = $("#cb_isp").is(':checked');
-    tracker_step_data['trackers']['cb_time_zone'] = $("#cb_time_zone").is(':checked');
-    tracker_step_data['trackers']['cb_coordinate'] = $("#cb_coordinate").is(':checked');
 
     //---------Web Pages-------------
     tracker_step_data['web_forms'] = webpage_data;

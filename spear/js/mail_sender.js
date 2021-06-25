@@ -115,7 +115,7 @@ function saveMailSenderGroup(e) {
     var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val();
     var mail_sender_mailbox = $('#mail_sender_mailbox').val();
 
-    if (mail_sender_name.trim() == '') {
+    if (RegTest(mail_sender_name, "COMMON") == false) {
         $("#mail_sender_name").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
@@ -136,7 +136,7 @@ function saveMailSenderGroup(e) {
     } else
         $("#mail_sender_from").removeClass("is-invalid");
 
-    if (validateEmailAddress(mail_sender_acc_username) == false) {
+    if (RegTest(mail_sender_acc_username, "EMAIL") == false) {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
@@ -233,7 +233,7 @@ function promptMailSenderCopy(id) {
 function MailSenderCopyAction() {
     var modal_mail_sender_name = $('#modal_mail_sender_name').val();
 
-    if (!modal_mail_sender_name.trim() == '') {
+    if (RegTest(modal_mail_sender_name, "COMMON") == false) {
         $("#mail_sender_name").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
@@ -380,7 +380,7 @@ function modalTestDeliveryAction(e){
     var test_to_address = $('#modal_mail_sender_test_mail_to').val();
     var range_SMTP_enc_level = $('#range_SMTP_enc_level').val();
 
-    if (mail_sender_name.trim() == '') {
+    if (RegTest(mail_sender_name, "COMMON") == false) {
         $("#mail_sender_name").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
@@ -401,14 +401,14 @@ function modalTestDeliveryAction(e){
     } else
         $("#mail_sender_from").removeClass("is-invalid");
 
-    if (validateEmailAddress(mail_sender_acc_username) == false) {
+    if (RegTest(mail_sender_acc_username, "EMAIL") == false) {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
     } else
         $("#mail_sender_acc_username").removeClass("is-invalid");
 
-    if (validateEmailAddress(test_to_address) == false) {
+    if (RegTest(test_to_address, "EMAIL") == false) {
         $("#modal_mail_sender_test_mail_to").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
@@ -457,7 +457,7 @@ function verifyMailBoxAccess(){
     } else
         $("#mail_sender_SMTP_server").removeClass("is-invalid");
 
-    if (validateEmailAddress(mail_sender_acc_username) == false) {
+    if (RegTest(mail_sender_acc_username, "EMAIL") == false) {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;

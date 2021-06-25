@@ -5,7 +5,6 @@ require_once(dirname(__FILE__) . '/common_functions.php');
 // remove all session variables
 @ob_start();
 session_start();
-session_unset();
 session_destroy();
 header("Location: ../spear");
 

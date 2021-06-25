@@ -73,7 +73,7 @@ function promptWebTrackerCopy(id) {
 function webTrackerCopyAction() {
     var modal_web_tracker_name = $('#modal_web_tracker_name').val();
 
-    if (!modal_web_tracker_name.match(/^[a-z\d\-_\s]+$/i)) {
+    if (RegTest(modal_web_tracker_name, 'COMMON') == false) {
         $("#modal_mail_campaign_name").addClass("is-invalid");
         toastr.error('', 'Empty/Unsupported character!');
         return;

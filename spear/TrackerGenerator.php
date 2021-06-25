@@ -1,9 +1,6 @@
 <?php
-    @ob_start();
-    session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession();
+   isSessionValid(true);
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
@@ -100,150 +97,7 @@
                                           </div>
                                        </div>
                                     </div>
-                                 </div>      
-                                 <hr/>  
-                                 <div class="form-group">
-                                    <label>Trackable items:</label>
-                                 </div>
-                                 <div class="form-group row">
-                                    <div class="col-md-3">
-                                       <div class="row">
-                                          <label for="cb_public_ip" class="col-sm-7 text-left control-label col-form-label">Public IP</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_public_ip" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_browser" class="col-sm-7 text-left control-label col-form-label">Web Browser</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_browser" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>
-
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_os" class="col-sm-7 text-left control-label col-form-label">OS Name</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_os" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_device_type" class="col-sm-7 text-left control-label col-form-label">Device Type</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_device_type" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>
-                                 </div>
-                                 <div class="form-group row">
-                                    <div class="col-md-3">
-                                       <div class="row">
-                                          <label for="cb_ua" class="col-sm-7 text-left control-label col-form-label">User Agent (UA)</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_ua" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>                                       
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_screen_res" class="col-sm-7 text-left control-label col-form-label">Screen Resolution</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_screen_res" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>     
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_country" class="col-sm-7 text-left control-label col-form-label">Region (Country)</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_country" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>  
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_city" class="col-sm-7 text-left control-label col-form-label">Region (City)</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_city" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>   
-                                 </div>
-                                 <div class="form-group row">                                                                     
-                                    <div class="col-md-3">
-                                       <div class="row">
-                                          <label for="cb_zip_code" class="col-sm-7 text-left control-label col-form-label">ZIP Code</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_zip_code" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>  
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_isp" class="col-sm-7 text-left control-label col-form-label">ISP</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_isp" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>  
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_time_zone" class="col-sm-7 text-left control-label col-form-label">Time Zone</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_time_zone" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>    
-                                    <div class="col-md-3 sep-left">
-                                       <div class="row">
-                                          <label for="cb_coordinate" class="col-sm-7 text-left control-label col-form-label">Coordinates</label>
-                                          <div class="custom-control custom-switch col-sm-5 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_coordinate" checked disabled>
-                                                <span class="slider round"></span>
-                                             </label>
-                                          </div>
-                                       </div>
-                                    </div>                                 
-                                 </div>
+                                 </div>  
                               </div>
                               <!--<p>(*) Mandatory</p> -->
                            </section>
@@ -276,7 +130,7 @@
                                  </div>
                                  <div class="form-group row">                            
                                     <div class="col-md-12">
-                                       <p>Copy below HTML tracker code under &lt;HEAD&gt; section of all the pages of your phishing website.</p>
+                                       <p>Copy below HTML tracker code under &lt;HEAD&gt; section of all the pages of your phishing website which is to be tracked.</p>
                                        <div class="col-md-12 prism_side-top">
                                        <span>
                                           <button type="button" class="btn waves-effect waves-light btn-xs btn-dark mdi mdi-download" data-toggle="tooltip" title="Download" onClick="downloadCode('html_tracker_code','tracker_link.txt','text/plain')"/>
@@ -347,9 +201,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Import HTML fields</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="col-md-12">
@@ -378,9 +230,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Are you sure?</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body" id="modal_prompts_body">
                         content...

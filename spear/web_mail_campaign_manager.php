@@ -1,7 +1,4 @@
 <?php
-//-------------------Session check-----------------------
-@ob_start();
-session_start();
 require_once(dirname(__FILE__) . '/session_manager.php');
 require_once(dirname(__FILE__) . '/libs/swiftmailer/autoload.php');
 //-------------------------------------------------------
@@ -14,7 +11,7 @@ if (isset($_POST)) {
 
 	if(isset($POSTJ['action_type'])){
 
-		if(isSessionRefreshed() == false){
+		if(isSessionValid() == false){
 			$OPS = ['get_campaign_list_web_mail','multi_get_live_campaign_data_web_mail'];	//permited requests
 			if(isset($POSTJ['tk_id']) && in_array($POSTJ['action_type'],$OPS)){
 				if(isset($POSTJ['campaign_id']) && isset($POSTJ['tracker_id'])){

@@ -28,7 +28,15 @@ if(verifyQuickTracker($conn, $tracker_id) == true){
     $user_agent = $_SERVER['HTTP_USER_AGENT'];   
     $date_time = round(microtime(true) * 1000); //(new DateTime())->format('d-m-Y H:i:s.u');     
     $user_os = $ua_info->getPlatformVersion();
-    $ip_info = getIPInfo($conn, $public_ip);
+    try{
+        if(empty($POSTJ['ip_info']))
+            $ip_info = getIPInfo($conn, $public_ip);
+        else
+            $ip_info = craftIPInfoArr(json_decode($POSTJ['ip_info'],true));
+    }
+    catch (Exception $e) {
+        $ip_info = getIPInfo($conn, $public_ip);
+    }
     $allHeaders ='';
 
     $mail_client = getMailClient($user_agent);    

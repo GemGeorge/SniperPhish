@@ -1,4 +1,5 @@
 <?php
+require_once(dirname(__FILE__) . '/session_manager.php');
 require_once(dirname(__FILE__) . '/db.php');
 //-----------------------------
 date_default_timezone_set('UTC');

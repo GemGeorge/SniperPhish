@@ -1,25 +1,23 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', true);
+error_reporting(E_ALL ^ E_WARNING); //display error but not warnings
+ini_set('display_errors', true);    //display error on screen
 require_once (dirname(__FILE__) . '/spear/common_functions.php');
 header('Content-Type: application/json');
 
 if (isset($_POST))
-  $POSTJ = json_decode(file_get_contents('php://input'),true);
+    $POSTJ = json_decode(file_get_contents('php://input'),true);
 else 
-  die();
+    die();
 
-if (isset($POSTJ['action_type']))
-{
-  if ($POSTJ['action_type'] == "check_requirements") 
-    checkRequirements();
+if (isset($POSTJ['action_type'])){
+    if ($POSTJ['action_type'] == "check_requirements") 
+        checkRequirements();
   if ($POSTJ['action_type'] == "do_install")
-    doInstall($POSTJ);
+        doInstall($POSTJ);
 }
 
 //----------------------------------------------------------------------
-function checkRequirements()
-{
+function checkRequirements(){
     $resp_arr = [];
     $f_error = false;
     $extensions = get_loaded_extensions();
@@ -27,47 +25,61 @@ function checkRequirements()
 
     if (phpversion() >= 7.3) 
         $resp_arr['PHP version ' . phpversion() ] = true;
-    else
-    {
+    else{
         $resp_arr['PHP version ' . phpversion() ] = "PHP version >= 7.3 is required"; 
         $f_error = true;
     }
-	
-	if (in_array("mysqli", $extensions)) 
+    
+    if (in_array("mysqli", $extensions)) 
         $resp_arr['PHP extension mysqli'] = true;
-    else
-    {
+    else{
         $resp_arr['PHP extension mysqli'] = "mysqli extension should be loaded";
         $f_error = true;
     }
 
     if (in_array("imap", $extensions)) 
         $resp_arr['PHP extension imap'] = true;
-    else
-    {
+    else{
         $resp_arr['PHP extension imap'] = "Imap extension should be loaded";
         $f_error = true;
     }
 
     if (in_array("gd", $extensions)) 
         $resp_arr['PHP extension gd'] = true;
-    else
-    {
+    else{
         $resp_arr['PHP extension gd'] = "gd extension should be loaded";
-        $f_error = true;
-    }
-
-    if (is_callable('shell_exec') && false === stripos(ini_get('disable_functions') , 'shell_exec')) 
-        $resp_arr['PHP function shell_exec'] = true;
-    else
-    {
-        $resp_arr['PHP function shell_exec'] = "PHP shell_exec should be enabled";
         $f_error = true;
     }
 
     $permission_info = getWritePermissionInfo();
     if(!empty($permission_info))
       $f_error = true;
+
+    //SP process commands check
+    if(getOSType() == 'windows'){
+      if(isCommandExist('tasklist') == false){
+        $resp_arr['Command - tasklist'] = "'tasklist' command should be enabled in your system";
+        $f_error = true;
+      }
+      if(isCommandExist('findstr /?') == false){
+        $resp_arr['Command - findstr'] = "'findstr' command should be enabled in your system";
+        $f_error = true;
+      }
+    }
+    else{
+      if(isCommandExist('ps a') == false){
+        $resp_arr['Command - ps'] = "'ps' command should be enabled in your system";
+        $f_error = true;
+      }
+      if(isCommandExist('grep --help') == false){
+        $resp_arr['Command - grep'] = "'grep' command should be enabled in your system";
+        $f_error = true;
+      }
+      if(isCommandExist('awk --help') == false){
+        $resp_arr['Command - awk'] = "'awk' command should be enabled in your system";
+        $f_error = true;
+      }
+    }
 
     echo json_encode(['error' => $f_error, 'requirements' => $resp_arr, 'permissions' => $permission_info]);    
 }
@@ -76,23 +88,22 @@ function getWritePermissionInfo(){
     $resp = [];
     
     if (!is_writable(dirname(__FILE__).'/spear'))  //for db.php
-      array_push($resp,dirname(__FILE__).'/spear');
+        array_push($resp,dirname(__FILE__).'/spear');
 
     if (!is_writable(dirname(__FILE__).'/spear/uploads'))   //for uploads w.r.t mail
-      array_push($resp,dirname(__FILE__).'/spear/uploads');
+        array_push($resp,dirname(__FILE__).'/spear/uploads');
 
     if (is_dir(dirname(__FILE__).'/spear/payloads/uploads') && !is_writable(dirname(__FILE__).'/spear/payloads/uploads'))   //for payloads
-      array_push($resp,dirname(__FILE__).'/spear/payloads/uploads');
-    if (is_dir(dirname(__FILE__).'/spear/sniperhost/hf_files') && !is_writable(dirname(__FILE__).'/spear/sniperhost/hf_files'))   //for host files
-      array_push($resp,dirname(__FILE__).'/spear/sniperhost/hf_files');
-    if (is_dir(dirname(__FILE__).'/spear/sniperhost/ht_files') && !is_writable(dirname(__FILE__).'/spear/sniperhost/ht_files'))   //for host text files
-      array_push($resp,dirname(__FILE__).'/spear/sniperhost/ht_files');
+        array_push($resp,dirname(__FILE__).'/spear/payloads/uploads');
+    if (!is_writable(dirname(__FILE__).'/spear/sniperhost/hf_files'))   //for host files
+        array_push($resp,dirname(__FILE__).'/spear/sniperhost/hf_files');
+    if (!is_writable(dirname(__FILE__).'/spear/sniperhost/ht_files'))   //for host text files
+        array_push($resp,dirname(__FILE__).'/spear/sniperhost/ht_files');
 
     return $resp;
 }
 
-function doInstall(&$POSTJ)
-{
+function doInstall(&$POSTJ){
     checkInstallation(); //check installation
     $db_name = $POSTJ['db_name'];
     $db_host = $POSTJ['db_host'];
@@ -137,20 +148,18 @@ function modifySniperPhishSettings($conn, $time_zone, $user_contact_mail)
     $stmt = $conn->prepare("INSERT INTO tb_main_variables(id,server_protocol,domain,baseurl,time_zone,time_format) VALUES(1,null,null,null,?,?)");
     $stmt->bind_param('ss', $time_zone,$def_time_format);
     if ($stmt->execute() === FALSE)
-       return false;
-     $stmt->close(); 
+        return false;
+    $stmt->close(); 
       
     $stmt = $conn->prepare("INSERT INTO tb_main(id,username,password,contact_mail,v_hash,v_hash_time) VALUES(1,'admin','23d119e1749d0d0f21dd751c52d3ca221462867669acaf58f209aa237a3955a3',?,null,null)");
     $stmt->bind_param('s', $user_contact_mail);
     if ($stmt->execute() === TRUE)
-       return true;
+        return true;
     else
-      return false;
+        return false;
 }
 
-function createTables($conn)
-{
-
+function createTables($conn){
     $tables = <<<'EOD'
 -- phpMyAdmin SQL Dump
 -- version 5.0.2
@@ -171,9 +180,6 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Database: `atest`
---
 
 -- --------------------------------------------------------
 

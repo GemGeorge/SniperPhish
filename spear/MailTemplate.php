@@ -1,9 +1,6 @@
 <?php
-    @ob_start();
-    session_start();
-//-----------------
    require_once(dirname(__FILE__) . '/session_manager.php');
-   checkSession();
+   isSessionValid(true);
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
@@ -188,7 +185,9 @@
                                      <button type="button" class="btn btn-success btn-sm" onclick='$("#attachment-uploader").trigger("click")' title="Add attachment" data-toggle="tooltip"><i class="fa fas fa-plus"></i> Attachment</button>
                                   </div>
                               </div>
-                              <div class="form-group" id="attachments_area"></div>                
+                              <div class="form-group attachments-area" id="attachments_area">
+                                 
+                              </div>                
                            </div> 
                            
                            <div class="col-md-3"> 
@@ -256,6 +255,37 @@
                                                       <td>{{MDOMAIN}}</td>
                                                       <td>Domain part of user's mail</td>
                                                    </tr>
+                                                   <tr>
+                                                      <td>{{RND}}</td>
+                                                      <td>Random alpha-num string (default length:5). Eg: {{RND1}}, {{RND2} etc.</td>
+                                                   </tr>
+                                                </tbody>
+                                             </table>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+
+                              <div class="panel-group box bg-dark text-white accordion m-t-5">
+                                 <div class="panel panel-default">
+                                   <div class="panel-heading card-hover">
+                                        <span class="panel-title">
+                                            <span>Hints</span>
+                                        <span>
+                                   </div>
+                                   <div id="collapseOneHint" class="panel-collapse collapse table-dark row" data-toggle="collapse" aria-expanded="false">
+                                       <div class="panel-body">
+                                          <div class="table-responsive">
+                                             <table class="table table-full-width">
+                                                <tbody>
+                                                   <tr>
+                                                      <td>You can link your phishing website to your email. Click Truck icon from the editor menus and select "Insert Web Tracker".</td>
+                                                   </tr>
+                                                   <tr>
+                                                      <td>You can randomize attachment name for each recipient. Provide a custom name once attachment is inserted. Eg: "{{CID}}.jpg"</td>
+                                                   </tr>
+                                                   <tr>
                                                 </tbody>
                                              </table>
                                           </div>
@@ -264,6 +294,7 @@
                                  </div>
                               </div>
                            </div>
+
                         </div>                        
                      </div>
                      <hr/>
@@ -294,9 +325,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Are you sure?</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         This will delete email template and the action can't be undone!
@@ -313,9 +342,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Enter new email template name</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row  m-t-20">
@@ -337,9 +364,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Test Mail Delivery</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row m-t-20">
@@ -368,9 +393,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Link Web Tracker</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row m-t-20">
@@ -404,9 +427,7 @@
                   <div class="modal-content">
                      <div class="modal-header">
                         <h5 class="modal-title">Sample Mail Tempates</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body">
                         <div class="form-group row m-t-20">

@@ -78,7 +78,7 @@ function getCONFIG($conn, $mconfig_id){
 
 function generateCID(&$conn, &$campaign_id){ //this make 100% unique CID
 	do{
-		$CID = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyz', ceil(10/strlen($x)) )),1,10);
+		$CID = getRandomStr(10);
 
 		$stmt = $conn->prepare("SELECT COUNT(*) FROM tb_data_mailcamp_live WHERE id=? AND campaign_id=?");
 		$stmt->bind_param("ss", $CID,$campaign_id);
@@ -193,12 +193,19 @@ function InitMailCampaign($conn, $campaign_id){
 	}
 
 	//Add attachments
+	$var_attachments=[];
 	foreach ($mail_attachment as $attachment) {
-		$file_path = 'uploads/attachments/'.$attachment['file_id'].'.att';
-	    if($attachment['inline'])
-	    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($attachment['file_name'])->setDisposition('inline'));
-	    else
-	    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($attachment['file_name']));
+		if(preg_match('/{{[0-9]*[a-zA-Z]+[a-zA-Z0-9]*}}/i', $attachment['file_disp_name']) == true){//if name has keywords
+			$attachment['att_ob'] = null;	//adding field for attachment object to use below
+			array_push($var_attachments,$attachment);
+		}
+		else{	
+			$file_path = 'uploads/attachments/'.$attachment['file_id'].'.att';
+		    if($attachment['inline'])
+		    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($attachment['file_disp_name'])->setDisposition('inline'));
+		    else
+		    	$message->attach(Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($attachment['file_disp_name']));
+		}
 	}
 
 	//-------------Start Signing & Encryption-------------
@@ -255,6 +262,23 @@ function InitMailCampaign($conn, $campaign_id){
 	  	$message->setBody($msg_body,$mail_content_type);
 	  	$message->setId($CID.'@sniperphish.generated');
 
+	  	//add variable attachments
+	  	foreach ($var_attachments as $key  => $attachment) {
+			$file_path = 'uploads/attachments/'.$attachment['file_id'].'.att';
+			$file_disp_name = filterKeywords($attachment['file_disp_name'],$keyword_vals);
+
+		    if($attachment['inline'])
+		    	$att = Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($file_disp_name)->setDisposition('inline');
+		    else
+		    	$att = Swift_Attachment::fromPath($file_path,mime_content_type($file_path))->setFilename($file_disp_name);
+
+
+			if($attachment['att_ob'] != null)
+				$message->detach($attachment['att_ob']);
+		    $var_attachments[$key]['att_ob'] = $att;
+		    $message->attach($att);			
+		}
+
 	  	statusEntryCreate($conn,$CID,$campaign_id,$MC_name,$send_time,$arr_user['name'],$arr_user['email']); 
 	  	try{
 		  	if($config_recipient_type == "to")
@@ -271,13 +295,13 @@ function InitMailCampaign($conn, $campaign_id){
 	  	while($msg_fail_retry_counter <= $MC_msg_fail_retry){
 			// Send the message
 			try{
-				$result = $mailer->send($message,$failures);	//$failures will store the rejected addresses
+				$result = $mailer->send($message);	//$failures will store the rejected addresses
 				if($result){
-					statusEntryUpdate($conn, $CID, 2, json_encode($failures));	//2= mail sent successfully
+					statusEntryUpdate($conn, $CID, 2);	//2= mail sent successfully
 					break;
 				}
 				else{			
-					statusEntryUpdate($conn, $CID, 3, json_encode($failures));	//3=Error in sending
+					statusEntryUpdate($conn, $CID, 3, 'Error');	//3=Error in sending
 					$msg_fail_retry_counter++;
 					sleep(1); // give 1 sec delay before next attempt
 				}

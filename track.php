@@ -40,8 +40,16 @@ $user_agent = htmlspecialchars($_SERVER['HTTP_USER_AGENT']);
 $date_time = round(microtime(true) * 1000);
 $user_browser = $ua_info->getName().' '.($ua_info->getVersion() == "unknown"?"":$ua_info->getVersion());
 $user_os = $ua_info->getPlatformVersion();
-$ip_info = getIPInfo($conn, $public_ip);
 $device_type = $ua_info->isMobile()?"Mobile":"Desktop";
+try{
+    if(empty($POSTJ['ip_info']))
+        $ip_info = getIPInfo($conn, $public_ip);
+    else
+        $ip_info = craftIPInfoArr(json_decode($POSTJ['ip_info'],true));
+}
+catch (Exception $e) {
+    $ip_info = getIPInfo($conn, $public_ip);
+}
 
 //-----------------------------------
 if(isset($POSTJ['screen_res']))

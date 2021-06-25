@@ -21,7 +21,7 @@ function modalOpenQuickTracker(flag_replace_value, tracker_id, tracker_name="") 
 
 function addQuickTracker(e) {
     var quick_tracker_name = $("#modal_quick_tracker_name").val();
-    if (quick_tracker_name == "") {
+    if (RegTest(quick_tracker_name, 'COMMON') == false) {
         $('#modal_quick_tracker_name').addClass('is-invalid');
         return;
     }

@@ -2,11 +2,9 @@ var globalModalValue = nextRandomId ='';
 var cookie_c_data = JSON.parse(atob(decodeURIComponent(Cookies.get('c_data'))));
 var date_space_format = {"space": " ", "comma": ",", "comaspace":", "};
 var space_format = date_space_format[cookie_c_data.time_format.space];
+
 $(function() {
     checkSniperPhishProcess();
-   // $('[data-toggle="tooltip"]').click(function () {
-   //       $('[data-toggle="tooltip"]').tooltip("hide");
-   // });
     $('[data-toggle="tooltip"]').tooltip({
         trigger : 'hover'
     })  
@@ -38,11 +36,6 @@ function displayLoader(dis_val,type="normal"){
 function getRandomId() {
     nextRandomId = Math.random().toString(36).substring(2, 8);
     return nextRandomId;
-}
-
-function validateEmailAddress(email) {
-    var expression = /(?!.*\.{2})^([a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+(\.[a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+)*|"((([ \t]*\r\n)?[ \t]+)?([\x01-\x08\x0b\x0c\x0e-\x1f\x7f\x21\x23-\x5b\x5d-\x7e\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|\\[\x01-\x09\x0b\x0c\x0d-\x7f\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))*(([ \t]*\r\n)?[ \t]+)?")@(([a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.)+([a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.?$/i;
-    return expression.test(String(email).toLowerCase());
 }
 
 function UTC2Local(in_val){     //Converts Unix and format 'DD-MM-Y hh:mm A' in UTC to local
@@ -132,20 +125,18 @@ function applyDataMask(field) {
 function checkSniperPhishProcess(){
     if(window.location.href.indexOf('?') == -1){    // works only in main pages
         setTimeout(function (){
-        $.post({
-            url: window.location.origin + "/spear/home_manager",
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({ 
-                    action_type: "check_process",
-                })
-            }).done(function (data) {
-                if (data.result == false) 
-                    addAlert('process');
-        });
-            
+            $.post({
+                url: window.location.origin + "/spear/home_manager",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ 
+                        action_type: "check_process",
+                    })
+                }).done(function (data) {
+                    if (data.result == false) 
+                        addAlert('process');
+            });           
 
-        }, 1000);
-        
+        }, 1000);        
     }
 }
 
@@ -166,10 +157,8 @@ function startSniperPhishService(e){
 }
 
 
-function addAlert(alert){//console.log($("#top_notifier div").length);
-
+function addAlert(alert){
     $("#top_notifier").append(`<span class="alert-count">` + ($("#top_notifier div").length+1) + `</span>`);
-
     $("#top_notifier").append(`<div class="dropdown-menu dropdown-menu-right mailbox animated fadeInDown" aria-labelledby="2"></div>`);
                
     if(alert == "process")
@@ -190,7 +179,7 @@ function removeAlert(alert,e){
         if($("#top_notifier div").length>0)
             $("#top_notifier").append(`<span class="alert-count">` + ($("#top_notifier div").length-1) + `</span>`);
 
-        if($("#top_notifier div").length == 1){  //if no notificqations. 1= top_notifier count element
+        if($("#top_notifier div").length == 1){  //if no notifications. 1= top_notifier count element
             $(".alert-count").remove();
             $("#top_notifier a li").remove();
         }
@@ -250,18 +239,91 @@ function isValidURL(url) {
   return true;
 }
 
-/*Idle Timer*/
-var idleMax = 25; // Logout after 25 minutes of IDLE
-var idleTime = 0;
+function RegTest(str,type){
+    var pattern;
+    switch (type){
+        case 'NUM' : pattern = /^\d+$/; break;
+        case 'ALPHA' : pattern = /^[a-z]+$/i; break;
+        case 'ALPHA_NUM' : pattern = /^[a-z\d\-_\s]+$/i; break;
+        case 'COMMON' : pattern = /^[a-z\d\-_\s()@.*+-]+$/i; break;
+        case 'EMAIL' : pattern = /(?!.*\.{2})^([a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+(\.[a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+)*|"((([ \t]*\r\n)?[ \t]+)?([\x01-\x08\x0b\x0c\x0e-\x1f\x7f\x21\x23-\x5b\x5d-\x7e\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|\\[\x01-\x09\x0b\x0c\x0d-\x7f\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))*(([ \t]*\r\n)?[ \t]+)?")@(([a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.)+([a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.?$/i; break;
+    }
+    return pattern.test(str);
+}
 
-var idleInterval = setInterval("timerIncrement()", 60000);  // 1 minute interval    
+/*------Idle Timer------*/
+var idleMax = 3600; // Logout after x seconds of IDLE. (in sec). 3600=1hr
+var idleTime = 0;
+var timerInterval = 60000 // idle check interval  (in ms). 60000=1 minute
+var idleInterval = setInterval("idleTimerFun()", timerInterval);  
 $("body").mousemove(function( event ) {
     idleTime = 0; // reset to zero
 });
 
-function timerIncrement() {
+function idleTimerFun() {
     idleTime++;
-    $.get(window.location.origin + '/spear/home_manager.php', function() {});   //A kinda keep-alive req
-    if (idleTime > idleMax)
-        location.replace(window.location.origin + '/spear/logout');
+    if (idleTime > idleMax){
+        $.post({
+            url: window.location.origin + "/spear/session_manager",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ 
+                    action_type: "terminate_session"
+                })
+            });
+                  
+        clearTimeout(idleInterval); //stop timer 
+        $('footer').append(`<div class="modal fade" id="modal_relogin" data-keyboard="false" data-backdrop="static" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+           <div class="modal-dialog">
+              <div class="modal-content">
+                 <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+                 </div>
+                 <div class="modal-body">
+                    <div class="row">
+                       <div class="col-12">
+                          <div class="input-group mb-3">
+                             <div class="input-group-prepend">
+                                <span class="input-group-text bg-success text-white" id="basic-addon1"><i class="fa fas fa-user"></i></span>
+                             </div>
+                             <input type="text" class="form-control form-control-lg" name="username" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" required>
+                          </div>
+                          <div class="input-group mb-3">
+                             <div class="input-group-prepend">
+                                <span class="input-group-text bg-warning text-white" id="basic-addon2"><i class="fa fas fa-key"></i></span>
+                             </div>
+                             <input type="password" class="form-control form-control-lg" name="password" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1" required>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+                 <div class="modal-footer">
+                    <button type="button" class="btn btn-info" onclick="doReLogin()">Login</button>
+                 </div>
+              </div>
+           </div>
+        </div>`);
+        $('#modal_relogin').modal('toggle');
+    }
 } 
+
+function doReLogin(){
+    var username = $("input[name=username]").val();
+    var pwd = $("input[name=password]").val();
+
+    $.post({
+        url: window.location.origin + "/spear/session_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
+                action_type: "re_login",
+                username: username,
+                pwd: pwd
+            })
+        }).done(function (data) {
+            if (data.result == 'success') {
+                $('#modal_relogin').modal('toggle');
+                idleTime = 0;
+                idleInterval = setInterval("idleTimerFun()", timerInterval); 
+                $("input[name=password]").val('');  //clear relogin pwd field
+            }                 
+    });
+}
