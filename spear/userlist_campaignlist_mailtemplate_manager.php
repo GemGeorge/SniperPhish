@@ -264,7 +264,7 @@ function uploadAttachment($conn,&$POSTJ){
 		die(json_encode(['result' => 'failed', 'error' => 'Directory uploads/attachments/ has no write permission']));
 
 	try{
-    	if(file_put_contents($target_file,$binary_data))
+    	if(file_put_contents($target_file,$binary_data) || file_exists($target_file))	//if 0 size file failed, check if they exist (written)
     		echo(json_encode(['result' => 'success', 'file_id' => $file_id]));	
     	else
 			echo(json_encode(['result' => 'failed', 'error' => 'File upload failed!']));	
@@ -289,7 +289,7 @@ function uploadMailBodyFiles($conn,&$POSTJ){
 		die(json_encode(['result' => 'failed', 'error' => 'Directory uploads/attachments/ has no write permission']));
 
 	try{
-    	if(file_put_contents($target_file,$binary_data))
+    	if(file_put_contents($target_file,$binary_data) || file_exists($target_file))	//if 0 size file failed, check if they exist (written)
     		echo(json_encode(['result' => 'success', 'file_id' => $file_id, "mbf" => $file_id_part]));	
     	else
     		echo(json_encode(['result' => 'failed', 'error' => $e->getMessage()]));	
