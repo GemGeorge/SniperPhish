@@ -92,7 +92,7 @@
                               </div>  
                               <label for="tb_batch_mail_limit" class="col-sm-3 text-left control-label col-form-label m-t-10">Message Limit:</label>
                               <div class="col-sm-3 m-t-10">
-                                 <div class="input-group number-spinner col-md-12">
+                                 <div class="input-group number-spinner">
                                     <span class="input-group-btn">
                                        <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
                                     </span>
@@ -223,7 +223,7 @@
                               </div>  
                               <label for="tb_antiflood_limit" class="col-sm-3 text-left control-label col-form-label m-t-10">Message Limit:</label>
                               <div class="col-sm-3 m-t-10">
-                                 <div class="input-group number-spinner col-md-12">
+                                 <div class="input-group number-spinner">
                                     <span class="input-group-btn">
                                        <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
                                     </span>
@@ -235,7 +235,7 @@
                               </div>     
                               <label for="tb_antiflood_pause" class="col-sm-3 text-left control-label col-form-label m-t-10">Pause for (seconds):</label>
                               <div class="col-sm-3 m-t-10">
-                                 <div class="input-group number-spinner col-md-12">
+                                 <div class="input-group number-spinner">
                                     <span class="input-group-btn">
                                        <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
                                     </span>

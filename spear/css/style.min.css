@@ -738,3 +738,7 @@ input:checked + .slider:before {
 .attachments-area .alert{
 	padding: .4rem 1.25rem;
 }
+
+.number-spinner{
+	min-width: 100px;
+}
