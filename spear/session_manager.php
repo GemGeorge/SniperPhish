@@ -191,6 +191,8 @@ function createSession($f_regenerate,$username){
 
 	if($f_regenerate)
 		session_regenerate_id(true);
+	else
+		setcookie("PHPSESSID", $_COOKIE['PHPSESSID'], ["path" => "/", "SameSite" => "Strict", "HttpOnly" => true]);
 	$_SESSION['username'] = $username;
 }
 
