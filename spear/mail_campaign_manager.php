@@ -275,6 +275,7 @@ function getUserGroupData($conn, $campaign_id){
 }
 
 function getMailReplied($conn, $campaign_id){
+	session_write_close(); //Required to avoid hanging by executing this fun
 	$reply_email = '';
 	$arr_replied_mails = [];
 	$arr_err = [];
