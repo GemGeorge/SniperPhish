@@ -136,7 +136,7 @@ function saveMailSenderGroup(e) {
     } else
         $("#mail_sender_from").removeClass("is-invalid");
 
-    if (RegTest(mail_sender_acc_username, "EMAIL") == false) {
+    if (mail_sender_acc_username.trim() == '') {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
@@ -401,7 +401,7 @@ function modalTestDeliveryAction(e){
     } else
         $("#mail_sender_from").removeClass("is-invalid");
 
-    if (RegTest(mail_sender_acc_username, "EMAIL") == false) {
+    if (mail_sender_acc_username.trim() == '') {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
