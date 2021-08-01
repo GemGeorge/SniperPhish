@@ -23,6 +23,12 @@
 4. After installation, SniperPhish will redirect to login page http://localhost/spear
 >Default login - *Username: `admin`   Password: `sniperphish`*
 
+## Updating/Upgrading
+1. 1st keep a backup of your existing /spear/db.php, /spear/uploads/, /spear/sniperhost/hf_files/ and /spear/sniperhost/ht_files/ folders. 
+2. Then delete all your current SnipePhish files and replace with the new SniperPhish. You may clone the repo/unzip latest SniperPhish release to the same location.
+3. Now, re-add the files and folders you backed up at the 1st step to the same locations
+
+>*Above steps applies to the update of all SniperPhish v1.0+ to the latest release as of now. There are no changes to the database.*
 ## Main Features
 * Web tracker code generation - track your website visits and form submissions independently
 * Tracks data from phishing website containg any number of pages
@@ -36,6 +42,7 @@
 * Advanced mail campaign customization – read receipt, TO/CC/BCC emails etc.
 * Anti-flood control for emails
 * Non-ASCII (Punycode transcription) support for email and domain
+* Auto-renaming attachments on-the-fly
 
 ## Screenshots
 <kbd>![Web-Email Campaign Dashboard](https://user-images.githubusercontent.com/15928266/116777794-e9447880-aaa0-11eb-9697-af5f5617b279.PNG)</kbd>
@@ -79,4 +86,4 @@ Join on our SniperPhish discord community to engage with us!
 ## Donation
 If this project help you 'Phish', you can give me a cup of coffee :) 
 
-[![bitcoin](https://user-images.githubusercontent.com/15928266/88777414-c3104600-d1b9-11ea-9262-10bae6805779.png)](https://sniperphish.com/donate)
+[![bitcoin](https://user-images.githubusercontent.com/15928266/124384822-9c318c80-dd05-11eb-948c-f0b9e697b740.png)](https://sniperphish.com/donate)
