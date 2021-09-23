@@ -95,7 +95,7 @@ function getMailCampaignFromCampaignListId(id) {
                     $('#mailConfigSelector').trigger('change');
                 } catch (err) {}
 
-                $("#datetimepicker_launch").val(UTC2Local(data.scheduled_time));
+                $("#datetimepicker_launch").val(UTC2Local(data.scheduled_time)).trigger('change');
 
                 $('#range_campaign_time_min').val(data.campaign_data.msg_interval.split('-')[0]);
                 $('#range_campaign_time_max').val(data.campaign_data.msg_interval.split('-')[1]);

@@ -34,9 +34,9 @@ function getScheduledCampaigns($conn){
 	$stmt->execute();
 	$result = $stmt->get_result();
 	while($row = $result->fetch_assoc()){
-		$scheduled_time_plus = date('d-m-Y h:i:s:u A',strtotime($row['scheduled_time'])-10);
-		$current_time = (new DateTime())->format('d-m-Y h:i:s:u A');
-
+		$scheduled_time_plus = strtotime($row['scheduled_time'])-10;
+		$current_time =  time();
+		
 		if($scheduled_time_plus < $current_time)
 			array_push($camp_ids,$row['campaign_id']);
 	}	

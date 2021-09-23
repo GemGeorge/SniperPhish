@@ -368,13 +368,13 @@ function lockAndWaitProcess($conn, $campaign_id){
 		$stmt->execute();	//Lock campaign
 		
 		//Wait for camp exec time
-		$scheduled_time = date('d-m-Y h:i:s:u A',strtotime($row['scheduled_time']));	//ms time
-		$current_time = (new DateTime())->format('d-m-Y h:i:s:u A');
+		$scheduled_time = strtotime($row['scheduled_time'])*1000;	//ms time
+		$current_time = microtime(true)*1000;	//ms time
 
 		while($scheduled_time>$current_time){
 			//wait time scheduled time comes
 			usleep(1000);	//0.001 seconds. (in ms)
-			$current_time = (new DateTime())->format('d-m-Y h:i:s:u A');
+			$current_time = microtime(true)*1000;	//ms time
 		}
 		$stmt->close();
 
