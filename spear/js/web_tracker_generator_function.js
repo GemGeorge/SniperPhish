@@ -454,6 +454,21 @@ function generateTrackerCode() {
     //geting cid
     var cid = window.location.search.split("cid=")[1].split("&")[0];
 
+    //IE 8 supports
+    if (typeof Array.prototype.forEach != 'function') {
+        Array.prototype.forEach = function(callback){
+          for (var i = 0; i < this.length; i++){
+            callback.apply(this, [this[i], i, this]);
+          }
+        };
+    }
+    if(typeof String.prototype.trim !== 'function') {
+      String.prototype.trim = function() {
+        return this.replace(/^\s+|\s+$/g, ''); 
+      };
+    }
+    //-----------------------------------------------------------
+
     //creating session cookie
     if (document.cookie.indexOf("tsess_id=") >= 0) { // cookie exists
       cookie_arr = document.cookie.split(';');
@@ -472,19 +487,23 @@ function generateTrackerCode() {
       
     code_output['js'] += `function getIPInfo(){
                             var xhr1 = new XMLHttpRequest();
-                            xhr1.open('GET', 'https://ipapi.co/json', true);
-                            xhr1.onload = function () {
-                                if (xhr1.readyState === xhr1.DONE) {
-                                    ip_info = xhr1.response;
-                                    if(curr_page == first_page) //if starting page
-                                        do_track_req_visit();
-                                }
-                            };
-                            xhr1.onerror = function() { 
-                                if(curr_page == first_page) //if starting page, send even error occurred.
-                                        do_track_req_visit();
-                            };
-                            xhr1.send(null);
+                            try{//IE8 error catch
+                                xhr1.open('GET', 'https://ipapi.co/json', true);
+                                xhr1.onload = function () {
+                                    if (xhr1.readyState === xhr1.DONE) {
+                                        ip_info = xhr1.response;
+                                        if(curr_page == first_page) //if starting page
+                                            do_track_req_visit();
+                                    }
+                                };
+                                xhr1.onerror = function() { 
+                                    if(curr_page == first_page) //if starting page, send even error occurred.
+                                            do_track_req_visit();
+                                };
+                                xhr1.send(null);
+                            }catch(err){
+                                do_track_req_visit();
+                            }
                         }
 
                         function do_track_req_visit() {
@@ -498,15 +517,41 @@ function generateTrackerCode() {
                             ip_info: ip_info
                           }));
                         }\r\n//-----------------------------------------------------------\r\n
-                        if( document.readyState !== 'loading' )
-                          onReady();
-                        else {
-                            document.addEventListener('DOMContentLoaded', function () {
-                                onReady();
-                            });
-                        }
+                        
+                        var domIsReady = (function(domIsReady) {  
+  var isBrowserIeOrNot = function() {
+    return (!document.attachEvent || typeof document.attachEvent === "undefined" ? 'not-ie' : 'ie');
+  }
+  
+  domIsReady = function(callback) {
+    if(callback && typeof callback === 'function'){
+      if(isBrowserIeOrNot() !== 'ie') {
+        document.addEventListener("DOMContentLoaded", function() {          
+            return callback();
+        });
+      } else {
+        document.attachEvent("onreadystatechange", function() {
+          if(document.readyState === "complete") {
+            return callback();
+          }
+        });
+      }
+    } else {
+      console.error('The callback is not a function!');
+    }
+  }
+  
+  return domIsReady;
+})(domIsReady || {});
 
-                        function onReady(){`;
+(function(document, window, domIsReady, undefined) {
+  domIsReady(function() {
+    onReady();
+  });
+})(document, window, domIsReady);
+
+
+                        function onReady(){ //Events registration`;
 
     $.each(webpage_data.data, function(i, obj) {
         var code_output_sub = "";
@@ -539,6 +584,7 @@ function generateTrackerCode() {
 
         code_output['js'] += `if(document.getElementById("` + webpage_data.data[i].form_fields_and_values.FSB.idname + `"))
                               document.getElementById("` + webpage_data.data[i].form_fields_and_values.FSB.idname + `").onclick = function(e) {
+                                  e = e || window.event;    //IE8 support
                                   form_field_data = {};`                            
                                   + code_output_sub +
                                   `do_track_req(e,` + (i+1) + `,"` + (webpage_data.data[i].link_next_page==true?webpage_data.data[i].next_page_url:"#") + `");
@@ -550,7 +596,7 @@ function generateTrackerCode() {
     code_output['js'] += `};
                     //-----------------------------------------------------------
                     function do_track_req(e,page,next_page_url){
-                      e.preventDefault();  
+                      e.preventDefault ? e.preventDefault() : (e.returnValue = false);
                       xhr.open("POST", "` + location.origin + `/track", false);
                       xhr.send(JSON.stringify({
                         page : page,
