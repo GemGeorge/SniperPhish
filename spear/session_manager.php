@@ -3,7 +3,10 @@ if (session_status() === PHP_SESSION_NONE) {
    @ob_start();
    session_start();
 }
-require_once(dirname(__FILE__) . '/db.php');
+if (file_exists(dirname(__FILE__) . '/db.php'))
+	require_once(dirname(__FILE__) . '/db.php');
+else
+	die("Can not find db.php. Visit <a href='/install'>here</a> to install SniperPhish");	//shows if login page is opened before install 
 require_once(dirname(__FILE__) . '/common_functions.php');
 error_reporting(E_ERROR | E_PARSE); //Disable warnings
 //-----------------------------

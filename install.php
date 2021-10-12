@@ -178,7 +178,7 @@
                     $("#comm_error").text(data2);             
                 }).fail(function(error2) {
                     if(error2.status == 200)
-                        $("#comm_error").text('Can not access /install_manager without using .php extension in the URL. SniperPhish requires web server configuration to ignore .php from URLs. A common reason for the error is that your web server is not detecting the .htaccess file. Check .htaccess file in the SniperPhish root directory and enable .htaccess support in your web server.\r\nError: ' + error.status + ' ' + error.statusText);
+                        $("#comm_error").html('The .htaccess file from web root is either a) missing, b)incorrectly configured or c)it\'s support does not enabled in your web server. SniperPhish requires web server configuration to ignore .php from URLs. You should configure .htaccess file to ignore .php extension.');
                     else
                         $("#comm_error").text('Can not access /install_manager.php. Error:' + error2.status + ' ' + error2.statusText);
                 });
