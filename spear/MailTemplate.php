@@ -551,6 +551,8 @@
       <script src="js/libs/jquery/datatables.js"></script>  
       <script src="js/libs/summernote-bs4.min.js"></script>
       <script src="js/libs/codemirror.min.js"></script>
+      <script src="js/libs/moment.min.js"></script>
+      <script src="js/libs/moment-timezone-with-data.min.js"></script>
       <script src="js/common_scripts.js"></script>
       <script src="js/mail_template.js"></script>
       <?php
@@ -571,8 +573,6 @@
       ?>
       <script defer src="js/libs/sidebarmenu.js"></script>  
       <script defer src="js/libs/select2.min.js"></script>
-      <script defer src="js/libs/moment.min.js"></script>
-      <script defer src="js/libs/moment-timezone-with-data.min.js"></script>
       <script defer src="js/libs/toastr.min.js"></script> 
       <script defer src="js/libs/codemirror.xml.min.js"></script>
    </body>

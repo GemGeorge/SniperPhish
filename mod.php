@@ -2,6 +2,7 @@
 require_once(dirname(__FILE__) . '/spear/libs/qr_barcode/qrcode.php');
 require_once(dirname(__FILE__) . '/spear/libs/qr_barcode/barcode.php');
 require_once(dirname(__FILE__) . '/spear/db.php');
+require_once(dirname(__FILE__) . '/spear/common_functions.php');
 
 if(isset($_GET['content']))
 	$content = $_GET['content'];
