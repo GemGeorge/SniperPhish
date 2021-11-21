@@ -453,6 +453,7 @@
                               <label for="tb_camp_result_colums_list_mcamp" class="col-md-2">Mail campaign:</label>
                               <select class="select2 col-md-10" style="width: 83%;"  multiple="multiple"  id="tb_camp_result_colums_list_mcamp">
                                  <optgroup label="User Info">
+                                    <option value="id" selected>CID</option>
                                     <option value="user_name" selected>Name</option>
                                     <option value="user_email" selected>Email</option>
                                     <option value="sending_status" selected>Status</option>

@@ -756,6 +756,9 @@ function loadTableCampaignResult() {
 
     $.each(allReportColListSelected, function(i, item) {
         switch (item) {
+            case "id":
+                tb_headers += "<th>CID</th>";
+                break;
             case "user_name":
                 tb_headers += "<th>Name</th>";
                 break;

@@ -158,6 +158,7 @@
                                     <div class="col-md-9">  
                                        <select class="select2 form-control m-t-16" style="width: 100%;" multiple="multiple"  id="tb_mailcamp_result_colums_list">
                                           <optgroup label="User Info">
+                                             <option value="id" selected>CID</option>
                                              <option value="user_name" selected>Name</option>
                                              <option value="user_email" selected>Email</option>
                                              <option value="sending_status" selected>Status</option>

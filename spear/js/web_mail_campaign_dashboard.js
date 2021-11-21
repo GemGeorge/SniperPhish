@@ -996,6 +996,9 @@ function loadTableCampaignResult() {
 
     $.each(allReportColListSelected, function(i, item) {
         switch (item) {
+            case "id":
+                tb_headers += "<th>CID</th>";
+                break;
             case "user_name":
                 tb_headers += "<th>Name</th>";
                 break;
@@ -1490,6 +1493,7 @@ function applyCellColors(){
         dt_mail_campaign_result.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
 
             switch(allReportColListSelected[colIdx]){
+                case "id": 
                 case "user_name": 
                 case "user_email": 
                 case "sending_status": 
