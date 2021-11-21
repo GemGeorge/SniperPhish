@@ -178,7 +178,7 @@
 
                                        <input type="text" class="form-control" id="mail_sender_mailbox" placeholder="{imap.mailserver.com:993/imap/ssl}INBOX" disabled="">
                                        <div class="text-right m-t-5">
-                                          <i class="mdi mdi-information cursor-pointer" data-container="body" data-toggle="popover" data-placement="top" data-content="Mailbox path receving replies from users. Mailbox of email account provided in 'Account username' is selected by default if no mai header 'REPLY-TO' is specified. Ref: https://www.php.net/manual/en/function.imap-open.php"></i>
+                                          <i class="mdi mdi-information cursor-pointer" data-container="body" data-toggle="popover" data-placement="top" data-content="Mailbox path receiving replies from users. Mailbox of email account provided in 'Account username' is selected by default if no mai header 'REPLY-TO' is specified. Ref: https://www.php.net/manual/en/function.imap-open.php"></i>
                                           <button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" title="Verify mailbox access" onclick="verifyMailBoxAccess()">Verify</button>
                                        </div>
                                     </div>
