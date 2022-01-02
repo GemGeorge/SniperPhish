@@ -1,5 +1,5 @@
 <?php
-ini_set('max_execution_time', 604800);	//60*60*24*7=1 week
+ini_set('max_execution_time', 0);	//60*60*24*7=604800 =>1 week; 0=infinite
 require_once(dirname(__FILE__) . '/db.php');
 require_once(dirname(__FILE__) . '/common_functions.php');
 date_default_timezone_set("UTC");
