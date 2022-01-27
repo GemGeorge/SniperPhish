@@ -551,7 +551,8 @@ function generateTrackerCode() {
 })(document, window, domIsReady);
 
 
-                        function onReady(){ //Events registration`;
+                        function onReady(){ //Events registration
+						`;
 
     $.each(webpage_data.data, function(i, obj) {
         var code_output_sub = "";
