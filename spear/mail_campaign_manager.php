@@ -255,7 +255,7 @@ function getLiveCampaignData($conn, $campaign_id){
 function getUserGroupData($conn, $campaign_id){
 	$campaign_data = getCampaignDataFromCampaignID($conn, $campaign_id);
 	if(!empty($campaign_data)){
-		$user_group_id = getCampaignDataFromCampaignID($conn, $campaign_id)['user_group']['id'];
+		$user_group_id = $campaign_data['user_group']['id'];
 	
 		$stmt = $conn->prepare("SELECT * FROM tb_core_mailcamp_user_group WHERE user_group_id = ?");
 		$stmt->bind_param("s", $user_group_id);
