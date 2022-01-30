@@ -2,6 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
    @ob_start();
    session_start();
+   session_write_close();	//prevent access denied lock error
 }
 if (file_exists(dirname(__FILE__) . '/db.php'))
 	require_once(dirname(__FILE__) . '/db.php');
