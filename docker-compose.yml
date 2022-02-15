@@ -1,0 +1,33 @@
+version: '3.3'
+
+services:
+   sniperphish:
+     build: .
+     depends_on:
+       - db
+     container_name: web
+     ports:
+       - "80:80"
+       - "443:443"
+     volumes:
+       - ./db.php:/var/www/html/spear/db.php
+       - ./uploads/:/var/www/html/spear/uploads/
+       - ./hf_files/:/var/www/html/spear/sniperhost/hf_files/
+       - ./ht_files/:/var/www/html/spear/sniperhost/ht_files/
+     links:
+       - db
+
+   db:
+     image: mysql:latest
+     container_name: db
+     ports:
+       - "3306:3306"
+     volumes:
+       - datadb:/var/lib/mysql
+     environment:
+       MYSQL_USER: "sniperphish"
+       MYSQL_PASSWORD: "sniperphish"
+       MYSQL_ROOT_PASSWORD: "root"
+       MYSQL_DATABASE: "sniperphish"
+volumes:
+        datadb:
