@@ -22,6 +22,8 @@
 3. Open installation page http://localhost/install in your browser and follow the steps
 4. After installation, SniperPhish will redirect to login page http://localhost/spear
 >Default login - *Username: `admin`   Password: `sniperphish`*
+>
+>Note: To ensure security, delete docker configuration files `docker-compose.yml` and `Dockerfile` from web root if you are not using [docker](#docker-installation)
 
 ## Updating/Upgrading
 1. 1st keep a backup of your existing /spear/db.php, /spear/uploads/, /spear/sniperhost/hf_files/ and /spear/sniperhost/ht_files/ folders. 
@@ -93,6 +95,11 @@ Go to `Web-MailCamp Dashboard -> Select Campaign`. Then selct the web tracker an
 
 ## SniperPhish honors contributions of
 Joseph Nygil ([@j_nygil](https://twitter.com/j_nygil)) and Sreehari Haridas ([@sr33h4ri](https://twitter.com/sr33h4ri))
+
+## Shoutouts
+* [@sven-hash](https://github.com/sven-hash) for the docker implementation
+* [@OzzyKampha](https://github.com/OzzyKampha), @Mr.GP & @indeserpen for poking with bugs and feature requests
+
 
 ## Come let's connect and collaborate
 Join on our SniperPhish discord community to engage with us!
