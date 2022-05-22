@@ -99,7 +99,7 @@ $(function() {
 
 function addRemoveTrackerImage(mode){
     if(mode == "addDefault"){
-        if(getTrackerImageType() == 2) // custome tracker            
+        if(getTrackerImageType() == 2) // custom tracker            
             $('#summernote').summernote('code', $('#summernote').summernote('code').replace(/<img [^>]*src="http:*\/\/.*\/tmail\?.*?>/gi, "{{TRACKER}}")); //replace custom
         else
         if(getTrackerImageType() == 0) // no tracker
