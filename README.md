@@ -23,7 +23,7 @@
 4. After installation, SniperPhish will redirect to login page http://localhost/spear
 >Default login - *Username: `admin`   Password: `sniperphish`*
 >
->Note: To ensure security, delete docker configuration files `docker-compose.yml` and `Dockerfile` from web root if you are not using [docker](#docker-installation)
+>Note: For docker installation, please visit https://github.com/GemGeorge/SniperPhish-Docker
 
 ## Updating/Upgrading
 1. 1st keep a backup of your existing /spear/db.php, /spear/uploads/, /spear/sniperhost/hf_files/ and /spear/sniperhost/ht_files/ folders. 
@@ -73,21 +73,6 @@ _Note: SniperPhish tracks your phishing website only if the page is called by ap
 #### Viewing combined Web-Email Result
 Go to `Web-MailCamp Dashboard -> Select Campaign`. Then selct the web tracker and email campaign you created.<br/>
 <kbd><img src="https://user-images.githubusercontent.com/15928266/116777253-2e1bdf80-aaa0-11eb-9c44-e1db8f200c39.png" height="286"></img></kbd>
-
-## Docker Installation
-1. Create the folders `mkdir -p  {uploads/attachments,uploads/timages,ht_files,hf_files}`
-2. Create `db.php` file with informations about DB data
-```
-<?php
-  $curr_db = "sniperphish";
-  $conn = mysqli_connect("db","root","root",$curr_db);
-
-  if (mysqli_connect_errno()) {
-    die("DB connection failed!");
-  }
-?>
-```
-
 
 ## More
 * SniperPhish website: https://sniperphish.com/
