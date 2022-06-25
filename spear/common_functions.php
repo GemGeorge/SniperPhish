@@ -324,7 +324,7 @@ function getRandomStr($length=10){
     return substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyz', ceil(10/strlen($x)) )),1,intval($length));
 }
 function getSniperPhishVersion(){
-    echo "1.3";
+    echo "1.4";
 }
 
 ?>
