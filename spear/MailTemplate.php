@@ -257,7 +257,7 @@
                                                    </tr>
                                                    <tr>
                                                       <td>{{RND}}</td>
-                                                      <td>Random alpha-num string (default length:5). Eg: {{RND1}}, {{RND2} etc.</td>
+                                                      <td>Random alpha-num string (default length:5). Eg: {{RND1}}, {{RND2}} etc.</td>
                                                    </tr>
                                                 </tbody>
                                              </table>
