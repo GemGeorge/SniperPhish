@@ -139,18 +139,8 @@ function uploadTrackerImage(fname,fsize,ftype,fb64){
         })
     }).done(function (response) {
         if(response.result == "success"){
-            if(getTrackerImageType() == 2){ // custome tracker
-                $('#summernote').summernote('code', $('#summernote').summernote('code').replace(/<img [^>]*src="http:*\/\/.*\/tmail\?.*?\"/gi, `<img src="` + location.protocol + `//` + document.domain + `/tmail?mid={{MID}}&cid={{CID}}&mtid=` + nextRandomId + "_" + Math.floor(Math.random()*9999) + "\""));
-                $("#lb_tracker_image").text("Default tracker added");
-             }
-            else{
-                if(getTrackerImageType() == 1){ // default tracker
-                    $('#summernote').summernote('code', $('#summernote').summernote('code').replace("{{TRACKER}}", `<img src="` + location.protocol + `//` + document.domain + `/tmail?mid={{MID}}&cid={{CID}}&mtid=` + nextRandomId + "_" + Math.floor(Math.random()*9999) + `"></img>`));
-                    $("#lb_tracker_image").text("Custom tracker added");
-                }
-                else    //no tracker case
-                    $('#summernote').summernote('code', $('#summernote').summernote('code') + `<img src="` + location.protocol + `//` + document.domain + `/tmail?mid={{MID}}&cid={{CID}}&mtid=` + nextRandomId + "_" + Math.floor(Math.random()*9999) + `"></img>`);
-            }
+			$('#summernote').summernote('code', $('#summernote').summernote('code').replace(/<img [^>]*src="http:*\/\/.*\/tmail\?.*?\"/gi, `<img src="` + location.protocol + `//` + document.domain + `/tmail?mid={{MID}}&cid={{CID}}&mtid=` + nextRandomId + "_" + Math.floor(Math.random()*9999) + "\""));
+			$("#lb_tracker_image").text("Default tracker added");
         }
         else
             toastr.error('', 'Error uploading image!<br/>' + response.error);
