@@ -2,7 +2,7 @@
 
 /**
  * Browser detection class file.
- * This file contains everything required to use the BrowserDetection class. Tested with PHP 5.3.29 - 7.2.4.
+ * This file contains everything required to use the BrowserDetection class. Tested with PHP 5.3.29 - 7.4.0.
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
@@ -13,10 +13,10 @@
  * details at: https://www.gnu.org/licenses/lgpl-3.0.html
  *
  * @package Browser_Detection
- * @version 2.9.5
- * @last-modified February 2, 2020
+ * @version 2.9.6
+ * @last-modified May 1, 2022
  * @author Alexandre Valiquette
- * @copyright Copyright (c) 2020, Wolfcast
+ * @copyright Copyright (c) 2022, Wolfcast
  * @link https://wolfcast.com/
  */
 
@@ -40,6 +40,13 @@ namespace Wolfcast;
  * 2010. Chris' class was based on the original work from Gary White.
  *
  * Updates:
+ *
+ * 2022-05-01: Version 2.9.6
+ *  + Added support for Chrome OS.
+ *  + Added support for macOS Monterey and macOS Big Sur.
+ *  + Now correctly detects AArch64 as 64-bit.
+ *  + Added support for PHP 8.
+ *  + Tested with latest Web Browsers and platforms.
  *
  * 2020-02-02: Version 2.9.5
  *  + WARNING! Breaking change: complete rework of robots detection. Now robot name and version is detected in addition
@@ -135,10 +142,10 @@ namespace Wolfcast;
  *  + Better Mozilla detection
  *
  * @package Browser_Detection
- * @version 2.9.5
- * @last-modified February 2, 2020
+ * @version 2.9.6
+ * @last-modified May 1, 2022
  * @author Alexandre Valiquette, Chris Schuld, Gary White
- * @copyright Copyright (c) 2020, Wolfcast
+ * @copyright Copyright (c) 2022, Wolfcast
  * @license https://www.gnu.org/licenses/lgpl-3.0.html
  * @link https://wolfcast.com/
  * @link https://wolfcast.com/open-source/browser-detection/tutorial.php
@@ -184,6 +191,7 @@ class BrowserDetection
      */
     const PLATFORM_ANDROID = 'Android';
     const PLATFORM_BLACKBERRY = 'BlackBerry';
+    const PLATFORM_CHROME_OS = 'Chrome OS';
     const PLATFORM_FREEBSD = 'FreeBSD';
     const PLATFORM_IOS = 'iOS';
     const PLATFORM_LINUX = 'Linux';
@@ -515,7 +523,7 @@ class BrowserDetection
      */
     public function getLibVersion()
     {
-        return '2.9.5';
+        return '2.9.6';
     }
 
     /**
@@ -554,6 +562,12 @@ class BrowserDetection
      */
     public function getPlatformVersion($returnVersionNumbers = false, $returnServerFlavor = false)
     {
+        if(isset($_SERVER['Sec-CH-UA-Platform-Version'])){   // temp code to detect Win 11 https://docs.microsoft.com/en-us/microsoft-edge/web-platform/how-to-detect-win11
+            $v_num_first = explode('.', $_SERVER['Sec-CH-UA-Platform-Version'])[0];
+            if($v_num_first >= 13)
+                return 'Windows 11';
+        }
+
         if ($this->_platformVersion == self::PLATFORM_VERSION_UNKNOWN || $this->_platformVersion == '') {
             return self::PLATFORM_VERSION_UNKNOWN;
         }
@@ -728,9 +742,9 @@ class BrowserDetection
         if (!is_string($agentString) || trim($agentString) == '') {
             //https://bugs.php.net/bug.php?id=49184
             if (filter_has_var(INPUT_SERVER, 'HTTP_USER_AGENT')) {
-                $agentString = filter_input(INPUT_SERVER, 'HTTP_USER_AGENT', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
+                $agentString = filter_input(INPUT_SERVER, 'HTTP_USER_AGENT', FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW);
             } else if (array_key_exists('HTTP_USER_AGENT', $_SERVER) && is_string($_SERVER['HTTP_USER_AGENT'])) {
-                $agentString = filter_var($_SERVER['HTTP_USER_AGENT'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
+                $agentString = filter_var($_SERVER['HTTP_USER_AGENT'], FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW);
             } else {
                 $agentString = '';
             }
@@ -1376,6 +1390,9 @@ class BrowserDetection
             } else if ($this->containString($this->_agent, array('CPU OS', 'CPU iPhone OS', 'iPhone', 'iPad', 'iPod'))) { /* Check iOS (iPad/iPod/iPhone) before Macintosh */
                 $this->setPlatform(self::PLATFORM_IOS);
                 $this->setMobile(true);
+            } else if ($this->containString($this->_agent, array('CrOS', 'Chromebook'))) {
+                $this->setPlatform(self::PLATFORM_CHROME_OS);
+                $this->setMobile(true);
             } else if ($this->containString($this->_agent, 'Android')) {
                 $this->setPlatform(self::PLATFORM_ANDROID);
                 $this->setMobile(true);
@@ -1416,8 +1433,8 @@ class BrowserDetection
         }
 
         //Check if it's a 64-bit platform
-        if ($this->containString($this->_agent, array('WOW64', 'Win64', 'AMD64', 'x86_64', 'x86-64', 'ia64', 'IRIX64',
-                'ppc64', 'sparc64', 'x64;', 'x64_64'))) {
+        if ($this->containString($this->_agent, array('WOW64', 'Win64', 'AMD64', 'x86_64', 'x86-64', 'Aarch64', 'ia64',
+                'IRIX64', 'ppc64', 'sparc64', 'x64;', 'x64_64'))) {
             $this->set64bit(true);
         }
 
@@ -1488,6 +1505,15 @@ class BrowserDetection
                     $result = str_replace('_', '.', $this->cleanVersion($foundVersion[1]));
                 } else if ($this->containString($this->_agent, 'Mac OS X')) {
                     $result = '10';
+                }
+                break;
+
+            case self::PLATFORM_CHROME_OS:
+                if (preg_match('/CrOS\s*\w*\s*([^\s;$]+)/i', $this->_agent, $foundVersion)) {
+                    $result = $this->cleanVersion($foundVersion[1]);
+                }
+                else if (preg_match('/Chromebook\s+([^\s;$]+)/i', $this->_agent, $foundVersion)) {
+                    $result = $this->cleanVersion($foundVersion[1], 'Build');
                 }
                 break;
 
@@ -1705,12 +1731,18 @@ class BrowserDetection
      * Clean a version string from unwanted characters.
      * @access protected
      * @param string $version The version string to clean.
+     * @param mixed $toRemove (optional) String or array of strings representing additional string(s) to remove.
      * @return string Returns the cleaned version number string.
      */
-    protected function cleanVersion($version)
+    protected function cleanVersion($version, $toRemove = NULL)
     {
+        $cleanVer = $version;
+        if ($toRemove !== NULL) {
+            $cleanVer = str_ireplace($toRemove, '', $cleanVer);
+        }
+
         //Clear anything that is in parentheses (and the parentheses themselves) - will clear started but unclosed ones too
-        $cleanVer = preg_replace('/\([^)]+\)?/', '', $version);
+        $cleanVer = preg_replace('/\([^)]+\)?/', '', $cleanVer);
         //Replace with a space any character which is NOT an alphanumeric, dot (.), hyphen (-), underscore (_) or space
         $cleanVer = preg_replace('/[^0-9.a-zA-Z_ -]/', ' ', $cleanVer);
 
@@ -1745,10 +1777,12 @@ class BrowserDetection
      * @param boolean $findWords (optional) Determines if the needle should match a word to be found. For example "Bar"
      * would not be found in "FooBar" when true but would be found in "Foo Bar". When set to false, the needle can be
      * found anywhere in the haystack.
+     * @param int $foundPos (optional) Integer buffer that will contain the position of the needle (if found and if a
+     * non NULL variable has been passed).
      * @return boolean Returns true if the needle (or one of the needles) has been found in the haystack, false
      * otherwise.
      */
-    protected function containString($haystack, $needle, $insensitive = true, $findWords = true)
+    protected function containString($haystack, $needle, $insensitive = true, $findWords = true, &$foundPos = NULL)
     {
         if (!is_array($needle)) {
             $needle = array($needle);
@@ -1756,16 +1790,19 @@ class BrowserDetection
 
         foreach ($needle as $currNeedle) {
             if ($findWords) {
-                 $found = $this->wordPos($haystack, $currNeedle, $insensitive) !== false;
+                 $position = $this->wordPos($haystack, $currNeedle, $insensitive);
             } else {
                 if ($insensitive) {
-                    $found = stripos($haystack, $currNeedle) !== false;
+                    $position = stripos($haystack, $currNeedle);
                 } else {
-                    $found = strpos($haystack, $currNeedle) !== false;
+                    $position = strpos($haystack, $currNeedle);
                 }
             }
 
-            if ($found) {
+            if ($position !== false) {
+                if ($foundPos !== NULL) {
+                    $foundPos = $position;
+                }
                 return true;
             }
         }
@@ -1806,13 +1843,14 @@ class BrowserDetection
         }
 
         foreach ($uaNameToLookFor as $currUANameToLookFor) {
-            if ($this->containString($userAgent, $currUANameToLookFor, true, $uaNameFindWords)) {
+            $foundPos = -1;
+            if ($this->containString($userAgent, $currUANameToLookFor, true, $uaNameFindWords, $foundPos)) {
                 //Many browsers don't use the standard "Browser/1.0" format, they uses "Browser 1.0;" instead
                 if (stripos($userAgent, $currUANameToLookFor . $separator) === false) {
                     $userAgent = str_ireplace($currUANameToLookFor . ' ', $currUANameToLookFor . $separator, $userAgent);
                 }
 
-                $verParts = explode($separator, stristr($userAgent, $currUANameToLookFor));
+                $verParts = explode($separator, substr($userAgent, $foundPos));
                 if (count($verParts) > 1) {
                     $verParts = explode(' ', $verParts[1]);
                     $version = $verParts[0];
@@ -1853,6 +1891,10 @@ class BrowserDetection
 
         if ($this->_platformVersion === '10') {
             return 'Mac OS X'; //Unspecified Mac OS X version
+        } else if ($this->compareVersions($macVer, '12.0') >= 0 && $this->compareVersions($macVer, '13.0') < 0) {
+            return 'macOS Monterey';
+        } else if ($this->compareVersions($macVer, '11.0') >= 0 && $this->compareVersions($macVer, '12.0') < 0) {
+            return 'macOS Big Sur';
         } else if ($this->compareVersions($macVer, '10.15') >= 0 && $this->compareVersions($macVer, '10.16') < 0) {
             return 'macOS Catalina';
         } else if ($this->compareVersions($macVer, '10.14') >= 0 && $this->compareVersions($macVer, '10.15') < 0) {
@@ -2248,12 +2290,10 @@ class BrowserDetection
         $cleanWinVer = implode('.', $cleanWinVer);
 
         if ($this->compareVersions($cleanWinVer, '11') >= 0) {
-            //Future versions of Windows
             return self::PLATFORM_WINDOWS . ' ' . $winVer;
         } else if ($this->compareVersions($cleanWinVer, '10') >= 0) {
-            //Current version of Windows
-            //(Windows Server 2019 & 2016 have the same version number. Only the build can separate the two - which is not included in the UA)
-            return $returnServerFlavor ? (self::PLATFORM_WINDOWS . ' Server 2019') : (self::PLATFORM_WINDOWS . ' 10');
+            //(Windows Server 2022, 2019 & 2016 have the same version number. Only the build can separate the two - which is not included in the UA)
+            return $returnServerFlavor ? (self::PLATFORM_WINDOWS . ' Server 2022') : (self::PLATFORM_WINDOWS . ' 10');
         } else if ($this->compareVersions($cleanWinVer, '7') < 0) {
             if ($this->compareVersions($cleanWinVer, '6.3') == 0) {
                 return $returnServerFlavor ? (self::PLATFORM_WINDOWS . ' Server 2012 R2') : (self::PLATFORM_WINDOWS . ' 8.1');

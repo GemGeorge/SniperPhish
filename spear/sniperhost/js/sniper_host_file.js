@@ -27,6 +27,7 @@ function getFileData(fname,fsize,ftype,fb64){
         $("#upload_msg").html('<span class="badge badge-pill badge-success">' + fname + ' uploaded!</span>');
         if($("#collapseOne").hasClass('show'))
             $("#collapseOne").collapse('toggle');
+        g_deny_navigation = '';
     }    
 }
 
@@ -54,7 +55,7 @@ function saveFile(e) {
 
     enableDisableMe(e);
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "save_file",
@@ -70,6 +71,7 @@ function saveFile(e) {
             window.history.replaceState(null,null, location.pathname + '?ht=' + nextRandomId);
             loadTableFilesList();
             viewFileDetailsFromId(nextRandomId,true);
+            g_deny_navigation = null;
         }
         else
             toastr.error('', response.error);
@@ -79,7 +81,7 @@ function saveFile(e) {
 
 function viewFileDetailsFromId(hf_id,quite) {
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_file_details_from_id",
@@ -125,7 +127,7 @@ function promptFileDeletion(hf_id) {
 
 function fileDeletionAction() {
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_file",
@@ -154,7 +156,7 @@ function loadTableFilesList() {
     $('#table_file_list tbody > tr').remove();
 
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_file_list",
@@ -166,7 +168,7 @@ function loadTableFilesList() {
 
                 var curr_header = g_arr_headers[value.file_header]==undefined?'Custom ('+value.file_header+')':g_arr_headers[value.file_header];
 
-                $("#table_file_list tbody").append("<tr><td></td><td>" + value.hf_name + "</td><td>" + value.file_original_name + "</td><td>" + curr_header +"</td><td data-order=\"" + UTC2LocalUNIX(value.date) + "\">" + UTC2Local(value.date) + "</td><td>" + action_items + "</td></tr>");
+                $("#table_file_list tbody").append("<tr><td></td><td>" + value.hf_name + "</td><td>" + value.file_original_name + "</td><td>" + curr_header +"</td><td data-order=\"" + getTimestamp(value.date) + "\">" + value.date + "</td><td>" + action_items + "</td></tr>");
             });
         }
 
@@ -183,6 +185,11 @@ function loadTableFilesList() {
 
             "drawCallback": function() {
                 $('#table_file_list tbody').fadeIn(500);
+                $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+            },
+
+            "initComplete": function() {
+                $('label>select').select2({minimumResultsForSearch: -1, });
             }
         }); //initialize table
         
@@ -194,11 +201,6 @@ function loadTableFilesList() {
                 cell.innerHTML = i + 1;
             });
         }).draw();
-
-        $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-        $("label>select").select2({
-            minimumResultsForSearch: -1,
-        });
     });  
 }
 

@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
    isSessionValid(true);
 ?>
 <!DOCTYPE html>
@@ -83,22 +83,48 @@
                               <div class="col-md-12">
                                  <div class="row mb-3 align-items-left">
                                     <label for="tb_tracker_name" class="col-sm-2 text-left control-label col-form-label">Tracker Name:</label>
-                                    <div class="col-md-6">
+                                    <div class="col-md-7">
                                        <input type="text" class="form-control" id="tb_tracker_name">
                                     </div>
+                                 </div>  
+
+
+                                 <div class="row">                            
+                                    <label for="tb_tracker_name" class="col-sm-2 text-left control-label col-form-label">Webhook URL:</label>                                    
+                                       <div class="col-md-3">
+                                          <select class="select2 form-control custom-select" id="selector_webhook_type" style="height: 36px;width: 100%;">
+                                              <option value="sp_base">SP base URL</option>
+                                              <option value="current_domain">Current domain</option>
+                                              <option value="cust_sp">Custom SP URL</option>
+                                          </select>
+                                       </div>
                                     <div class="col-md-4">
-                                       <div class="row">
-                                          <label for="cb_auto_ativate" class="col-sm-9 text-right control-label col-form-label">Auto-activate after creation</label>
-                                          <div class="custom-control custom-switch col-sm-3 m-t-5 text-right">
-                                             <label class="switch">
-                                                <input type="checkbox" id="cb_auto_ativate" checked>
-                                                <span class="slider round"></span>
-                                             </label>
+                                       <input type="text" class="form-control" id="tb_webhook_url">
+                                       <div class="text-right m-t-5">
+                                          <i class="mdi mdi-information cursor-pointer" data-container="body" tabindex="0" data-toggle="popover" data-trigger="focus" data-placement="top" data-content="SniperPhish URL to which webhook is received from phishing websites. Thish should be accessible for target users."></i>
+                                          <button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="top" title="Verify access to the Webhook URL" onclick="webhookValidate($(this))"><i class="fa fas fa-check"></i></button>
+                                       </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                       <div class="row">   
+                                          <div class="col-md-7">
+                                             <span class="m-t-5 d-block">/track</span>
                                           </div>
                                        </div>
                                     </div>
-                                 </div>  
+                                 </div>
+
+                                 <div class="row">
+                                    <label for="cb_auto_ativate" class="col-sm-2 text-left control-label col-form-label m-t-10">Auto-activate after creation</label>
+                                    <div class="custom-control custom-switch col-sm-3 m-t-15 row">
+                                       <label class="switch">
+                                          <input type="checkbox" id="cb_auto_ativate" checked>
+                                          <span class="slider round"></span>
+                                       </label>
+                                    </div>
+                                 </div>
                               </div>
+
                               <!--<p>(*) Mandatory</p> -->
                            </section>
                            <h3>Web Pages</h3>
@@ -115,8 +141,7 @@
                                     <div class="col-md-1 text-right">
                                        <button class="btn btn-info btn-sm bt_delete_page_first" data-toggle="tooltip" data-placement="left" title="Add page" hidden=""><i class="fas fa-level-down-alt"></i></button>
                                     </div>
-                                 </div>
-                             
+                                 </div>                             
                               </div>
                            </section>
                            <h3>Output</h3>
@@ -261,6 +286,7 @@
       <!-- this page js -->
       <script src="js/libs/jquery/jquery.steps.min.js"></script>
       <script src="js/libs/clipboard.min.js"></script>  
+      <script src="js/libs/select2.min.js"></script>
       <script src="js/common_scripts.js"></script>
       <script src="js/web_tracker_generator_function.js"></script>
       <script>
@@ -282,6 +308,12 @@
                          f_error = true;
                      } else
                          $("#tb_tracker_name").removeClass("is-invalid");
+
+                     if (isValidURL($("#tb_webhook_url").val()) == false) {
+                         $("#tb_webhook_url").addClass("is-invalid");
+                         f_error = true;
+                     } else
+                         $("#tb_webhook_url").removeClass("is-invalid");
                  }
 
                  if (currentIndex == 1) {
@@ -385,7 +417,6 @@
       <script defer src="js/libs/popper.min.js"></script>
       <script defer src="js/libs/bootstrap.min.js"></script>
       <script defer src="js/libs/jquery/jquery.validate.min.js"></script>
-      <script defer src="js/libs/select2.min.js"></script>
       <script defer src="js/libs/toastr.min.js"></script>
       <script defer src="js/libs/moment.min.js"></script>
       <script defer src="js/libs/moment-timezone-with-data.min.js"></script>

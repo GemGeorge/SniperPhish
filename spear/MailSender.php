@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
    isSessionValid(true);
 ?>
 <!DOCTYPE html>
@@ -56,7 +56,7 @@
                   <div class="col-12 d-flex no-block align-items-center">
                      <h4 class="page-title">Email Sender List</h4>
                      <div class="ml-auto text-right" id="store-area">
-                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#ModalStore"><i class="fa fas fa-warehouse"></i> Store</button>
+                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#modal_store"><i class="fa fas fa-warehouse"></i> Store</button>
                      </div>
                   </div>
                </div>
@@ -123,14 +123,25 @@
                   <div class="card-body">
                      <div class="row">
                         <div class="col-md-12">
-                           <div class="form-group row">                                              
-                              <label for="mail_sender_name" class="col-md-2 text-left control-label col-form-label">Mail Sender Name: </label>
-                              <div class="col-md-4">              
-                                 <input type="text" class="form-control" id="mail_sender_name">
+                           <div class="row">          
+                              <div class="col-md-6">
+                                 <div class="form-group row">                                    
+                                    <label for="mail_sender_name" class="col-md-3 text-left control-label col-form-label">Mail Sender Name: </label>
+                                    <div class="col-md-7">              
+                                       <input type="text" class="form-control" id="mail_sender_name">
+                                    </div>
+                                 </div>
                               </div>
-                              <div class="col-md-6 text-right">
-                                 <button type="button" class="btn btn-info" onclick="saveMailSenderGroup($(this))"><i class="fa fas fa-save"></i> Save</button>
-                              </div>                             
+                              <div class="col-md-6">
+                                 <div class="form-group row">                                 
+                                    <div class="col-sm-5">
+                                       <label class="text-left control-label row col-form-label">Sender Template: <span class="text-success ml-1 cursor-pointer" id="lb_sender_template_name" onclick="$('#modal_store').modal('toggle');">Custom</span></label>
+                                    </div>
+                                    <div class="col-sm-7 text-right">
+                                       <button type="button" class="btn btn-info" onclick="saveMailSenderGroup($(this))"><i class="fa fas fa-save"></i> Save</button>
+                                    </div>
+                                 </div>
+                              </div>                   
                            </div>                    
                         </div>
                      </div>
@@ -148,13 +159,13 @@
                                  <div class="form-group row">
                                     <label for="mail_sender_acc_username" class="col-sm-3 text-left control-label col-form-label">SMTP Username:*</label>
                                     <div class="col-sm-7">
-                                       <input type="text" class="form-control" id="mail_sender_acc_username" placeholder="Email account">
+                                       <input type="text" class="form-control" id="mail_sender_acc_username" placeholder="Email address">
                                     </div>
                                  </div>
                                  <div class="form-group row">
                                     <label for="mail_sender_acc_pwd" class="col-sm-3 text-left control-label col-form-label">SMTP Password:*</label>
                                     <div class="col-sm-7">
-                                       <input type="password" class="form-control" id="mail_sender_acc_pwd" placeholder="Email account password">
+                                       <input type="password" class="form-control" id="mail_sender_acc_pwd" placeholder="SMTP login password">
                                     </div>
                                  </div>
                                  <div class="form-group row">
@@ -178,7 +189,7 @@
 
                                        <input type="text" class="form-control" id="mail_sender_mailbox" placeholder="{imap.mailserver.com:993/imap/ssl}INBOX" disabled="">
                                        <div class="text-right m-t-5">
-                                          <i class="mdi mdi-information cursor-pointer" data-container="body" data-toggle="popover" data-placement="top" data-content="Mailbox path receiving replies from users. Mailbox of email account provided in 'Account username' is selected by default if no mai header 'REPLY-TO' is specified. Ref: https://www.php.net/manual/en/function.imap-open.php"></i>
+                                          <i class="mdi mdi-information cursor-pointer" data-container="body" tabindex="0" data-toggle="popover" data-trigger="focus" data-placement="top" data-content="Mailbox path receiving replies from users. Mailbox of email account provided in 'Account username' is selected by default if no mai header 'REPLY-TO' is specified. Ref: https://www.php.net/manual/en/function.imap-open.php"></i>
                                           <button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" title="Verify mailbox access" onclick="verifyMailBoxAccess()">Verify</button>
                                        </div>
                                     </div>
@@ -186,7 +197,7 @@
                               </div>
                               <div class="col-md-6">
                                  <div class="form-group row">
-                                    <label class="text-left control-label col-form-label">Custom mail header:</label>
+                                    <label class="text-left control-label col-form-label">Custom Email Header:</label>
                                  </div>
                                  <div class="form-group row">                                 
                                     <div class="col-sm-5">
@@ -212,15 +223,6 @@
                                           <tbody>
                                           </tbody>
                                        </table>
-                                    </div>
-                                 </div>
-                                 <div class="form-group row">
-                                    <label for="mail_sender_mailbox" class="col-sm-3 row text-left control-label col-form-label">SMTP Encryption:</label>
-                                    <div class="col-md-7 row">
-                                       <div class="range-slider col-md-7 m-t-15">
-                                          <input class="input-range input-range1" oninput="rangeSMTPEncryption(this.id)" onchange="rangeSMTPEncryption(this.id)" id="range_SMTP_enc_level" type="range" value="2" min="0" max="2">
-                                       </div> 
-                                       <label class="col-md-4 m-l-10 text-info text-left control-label col-form-label" id="lb_smtp_enc">TLS</label>
                                     </div>
                                  </div>
                                  <hr/>
@@ -360,13 +362,17 @@
                </div>
             </div>
             <!-- Modal -->
-            <div class="modal fade" id="modal_verifier" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal fade" id="modal_verifier" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
                <div class="modal-dialog" role="document">
                   <div class="modal-content">
                      <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                      </div>
                      <div class="modal-body" id="modal_verifier_body">
+                        <div class="form-group row area_data">
+                        </div>
+                        <div class="form-group row area_loader">
+                        </div>
                      </div>
                      <div class="modal-footer" >                        
                      </div>
@@ -374,7 +380,7 @@
                </div>
             </div>
             <!-- Modal -->
-            <div class="modal fade" id="ModalStore" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal fade" id="modal_store" tabindex="-1" role="dialog" aria-hidden="true">
                <div class="modal-dialog" role="document">
                   <div class="modal-content">
                      <div class="modal-header">
@@ -392,7 +398,7 @@
                         <i id="lb_selector_common_mail_sender_note"></i>
                      </div>
                      <div class="modal-footer" >
-                        <button type="button" class="btn btn-success" onclick="insertCommonSender()"><i class="mdi mdi-arrow-bottom-left"></i> Insert</button>
+                        <button type="button" class="btn btn-success" onclick="appySenderTemplate()"><i class="mdi mdi-arrow-bottom-left"></i> Insert</button>
                      </div>
                   </div>
                </div>

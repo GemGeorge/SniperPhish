@@ -20,6 +20,9 @@ var bt_more_tools = `<div class="note-btn-group btn-group">
             <a class="dropdown-item" href="#" onclick="addMoreOptions('web_tracker_link')" role="listitem">
                 Link to Web Tracker
             </a>
+            <a class="dropdown-item" href="#" onclick="addMoreOptions('sh_lp')" role="listitem" data-border="top">
+                SniperHost landing page
+            </a>
             <a class="dropdown-item" href="#" onclick="addMoreOptions('qr_ir')" role="listitem" data-border="top">
                 QR code (inline remote)
             </a>
@@ -39,8 +42,7 @@ var bt_more_tools = `<div class="note-btn-group btn-group">
                 Bar code (inline attachment)
             </a>
         </div>
-    </div>`;  
-
+    </div>`; 
 
 $(function() {
     $('.accordion .panel-default .panel-heading').click(function (e) {
@@ -64,10 +66,14 @@ $(function() {
 
     $("#selector_sample_mailtemplates").select2({
         minimumResultsForSearch: -1,
+    });
+
+    $("#landpage_selector").select2({
+        minimumResultsForSearch: -1,
     }); 
 
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_sender_list"
@@ -82,7 +88,7 @@ $(function() {
     });
 
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_link_to_web_tracker"
@@ -94,17 +100,41 @@ $(function() {
             $.each(data, function() {
                 $("#web_tracker_selector").append("<option value='" + this.first_page + "'>" + this.tracker_name + "</option>");
             });
-    });     
+    });  
+
+    $.post({
+        url: "sniperhost/manager/sniperhost_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
+            action_type: "get_landpage_list",
+        })
+    }).done(function (data) {
+        if(data.error)
+            $("#landpage_selector").append("<option value='Empty'>Empty</option>");
+        else
+            $.each(data, function() {
+                $("#landpage_selector").append("<option value='" + this.page_file_name + "'>" + this.page_name + "</option>");
+            });
+    });   
+
+    $('#section_add_mail_template').click(function(){
+        g_deny_navigation = '';
+    });
 });
 
 function addRemoveTrackerImage(mode){
     if(mode == "addDefault"){
-        if(getTrackerImageType() == 2) // custom tracker            
-            $('#summernote').summernote('code', $('#summernote').summernote('code').replace(/<img [^>]*src="http:*\/\/.*\/tmail\?.*?>/gi, "{{TRACKER}}")); //replace custom
-        else
-        if(getTrackerImageType() == 0) // no tracker
-            $('#summernote').summernote('code', $('#summernote').summernote('code') + "{{TRACKER}}");
-        $("#lb_tracker_image").text("Default tracker added");
+        var l_tracker_image_type = getTrackerImageType();
+        if(l_tracker_image_type == 1) //if default tracker exist
+            toastr.info('', 'Default tracker already added!');
+        else{
+            if(l_tracker_image_type == 2) // custom tracker            
+                $('#summernote').summernote('code', $('#summernote').summernote('code').replace(/<img [^>]*src="http:*\/\/.*\/tmail\?.*?>/gi, "{{TRACKER}}")); //replace custom
+            else
+            if(l_tracker_image_type == 0) // no tracker
+                $('#summernote').summernote('code', $('#summernote').summernote('code') + "{{TRACKER}}");
+            $("#lb_tracker_image").text("Default tracker added");
+        }
         g_tracker_image_type = 1;
     }
     else
@@ -129,7 +159,7 @@ function uploadTrackerImage(fname,fsize,ftype,fb64){
     }
 
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "upload_tracker_image",
@@ -139,8 +169,8 @@ function uploadTrackerImage(fname,fsize,ftype,fb64){
         })
     }).done(function (response) {
         if(response.result == "success"){
-			$('#summernote').summernote('code', $('#summernote').summernote('code').replace(/<img [^>]*src="http:*\/\/.*\/tmail\?.*?\"/gi, `<img src="` + location.protocol + `//` + document.domain + `/tmail?mid={{MID}}&cid={{CID}}&mtid=` + nextRandomId + "_" + Math.floor(Math.random()*9999) + "\""));
-			$("#lb_tracker_image").text("Default tracker added");
+            $('#summernote').summernote('code', $('#summernote').summernote('code').replace("{{TRACKER}}", `<img src="` + location.protocol + `//` + document.domain + `/tmail?mid={{MID}}&rid={{RID}}&mtid=` + nextRandomId + "_" + Math.floor(Math.random()*9999) + `"></img>`));
+            $("#lb_tracker_image").text("Custom tracker added");
         }
         else
             toastr.error('', 'Error uploading image!<br/>' + response.error);
@@ -169,7 +199,7 @@ function saveMailTemplate(e) {
 
     enableDisableMe(e);
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "save_mail_template",
@@ -188,6 +218,7 @@ function saveMailTemplate(e) {
             else
                 toastr.success('', 'Saved successfully!');
             window.history.replaceState(null,null, location.pathname + '?action=edit&template=' + nextRandomId);
+            g_deny_navigation = null;
         }
         else
             toastr.error('', 'Error saving data!<br/>' + response.error);
@@ -203,7 +234,7 @@ function getMailTemplateFromTemplateId(id) {
         nextRandomId = id;
 
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_mail_template_from_template_id",
@@ -214,8 +245,13 @@ function getMailTemplateFromTemplateId(id) {
         $('#mail_template_subject').val(data.mail_template_subject);
         $('#summernote').summernote('code', data.mail_template_content);//.replace(/\n/gi, "<br/>"));
         $("#mail_content_type_selector").val(data.mail_content_type).trigger("change");
-        $.each(data.attachment, function(i,file) {
-            addAttachmentLabel(file.file_id, file.file_name, file.file_disp_name, file.inline);
+        $.each(data.attachment, function(i,att_info) {
+            //var att= {file_id: file.file_id, file_name: file.file_name, file.file_disp_name:, inline, file.inline, payload_info: file.payload_info};
+            //if(file.payload_info == true){
+              //  att.payload_info={custom: file.payload_info.custom, file_extn: file.payload_info.file_extn, file_type:file.payload_info.file_extn.file_type, }
+
+            
+            addAttachmentLabel(att_info);
         });
 
         if(data.timage_type == 0)
@@ -236,7 +272,7 @@ function promptMailTemplateDeletion(id) {
 
 function mailTemplateDeletionAction() {
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_mail_template_from_template_id",
@@ -269,7 +305,7 @@ function mailTemplateCopy() {
         $("#modal_new_mail_template_name").removeClass("is-invalid");
 
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "make_copy_mail_template",
@@ -292,7 +328,7 @@ function mailTemplateCopy() {
 
 function loadTableMailTemplateList() {
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_mail_template_list"
@@ -303,7 +339,7 @@ function loadTableMailTemplateList() {
                 var action_items_mail_template_table = `<div class="d-flex no-block align-items-center"><button type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top" onclick="document.location='MailTemplate?action=edit&template=` + value.mail_template_id + `'" title="View/Edit"><i class="mdi mdi-pencil"></i></button><button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="top" title="Copy" onclick="promptMailTemplateCopy('` + value.mail_template_id + `')"><i class="mdi mdi-content-copy"></i></button><button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" title="Delete" onclick="promptMailTemplateDeletion('` + value.mail_template_id + `')"><i class="mdi mdi-delete-variant"></i></button></div>`;
 
                 var is_attachment =  Object.keys(value.attachment).length>0? "<i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i><span hidden>Yes</span>" : "<i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span>";
-                $("#table_mail_template_list tbody").append("<tr><td></td><td>" + value.mail_template_name + "</td><td>" + value.mail_template_subject + "</td><td>" + $('<div>').text(value.mail_template_content).html() + "...</td><td>" + is_attachment + "</td><td data-order=\"" + UTC2LocalUNIX(value.date) + "\">" + UTC2Local(value.date) + "</td><td>" + action_items_mail_template_table + "</td></tr>");
+                $("#table_mail_template_list tbody").append("<tr><td></td><td>" + value.mail_template_name + "</td><td>" + value.mail_template_subject + "</td><td>" + $('<div>').text(value.mail_template_content).html() + "...</td><td>" + is_attachment + "</td><td data-order=\"" + getTimestamp(value.date) + "\">" + value.date + "</td><td>" + action_items_mail_template_table + "</td></tr>");
             });
         }
         
@@ -349,7 +385,7 @@ function uploadAttachments(fname,fsize,ftype,fb64){
     }
 
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "upload_attachments",
@@ -359,7 +395,7 @@ function uploadAttachments(fname,fsize,ftype,fb64){
         })
     }).done(function (response) {
         if(response.result == "success"){
-            addAttachmentLabel(response.file_id, fname, fname, false);                
+            addAttachmentLabel({file_id: response.file_id, file_name: fname, file_disp_name:fname, inline:false, payloaded:false});  
             triggerAttachmentChanges();      
         }
         else
@@ -377,25 +413,20 @@ function catchAttachments(){
     return attachments;
 }
 
-function addAttachmentLabel(file_id,file_name, file_disp_name, inline){
-    if(inline)
-        var inline_attr = 'checked';
-    else
-        var inline_attr = '';
-
+function addAttachmentLabel(att_info){
     $("#attachments_area").append(`<div class="row">
                                     <div class="col-md-5">
                                        <div class="form-control alert alert-success alert-rounded ">
                                           <i class="mdi mdi-attachment m-r-5"></i> 
-                                          <span>` + file_name + `</span>
+                                          <span>` + att_info.file_name + `</span>
                                        </div>
                                     </div>
                                     <div class="col-md-5">
-                                       <input type="text" name="disp_name" class="form-control" placeholder="Name to show" value="` + file_disp_name + `">
+                                       <input type="text" name="disp_name" class="form-control" placeholder="Name to show" value="` + att_info.file_disp_name + `">
                                     </div>
                                     <div class="custom-control custom-switch col-md-1 m-t-5 text-right">
                                      <label class="switch">
-                                         <input type="checkbox" name="cb_att_inline" ` + inline_attr + `>
+                                         <input type="checkbox" name="cb_att_inline" ` + (att_info.inline?'Checked':'') + `>
                                          <span class="slider round" data-toggle="tooltip" title="Inline attachment" data-placement="top"></span>
                                      </label>
                                    </div>
@@ -403,7 +434,7 @@ function addAttachmentLabel(file_id,file_name, file_disp_name, inline){
                                        <button type="button" class="btn btn-danger btn-sm" title="Remove attachment" data-toggle="tooltip" onclick="removeAttachment(this)"><i class="mdi mdi-close"></i></button>
                                     </div>
                                  </div>`);
-    $("#attachments_area").children(":last").data('att_info', { file_id: file_id, file_name: file_name});   //remaining info is added from catchAttachments()
+    $("#attachments_area").children(":last").data('att_info', att_info);   //remaining info is added from catchAttachments()
     $('[data-toggle="tooltip"]').tooltip();
 }
 
@@ -427,7 +458,7 @@ function uploadMailBodyFiles(fname,fsize,ftype,fb64,el){
 
     $(el).closest('.modal-content').find('.modal-footer').append(displayLoader("Uploading...","small"))
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "upload_mail_body_files",
@@ -456,12 +487,24 @@ function linkWebTracker(){
         toastr.error('', 'Error: Please create web tracker first');
     else{
         switch($("#web_tracker_style_selector").val()){
-            case "1": $('#summernote').summernote('pasteHTML', `<a href="` + url + "?cid={{CID}}" + `">` + url + "?cid={{CID}}" + `</a>`); break;
-            case "2": $('#summernote').summernote('pasteHTML', `<a href="` + url + "?cid={{CID}}" + `">` + url + `</a>`); break;
-            case "3": $('#summernote').summernote('pasteHTML', `<span>Please visit our website <a href="` + url + "?cid={{CID}}" + `">here</a></span>`); break;
+            case "1": $('#summernote').summernote('pasteHTML', `<a href="` + url + "?rid={{RID}}" + `">` + url + "?rid={{RID}}" + `</a>`); break;
+            case "2": $('#summernote').summernote('pasteHTML', `<a href="` + url + "?rid={{RID}}" + `">` + url + `</a>`); break;
+            case "3": $('#summernote').summernote('pasteHTML', `<span>Please visit our website <a href="` + url + "?rid={{RID}}" + `">here</a></span>`); break;
         }
     }
     $('#modal_web_tracker_selection').modal('toggle');
+}
+
+function linkLandpage(){
+    $('#summernote').summernote('restoreRange');
+    var page_file_name = $("#landpage_selector").val();
+    if(page_file_name == "Empty")
+        toastr.error('', 'Error: Please create landing page from SniperHost first');
+    else{
+        var url = window.location.origin + '/spear/sniperhost/lp_pages/' + page_file_name
+        $('#summernote').summernote('pasteHTML', `<a href="` + url + `">` + url + `</a>`);
+    }
+    $('#modal_sniperhost_landpage_selection').modal('toggle');
 }
 //---------------------------------------------------------
 
@@ -493,7 +536,7 @@ function modalTestDeliveryAction(e){
 
     enableDisableMe(e);
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "send_test_mail_sample",
@@ -566,7 +609,10 @@ function addMoreOptions(val){
     if(val == "web_tracker_link")
         $('#modal_web_tracker_selection').modal('toggle');
     else
-        $('#summernote').summernote('pasteHTML', `<img src="` + location.protocol + `//` + document.domain + `/mod?type=` + val + `&content=<your text here>&img_name=code.png"></img>`);
+        if(val == "sh_lp")
+            $('#modal_sniperhost_landpage_selection').modal('toggle');
+        else
+            $('#summernote').summernote('pasteHTML', `<img src="` + location.protocol + `//` + document.domain + `/mod?type=` + val + `&content=<your text here>&img_name=code.png"></img>`);
 }
 
 function insertMedia(type){    
@@ -609,7 +655,7 @@ function insertMedia(type){
 
 function getStoreList(){
     $.post({
-        url: "settings_manager",
+        url: "manager/settings_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_store_list",
@@ -632,7 +678,7 @@ $('#selector_sample_mailtemplates').on('change', function() {
 
 function insertMailTemplate(){
     $.post({
-        url: "settings_manager",
+        url: "manager/settings_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_store_list",
@@ -658,3 +704,5 @@ function insertMailTemplate(){
         }
     }); 
 }
+
+

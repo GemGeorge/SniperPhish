@@ -29,7 +29,7 @@ $(function() {
 
 function pullMailCampaignFieldData() {
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "pull_mail_campaign_field_data"
@@ -65,7 +65,7 @@ function getMailCampaignFromCampaignListId(id) {
 
     $.when(pullMailCampaignFieldData()).then(function() {
         $.post({
-            url: "mail_campaign_manager",
+            url: "manager/mail_campaign_manager",
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({ 
                 action_type: "get_campaign_from_campaign_list_id",
@@ -95,7 +95,7 @@ function getMailCampaignFromCampaignListId(id) {
                     $('#mailConfigSelector').trigger('change');
                 } catch (err) {}
 
-                $("#datetimepicker_launch").val(UTC2Local(data.scheduled_time)).trigger('change');
+                $("#datetimepicker_launch").val(data.scheduled_time).trigger('change');
 
                 $('#range_campaign_time_min').val(data.campaign_data.msg_interval.split('-')[0]);
                 $('#range_campaign_time_max').val(data.campaign_data.msg_interval.split('-')[1]);
@@ -166,7 +166,7 @@ function saveMailCampaignAction() {
 
     enableDisableMe($("#bt_saveMailCamp"));
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "save_campaign_list",
@@ -214,7 +214,7 @@ function mailCampStartStopAction(id, campaign_name, action_value) {
         var new_action_value = 1;
 
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "start_stop_mailCampaign",
@@ -247,7 +247,7 @@ function promptMailCampaignDeletion(id, campaign_name) {
 
 function mailCampaignDeletionAction() {
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_campaign_from_campaign_id",
@@ -280,7 +280,7 @@ function mailCampaignCopyAction() {
         $("#modal_mail_campaign_name").removeClass("is-invalid");
 
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "make_copy_campaign_list",
@@ -307,7 +307,7 @@ function loadTableCampaignList() {
     $('#table_mail_campaign_list tbody > tr').remove();
 
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_campaign_list"
@@ -357,11 +357,13 @@ function loadTableCampaignList() {
                             break;
                     }                
                     
-                    $("#table_mail_campaign_list tbody").append("<tr><td></td><td>" + value.campaign_name + "</td><td>" + value.campaign_data.user_group.name + "</td><td>" + value.campaign_data.mail_template.name + "</td><td>" + value.campaign_data.mail_sender.name + "</td><td>" + value.campaign_data.mail_config.name+ "</td><td data-order=\"" + UTC2LocalUNIX(value.date) + "\">" + UTC2Local(value.date) + "</td><td data-order=\"" + UTC2LocalUNIX(value.scheduled_time) + "\">" + UTC2Local(value.scheduled_time) + "</td><td data-order=\"" + UTC2LocalUNIX(value.stop_time) + "\">" + UTC2Local(value.stop_time) + "</td><td>"+ camp_status + "</td><td>" + action_items_campaign_table + "</td></tr>");
+                    $("#table_mail_campaign_list tbody").append("<tr><td></td><td>" + value.campaign_name + "</td><td>" + value.campaign_data.user_group.name + "</td><td>" + value.campaign_data.mail_template.name + "</td><td>" + value.campaign_data.mail_sender.name + "</td><td>" + value.campaign_data.mail_config.name+ "</td><td data-order=\"" + getTimestamp(value.date) + "\">" + (value.date==null?'-':value.date) + "</td><td data-order=\"" + getTimestamp(value.scheduled_time) + "\">" + (value.scheduled_time==null?'-':value.scheduled_time) + "</td><td data-order=\"" + getTimestamp(value.stop_time) + "\">" + (value.stop_time==null?'-':value.stop_time) + "</td><td>"+ camp_status + "</td><td>" + action_items_campaign_table + "</td></tr>");
                 });
             }
             dt_mail_campaign_list = $('#table_mail_campaign_list').DataTable({
                 "aaSorting": [6, 'desc'],
+                'pageLength': 20,
+                'lengthMenu': [[20, 50, 100, -1], [20, 50, 100, 'All']],
                 'columnDefs': [{
                     "targets": [9,10],
                     "className": "dt-center"
@@ -372,6 +374,11 @@ function loadTableCampaignList() {
     
                 "drawCallback": function() {
                     $('#table_mail_campaign_list tbody').fadeIn(500);
+                    $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+                },
+
+                "initComplete": function() {
+                    $("label>select").select2({minimumResultsForSearch: -1, });
                 }
             }); //initialize table
     
@@ -382,11 +389,7 @@ function loadTableCampaignList() {
                 }).nodes().each(function(cell, i) {
                     cell.innerHTML = i + 1;
                 });
-            }).draw();
-            $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-            $("label>select").select2({
-                minimumResultsForSearch: -1,
-            });
+            }).draw();            
         });
     });   
 }

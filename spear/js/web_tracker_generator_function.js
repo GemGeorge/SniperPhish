@@ -1,7 +1,9 @@
 var form_fields_and_values = tracker_step_data = {};
 var dt;
-var g_tracker_id = globalModalValue = '';
+var g_tracker_id = globalModalValue = g_baseurl = '';
 var webpage_data = [];
+getSPBaseURL();
+
 var all_form_fields = `<div class="row mb-3 HTML_form_field">
                           <div class="col-md-3">
                              <select class="select2 form-control" style="width: 100%; height:36px;" name="field_type_names">
@@ -90,6 +92,39 @@ var beauty_op = {
     "indent_empty_lines": false
 };
 
+$(function() {
+    $("#selector_webhook_type").select2({
+        minimumResultsForSearch: -1,
+    });
+
+    $('#selector_webhook_type').on('change', function() {
+        var dataval = $('#selector_webhook_type').val();
+        if(dataval == 'sp_base')
+            $('#tb_webhook_url').val(g_baseurl);
+        else
+        if(dataval == 'current_domain')
+            $('#tb_webhook_url').val(location.origin);
+        else
+            $('#tb_webhook_url').val('');
+    });
+});
+
+function getSPBaseURL(){
+    $.post({
+        url: "manager/web_tracker_generator_list_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
+            action_type: "get_SP_base_URL"
+         })
+    }).done(function (data) {
+        if(!data.error){  // no data error
+            g_baseurl = data.baseurl;
+            if($('#selector_webhook_type').val() == 'sp_base' && $('#tb_webhook_url').val() == '')
+                $('#tb_webhook_url').val(g_baseurl);
+        }
+    }); 
+}
+
 function deletePageAction(){
     globalModalValue.tooltip('hide');
     globalModalValue.closest('.new_webpage').remove();
@@ -118,7 +153,7 @@ function startHTMLFieldFetch(){
 
     if($("#tb_import_url").val() != ''){
       $.post({
-          url: "web_tracker_generator_list_manager",
+          url: "manager/web_tracker_generator_list_manager",
           contentType: 'application/json; charset=utf-8',
           data: JSON.stringify({ 
               action_type: "get_html_content",
@@ -259,11 +294,11 @@ $(function() {
             case 'RB':
                 $(this).closest(".HTML_form_field").find("[name='field_id_names']").attr("placeholder", "Radio button group name attribute value");
                 break;
-            case 'Select':
-                $(this).closest(".HTML_form_field").find("[name='field_id_names']").attr("placeholder", "Select (dropdown) list id value");
-                break;
             case 'TA':
                 $(this).closest(".HTML_form_field").find("[name='field_id_names']").attr("placeholder", "Select TextArea id value");
+                break;
+            case 'Select':
+                $(this).closest(".HTML_form_field").find("[name='field_id_names']").attr("placeholder", "Select (dropdown) list id value");
                 break;
             case 'FSB':
                 $(this).closest(".HTML_form_field").find("[name='field_id_names']").attr("placeholder", "Form Submit button id value");
@@ -374,7 +409,6 @@ function generateFormFields() {
             return JSON.parse('{"idname":"' + $(this).val() + '","track":' + $(this).closest(".HTML_form_field").find("[name='cb_field_track']").is(':checked') + '}');  //eg: TA_ta1: Object { idname: "", track: true }
         }).get();
 
-        var j = 0;
         $.each(arr_filed_types, function(i, e) {
             if (arr_filed_types[i] == "FSB")
                 form_fields_and_values[arr_filed_types[i]] = arr_filed_values[i];
@@ -393,24 +427,22 @@ function getNextTrackerId() {
 function generateTrackerCode() {
     var req_par = "";
     var code_output = [];
-    code_output['html_login'] = "";
-    code_output['html_form'] = "";
-    code_output['js'] = "";
-    code_output['php'] = "";
+    code_output ={html_login:'', html_form:'', js:'', php:''};
     $('#html_area').empty();
     $('#js_area').empty();
     $('#others_area').empty();
+    var webhook_url_host = $("#tb_webhook_url").val().replace(/^\/|\/$/g, '');
 
     if(g_tracker_id == "")
         getNextTrackerId();
 
-    var tracker_link = `<script src="` + location.origin + `/mod?tlink=` + g_tracker_id + `"></script>`
+    var tracker_link = `<script src="` + webhook_url_host + `/mod?tlink=` + g_tracker_id + `" type="text/javascript"></script>`
     $('.html_tracker_code').text(html_beautify(tracker_link));
 
     //----------HTML-----
     
     $.each(webpage_data.data, function(i, obj) {        
-        code_output['html_form'] = "";
+        code_output.html_form = '';
         $('#html_area').append(`<div class="row m-b-10">
                                     <div class="col-md-12">
                                         <div class="alert alert-primary bottom-space-dec" role="alert">
@@ -425,19 +457,19 @@ function generateTrackerCode() {
 
         $.each(webpage_data.data[i].form_fields_and_values, function(form_field_type, form_field) {
             if (form_field_type.startsWith("TF_"))
-                code_output['html_form'] += form_field.idname + `:<input type="text" id="` + form_field.idname + `">`;
+                code_output.html_form += form_field.idname + `:<input type="text" id="` + form_field.idname + `">`;
             if (form_field_type.startsWith("CB_"))
-                code_output['html_form'] += form_field.idname + `:<input type="checkbox" id="` + form_field.idname + `">`;
+                code_output.html_form += form_field.idname + `:<input type="checkbox" id="` + form_field.idname + `">`;
             if (form_field_type.startsWith("RB_"))
-                code_output['html_form'] += form_field.idname + `:<input type="radio" name="` + form_field.idname + `">`;
+                code_output.html_form += form_field.idname + `:<input type="radio" name="` + form_field.idname + `">`;
             if (form_field_type.startsWith("TA_"))
-                code_output['html_form'] += form_field.idname + `:<textarea rows="4" cols="50" id="` + form_field.idname + `"></textarea>`;
+                code_output.html_form += form_field.idname + `:<textarea rows="4" cols="50" id="` + form_field.idname + `"></textarea>`;
             if (form_field_type.startsWith("Select_"))
-                code_output['html_form'] += `\t` + form_field.idname + `:<select id="` + form_field.idname + `"><option value="1">Value 1</option>
+                code_output.html_form += `\t` + form_field.idname + `:<select id="` + form_field.idname + `"><option value="1">Value 1</option>
             <option value="2">Value 2</option></select>`;
         });
-        code_output['html_form'] += `<input type="button" id="` + webpage_data.data[i].form_fields_and_values.FSB.idname + `" value="Submit">`;
-        $('.html_code_class_' + i).text(html_beautify(`<!DOCTYPE html>`+formatHTML(`<form>` + code_output['html_form'] + `</form>`),beauty_op));
+        code_output.html_form += `<input type="button" id="` + webpage_data.data[i].form_fields_and_values.FSB.idname + `" value="Submit">`;
+        $('.html_code_class_' + i).text(html_beautify(`<!DOCTYPE html>`+formatHTML(`<form>` + code_output.html_form + `</form>`),beauty_op));
     });
 
     //-----------JS--------
@@ -451,8 +483,8 @@ function generateTrackerCode() {
     var ip_info;
     var xhr = new XMLHttpRequest();
 
-    //geting cid
-    var cid = window.location.search.split("cid=")[1].split("&")[0];
+    //geting rid
+    var rid = window.location.search.split("rid=")[1].split("&")[0];
 
     //IE 8 supports
     if (typeof Array.prototype.forEach != 'function') {
@@ -491,7 +523,7 @@ function generateTrackerCode() {
                                 xhr1.open('GET', 'https://ipapi.co/json', true);
                                 xhr1.onload = function () {
                                     if (xhr1.readyState === xhr1.DONE) {
-                                        ip_info = xhr1.response;
+                                        ip_info = JSON.parse(xhr1.response);
                                         if(curr_page == first_page) //if starting page
                                             do_track_req_visit();
                                     }
@@ -507,13 +539,13 @@ function generateTrackerCode() {
                         }
 
                         function do_track_req_visit() {
-                          xhr.open("POST", "` + location.origin + `/track", true);
+                          xhr.open("POST", "` + webhook_url_host + `/track", true);
                           xhr.send(JSON.stringify({
                             page: 0,
                             trackerId: tracker_id,
                             sess_id : sess_id,` + 
                             req_par + `
-                            cid : cid,
+                            rid : rid,
                             ip_info: ip_info
                           }));
                         }\r\n//-----------------------------------------------------------\r\n
@@ -552,7 +584,7 @@ function generateTrackerCode() {
 
 
                         function onReady(){ //Events registration
-						`;
+                            `;
 
     $.each(webpage_data.data, function(i, obj) {
         var code_output_sub = "";
@@ -598,19 +630,19 @@ function generateTrackerCode() {
                     //-----------------------------------------------------------
                     function do_track_req(e,page,next_page_url){
                       e.preventDefault ? e.preventDefault() : (e.returnValue = false);
-                      xhr.open("POST", "` + location.origin + `/track", false);
+                      xhr.open("POST", "` + webhook_url_host + `/track", false);
                       xhr.send(JSON.stringify({
                         page : page,
                         trackerId : tracker_id,
                         sess_id : sess_id,` + 
                         req_par + `
                         form_field_data : form_field_data,
-                        cid : cid,
+                        rid : rid,
                         ip_info: ip_info
                       }));    
 
                       if(next_page_url !="#")
-                        window.top.location.href = next_page_url + "?cid=" + cid;
+                        window.top.location.href = next_page_url + "?rid=" + rid;
                   }`;  
 
     $('#js_area').append(`<div class="row">
@@ -620,7 +652,7 @@ function generateTrackerCode() {
                             </div>
                             <div class="col-md-12 prism_side-top">
                                 <span>
-                                    <button type="button" class="btn waves-effect waves-light btn-xs btn-dark mdi mdi-download" data-toggle="tooltip" title="Download" onClick="downloadCode('code_class_js')"/>
+                                    <button type="button" class="btn waves-effect waves-light btn-xs btn-dark mdi mdi-download" data-toggle="tooltip" title="Download" onClick="downloadCode('code_class_js','tracker_scripts.js',null)"/>
                                     <button type="button" class="btn waves-effect waves-light btn-xs btn-dark mdi mdi-content-copy btn_copy" data-toggle="tooltip" title="Copy" onclick="copyCode('js_code_class')"/>
                                 </span>
                             </div>
@@ -657,10 +689,10 @@ function downloadCode(code_area, file_name, content_type='text/html') {
     var a = window.document.createElement('a');
     a.href = window.URL.createObjectURL(new Blob([$('.' + code_area).text()], { type: content_type}));
 
-    if(code_area.startsWith("html"))
+    if(content_type == 'text/html') //html web pages
         a.download = file_name.split("/").pop();
     else
-        a.download = 'tracker_scripts.js';
+        a.download = file_name;
 
     document.body.appendChild(a);
     a.click();
@@ -696,28 +728,22 @@ function saveWebTracker(tracker_id) {
     if(tracker_id == "")
         tracker_id = g_tracker_id;
 
-    tracker_step_data['start'] = {};
-    tracker_step_data['trackers'] = {};
-    tracker_step_data['web_forms']= {};
-    tracker_code_output = {};
-    tracker_code_output['web_forms_code'] = {};
-
-
-    tracker_step_data['start']['tb_tracker_name'] = $('#tb_tracker_name').val();
-    tracker_step_data['start']['cb_auto_ativate'] = $("#cb_auto_ativate").is(':checked');
+    tracker_step_data = {start:{}, trackers:{}, web_forms:{}}
+    tracker_code_output = {web_forms_code:{}};
+    tracker_step_data.start = {tb_tracker_name:$('#tb_tracker_name').val(), selector_webhook_type: $('#selector_webhook_type').val(), tb_webhook_url:$('#tb_webhook_url').val(), cb_auto_ativate:$("#cb_auto_ativate").is(':checked')}
 
     //---------Web Pages-------------
-    tracker_step_data['web_forms'] = webpage_data;
+    tracker_step_data.web_forms = webpage_data;
 
     $($("[class*='html_code_class_']")).each(function(i, obj) {
-        tracker_code_output['web_forms_code'][i] = $(obj).text();
+        tracker_code_output.web_forms_code[i] = $(obj).text();
     });
 
-    tracker_code_output['js_tracker'] = $('.js_code_class').text();
+    tracker_code_output.js_tracker = $('.js_code_class').text();
 
     enableDisableMe($('#genreator-form').find('a[href="#finish"]'));
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "save_web_tracker",
@@ -739,7 +765,7 @@ function saveWebTracker(tracker_id) {
 function editWebTracker(tracker_id) {
     g_tracker_id = tracker_id;
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_web_tracker_from_id",
@@ -747,15 +773,20 @@ function editWebTracker(tracker_id) {
          }),
     }).done(function (data) {
         $(function() {
-            $('#tracker_name').text(data['tracker_name']);
-            $('#tb_tracker_name').val(data['tracker_name']);
-            var tracker_step_data = JSON.parse(data['tracker_step_data']);
+            $('#tracker_name').text(data.tracker_name);
+            $('#tb_tracker_name').val(data.tracker_name);
+            var tracker_step_data = data.tracker_step_data;
 
-            $.each(tracker_step_data['trackers'], function(name_id,val) {   
+            $.each(tracker_step_data.trackers, function(name_id,val) {   
                 $('#' + name_id).prop('checked', val);
             });    
 
-            $('#cb_auto_ativate').trigger('click').prop('checked', tracker_step_data['start']['cb_auto_ativate']);       
+            $('#selector_webhook_type').val(tracker_step_data.start.selector_webhook_type);               
+            $('#tb_webhook_url').val(tracker_step_data.start.tb_webhook_url);   
+            if(data.active)
+                $('#cb_auto_ativate').trigger('click').prop('checked', tracker_step_data.start.cb_auto_ativate); 
+            else
+                $('#cb_auto_ativate').trigger('click').prop('checked', false); 
 
             //---form page----
             $('#webpages_area').empty();
@@ -817,6 +848,33 @@ function formatHTML_child(node, level) {
     return node;
 }
 
+//-----------------
+function webhookValidate(e){
+    if($('#tb_webhook_url').val() == ''){
+        $("#tb_webhook_url").addClass("is-invalid");
+        return;
+    } else
+        $("#tb_webhook_url").removeClass("is-invalid");
 
+    enableDisableMe(e);
+    $.post({
+        url: $('#tb_webhook_url').val() + '/track',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
+            sp_ver: "test"
+         }),
+    }).done(function (response) {
+        if(response == "success"){
+            toastr.success('', 'Access verified successfully!');
+            $("#tb_webhook_url").removeClass("is-invalid");
+        }
+        else
+            toastr.error('', 'Failed! ' + response.error);
 
+        enableDisableMe(e);
+    }).fail(function() {
+        toastr.error('', 'Invalid response received.  Check access to webhook endpoint!');
+        enableDisableMe(e);
+      }); 
+}
 

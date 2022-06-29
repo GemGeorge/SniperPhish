@@ -14,7 +14,7 @@ function modalOpenQuickTracker(flag_replace_value, tracker_id, tracker_name="") 
         $("#modal_quick_tracker_name").val('');
     }
 
-    $('#quick_tracker_html').text('<img src="' + location.origin + '/qt?tid=' + g_modalValue + '&cid=<Client ID>"></img>');
+    $('#quick_tracker_html').text('<img src="' + location.origin + '/qt?tid=' + g_modalValue + '&rid=<RID>"></img>');
     Prism.highlightAll();
     $('#modal_new_quick_tracker').modal('toggle');
 }
@@ -28,7 +28,7 @@ function addQuickTracker(e) {
 
     enableDisableMe(e);
     $.post({
-        url: "quick_tracker_manager",
+        url: "manager/quick_tracker_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "save_quick_tracker",
@@ -57,7 +57,7 @@ function promptDeleteQuickTracker(id, tracker_name) {
 
 function deleteQuickTrackerAction() {
     $.post({
-        url: "quick_tracker_manager",
+        url: "manager/quick_tracker_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_quick_tracker",
@@ -84,7 +84,7 @@ function promptQuickTrackerDataDeletion(id, tracker_name) { // delete user data 
 
 function quickTrackerDataDeletion() { // delete user data only
     $.post({
-        url: "quick_tracker_manager",
+        url: "manager/quick_tracker_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_quick_tracker_data",
@@ -105,7 +105,7 @@ $(document).ready(function() {
     $(document).on("click", "button[name='quick_tracker_status_button']", function() {
         $('[data-toggle="tooltip"]').tooltip("hide");
         $.post({
-            url: "quick_tracker_manager",
+            url: "manager/quick_tracker_manager",
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({ 
                 action_type: "pause_stop_quick_tracker_tracking",
@@ -130,7 +130,7 @@ function loadTableQuickTrackerList() {
     $('#table_quick_tracker_list tbody > tr').remove();
 
     $.post({
-        url: "quick_tracker_manager",
+        url: "manager/quick_tracker_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_quick_tracker_list"
@@ -140,10 +140,10 @@ function loadTableQuickTrackerList() {
             $.each(data, function(key, value) {
                 var action_items = `<div class="d-flex no-block"><button type="button" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Report" onClick="document.location='QuickTrackerReport?tracker=` + value.tracker_id + `'"><i class="mdi mdi-book-open"></i></button>`;
 
-                if (value.active == 1)
-                    action_items += `<button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Pause/Stop Tracking" data-tracker_id="` + value.tracker_id + `" data-status_value="0" name="quick_tracker_status_button"><i class="mdi mdi-stop"></i></button>`;
+                if (value.active == true)
+                    action_items += `<button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Pause/Stop Tracking" data-tracker_id="` + value.tracker_id + `" data-status_value=fale name="quick_tracker_status_button"><i class="mdi mdi-stop"></i></button>`;
                 else
-                    action_items += `<button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" title="Start/Resume Tracking" data-tracker_id="` + value.tracker_id + `" data-status_value="1" name="quick_tracker_status_button"><i class="mdi mdi-play"></i></button>`;
+                    action_items += `<button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" title="Start/Resume Tracking" data-tracker_id="` + value.tracker_id + `" data-status_value=true name="quick_tracker_status_button"><i class="mdi mdi-play"></i></button>`;
 
                 action_items += `<div class="btn-group ml-sm-1 btn-group-table">
                         <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</button>
@@ -153,13 +153,15 @@ function loadTableQuickTrackerList() {
                             <a class="dropdown-item" href="#" onClick="promptQuickTrackerDataDeletion('` + value.tracker_id + `','` + value.tracker_name + `')">Delete Data</a>
                         </div></div></div>`;
                 
-                $("#table_quick_tracker_list tbody").append("<tr><td></td><td>" + value.tracker_id + "</td><td>" + value.tracker_name + "</td><td data-order=\"" + UTC2LocalUNIX(value.date) + "\">" + UTC2Local(value.date) + "</td><td data-order=\"" + UTC2LocalUNIX(value.start_time) + "\">" + UTC2Local(value.start_time) + "</td><td data-order=\"" + UTC2LocalUNIX(value.stop_time) + "\">" + UTC2Local(value.stop_time) + "</td><td>" + action_items + "</td></tr>");
+                $("#table_quick_tracker_list tbody").append("<tr><td></td><td>" + value.tracker_id + "</td><td>" + value.tracker_name + "</td><td data-order=\"" + getTimestamp(value.date) + "\">" + (value.date==null?'-':value.date) + "</td><td data-order=\"" + getTimestamp(value.start_time) + "\">" + (value.start_time==null?'-':value.start_time) + "</td><td data-order=\"" + getTimestamp(value.stop_time) + "\">" + (value.stop_time==null?'-':value.stop_time) + "</td><td>" + action_items + "</td></tr>");
             });
         }
         
         dt_quick_tracker_list = $('#table_quick_tracker_list').DataTable({
             "bDestroy": true,
             "aaSorting": [3, 'desc'],
+            'pageLength': 20,
+            'lengthMenu': [[20, 50, 100, -1], [20, 50, 100, 'All']],
             'columnDefs': [{
                 "targets": 6,
                 "className": "dt-center"
@@ -170,8 +172,13 @@ function loadTableQuickTrackerList() {
 
             "drawCallback": function() {
                 $('#table_quick_tracker_list tbody').fadeIn(500);
+                $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+            },
+
+            "initComplete": function() {
+                $('label>select').select2({minimumResultsForSearch: -1, });
             }
-        }); //initialize table
+        });
 
         dt_quick_tracker_list.on('order.dt_quick_tracker_list search.dt_quick_tracker_list', function() {
             dt_quick_tracker_list.column(0, {
@@ -181,11 +188,6 @@ function loadTableQuickTrackerList() {
                 cell.innerHTML = i + 1;
             });
         }).draw();
-
-        $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-        $("label>select").select2({
-            minimumResultsForSearch: -1,
-        });
     });   
 }
 

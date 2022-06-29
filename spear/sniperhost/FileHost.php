@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__,2) . '/session_manager.php');
+   require_once(dirname(__FILE__,2) . '/manager/session_manager.php');
    isSessionValid(true);
 ?>
 <!DOCTYPE html>
@@ -221,7 +221,6 @@
       <script defer src="../js/libs/jquery/datatables.js"></script>   
       <script defer src="../js/libs/prism.js"></script>
       <script defer src="../js/libs/moment.min.js"></script>
-      <script defer src="../js/libs/moment-timezone-with-data.min.js"></script>
       <script defer src="../js/libs/popper.min.js"></script>
       <script defer src="../js/libs/bootstrap.min.js"></script>
       <script defer src="../js/libs/sidebarmenu.js"></script>

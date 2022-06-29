@@ -1,11 +1,11 @@
 <?php
-require_once(dirname(__FILE__) . '/spear/db.php');
-require_once(dirname(__FILE__) . '/spear/common_functions.php');
+require_once(dirname(__FILE__) . '/spear/config/db.php');
+require_once(dirname(__FILE__) . '/spear/manager/common_functions.php');
 require_once(dirname(__FILE__) . '/spear/libs/browser_detect/BrowserDetection.php');
 date_default_timezone_set('UTC');
 
-if(isset($_GET['cid']))
-    $user_id = doFilter($_GET['cid'],'ALPHA_NUM');
+if(isset($_GET['rid']))
+    $user_id = doFilter($_GET['rid'],'ALPHA_NUM');
 else
     $user_id = 'Failed';
 
@@ -22,13 +22,7 @@ else
     $mail_template_id = 'Failed';
 
 $ua_info = new Wolfcast\BrowserDetection();
-$public_ip = getenv('HTTP_CLIENT_IP')?:
-getenv('HTTP_X_FORWARDED_FOR')?:
-getenv('HTTP_X_FORWARDED')?:
-getenv('HTTP_FORWARDED_FOR')?:
-getenv('HTTP_FORWARDED')?:
-getenv('REMOTE_ADDR');
-$public_ip = htmlspecialchars($public_ip);
+$public_ip = getPublicIP();
 
 //Verify campaign is active
 $user_details = verifyMailCmapaignUser($conn, $campaign_id, $user_id);
@@ -108,7 +102,7 @@ if(verifyMailCmapaign($conn, $campaign_id) == true && $user_details != 'empty'){
         $allHeaders = json_encode($tmp);
     }
 
-    $stmt = $conn->prepare("UPDATE tb_data_mailcamp_live SET mail_open_times=?,public_ip=?,ip_info=?,user_agent=?,mail_client=?,platform=?,device_type=?,all_headers=? WHERE campaign_id=? AND id=?");
+    $stmt = $conn->prepare("UPDATE tb_data_mailcamp_live SET mail_open_times=?,public_ip=?,ip_info=?,user_agent=?,mail_client=?,platform=?,device_type=?,all_headers=? WHERE campaign_id=? AND rid=?");
     $stmt->bind_param('ssssssssss', $mail_open_times,$public_ip,$ip_info,$user_agent,$mail_client,$user_os,$device_type,$allHeaders,$campaign_id,$user_id);
     $stmt->execute();
 }
@@ -140,7 +134,7 @@ function verifyMailCmapaign($conn, $campaign_id){
 }
 
 function verifyMailCmapaignUser($conn, $campaign_id, $id){
-    $stmt = $conn->prepare("SELECT * FROM tb_data_mailcamp_live WHERE campaign_id = ? AND id=?");
+    $stmt = $conn->prepare("SELECT * FROM tb_data_mailcamp_live WHERE campaign_id = ? AND rid=?");
     $stmt->bind_param("ss", $campaign_id,$id);
     $stmt->execute();
     $result = $stmt->get_result();

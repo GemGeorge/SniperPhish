@@ -1,7 +1,6 @@
 var globalModalValue = nextRandomId ='';
+var g_deny_navigation = null;
 var cookie_c_data = JSON.parse(atob(decodeURIComponent(Cookies.get('c_data'))));
-var date_space_format = {"space": " ", "comma": ",", "comaspace":", "};
-var space_format = date_space_format[cookie_c_data.time_format.space];
 
 $(function() {
     checkSniperPhishProcess();
@@ -11,6 +10,13 @@ $(function() {
     $('[data-toggle="tooltip"]').on('click mouseleave', function () {
       $('[data-toggle="tooltip"]').tooltip('hide');
     });
+
+    if(location.pathname.endsWith('Home')){
+        $('.lb-login').removeAttr('hidden');
+        $('.lb-login span').text(cookie_c_data.last_login + ' UTC' + moment.tz(cookie_c_data.timezone).format('Z'));
+    }
+    $('.profile-name').text('('+cookie_c_data.name+')');
+    $('.pro-pic').attr('src','/spear/images/users/' + cookie_c_data.dp_name + '.png');
 });
 function displayLoader(dis_val,type="normal"){
     if(type == "small")
@@ -41,27 +47,6 @@ function getRandomId() {
     return nextRandomId;
 }
 
-function UTC2Local(in_val){     //Converts Unix and format 'DD-MM-Y hh:mm A' in UTC to local
-    if(in_val == '' || in_val == undefined)
-        return '-';
-
-    var time_format = getDateTimeFormat();
-
-    if(moment(in_val, 'DD-MM-Y hh:mm A', true).isValid())       
-        return moment.utc(in_val, "DD-MM-Y hh:mm A").tz(cookie_c_data.time_zone.timezone).format(time_format); //timezone => Asia/Kuala_Lumpur
-    else
-        return moment.unix(in_val/1000+(+cookie_c_data.time_zone.value)).utc().format(time_format);
-}
-
-function Local2LocalUNIX(in_val){     //Converts Local date to Unix local 
-    if(in_val == '' || in_val == undefined)
-        return '-';
-
-    var time_format = getDateTimeFormat();
-
-    return moment(in_val, time_format).unix();
-}
-
 function getDateTimeFormat(type=''){
     if(type == 'dateonly')
         return cookie_c_data.time_format.date;
@@ -72,16 +57,16 @@ function getDateTimeFormat(type=''){
         return cookie_c_data.time_format.date + space_format + cookie_c_data.time_format.time;
 }
 
-function UTC2LocalUNIX(in_val){ // 02-05-2020 07:10 AM => 1588403400000
-    return moment.utc(in_val, "DD-MM-Y hh:mm A").tz(getDateTimeFormat('tzonly')).valueOf();
+function getTimestamp(in_val){   //15-11-2021 09:54 PM => 1636993440000
+    return moment(in_val, 'DD-MM-YYYY hh:mm A').valueOf()
 }
 
-function LocalUNIX2LocalDate(in_val,format=''){ // 1588403400000 => 02-05-2020
-    return moment(in_val).format(getDateTimeFormat('dateonly'));
+function Unix2StdDateTime(in_val,time_zone){ //1640958851257 => "12-31-2021 09:54 PM";  eg: Unix2StdDateTime(1640958851257,'Asia/Kolkata')
+    return moment.unix(in_val).tz(time_zone).format("MM-DD-YYYY hh:mm A");
 }
 
-function LocalUNIX2Local(in_val,format=''){ // 1588403400000 => 02-05-2020 03:10:00 PM
-    return moment(in_val).format(getDateTimeFormat());
+function Unix2StdDate(in_val,format=''){ // 1588403400000 => 02-05-2020
+    return moment(in_val).format('DD-MM-YYYY');
 }
 //---------------------------------
 Array.prototype.forEach.call(document.body.querySelectorAll("*[data-mask]"), applyDataMask);
@@ -129,7 +114,7 @@ function checkSniperPhishProcess(){
     if(window.location.href.indexOf('?') == -1){    // works only in main pages
         setTimeout(function (){
             $.post({
-                url: window.location.origin + "/spear/home_manager",
+                url: window.location.origin + "/spear/manager/home_manager",
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({ 
                         action_type: "check_process",
@@ -145,7 +130,7 @@ function checkSniperPhishProcess(){
 
 function startSniperPhishService(e){
     $.post({
-            url: window.location.origin + "/spear/home_manager",
+            url: window.location.origin + "/spear/manager/home_manager",
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({ 
                     action_type: "start_process",
@@ -234,12 +219,12 @@ function uploadFile(ev,upload_fn,el){
 }
 //---------------------
 function isValidURL(url) {
-  try {
-    new URL(url);
-  } catch (e) {
-    return false;
-  }
-  return true;
+    try {
+        new URL(url);
+    } catch (e) {
+        return false;
+    }
+    return true;
 }
 
 function RegTest(str,type){
@@ -254,6 +239,10 @@ function RegTest(str,type){
     return pattern.test(str);
 }
 
+//-------------------------
+window.onbeforeunload = function(e) {   //deny navigation for unsaved activity
+    return g_deny_navigation;
+};
 /*------Idle Timer------*/
 var idleMax = 3600; // Logout after x seconds of IDLE. (in sec). 3600=1hr
 var idleTime = 0;
@@ -279,10 +268,12 @@ function idleTimerFun() {
            <div class="modal-dialog">
               <div class="modal-content">
                  <div class="modal-header">
+                    <h5 class="modal-title">Session expired</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
                  </div>
                  <div class="modal-body">
                     <div class="row">
+                        <label class="col-sm-12 text-left control-label col-form-label">Please re-login to renew your session: </label>
                        <div class="col-12">
                           <div class="input-group mb-3">
                              <div class="input-group-prepend">
@@ -314,7 +305,7 @@ function doReLogin(){
     var pwd = $("input[name=password]").val();
 
     $.post({
-        url: window.location.origin + "/spear/session_manager",
+        url: window.location.origin + "/spear/manager/session_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
                 action_type: "re_login",

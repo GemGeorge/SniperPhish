@@ -56,6 +56,10 @@
                   <a class="dropdown-item" href="/spear/QuickTracker">Quick Tracker</a>
                   <a class="dropdown-item" href="/spear/TrackerGenerator">Web Tracker</a>
                   <a class="dropdown-item" href="/spear/MailCampaignList?action=add&campaign=new">Email Campaign</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="/spear/MailUserGroup?action=add&user=new">User Group</a>
+                  <a class="dropdown-item" href="/spear/MailTemplate?action=add&template=new">Email Template</a>
+                  <a class="dropdown-item" href="/spear/MailSender?action=add&sender=new">Email Sender List</a>
                </div>
             </li>
          </ul>
@@ -66,6 +70,9 @@
             <!-- ============================================================== -->
             <!-- Comment -->
             <!-- ============================================================== -->
+            <li class="nav-item dropdown lb-login" hidden>
+                <a class="nav-link">Last login: <span></span></a>
+            </li>
             <li class="nav-item dropdown" id="top_notifier">
                <a class="nav-link dropdown-toggle waves-effect waves-dark" href="" id="2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                <i class="mdi mdi-bell font-24"></i>
@@ -78,11 +85,11 @@
             <!-- User profile and search -->
             <!-- ============================================================== -->
             <li class="nav-item dropdown">
-               <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark pro-pic" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="/spear/images/users/1.jpg" alt="user" class="rounded-circle" width="31"></a>
+               <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="/spear/images/users/1.png" alt="user" class="rounded-circle pro-pic" width="31"></a>
                <div class="dropdown-menu dropdown-menu-right user-dd animated">
-                  <a class="dropdown-item" href="/spear/Settings"><i class="fa far fa-user m-r-5 m-l-5"></i> My Profile</a>
+                  <a class="dropdown-item" href="/spear/SettingsUser"><i class="fa far fa-user m-r-5 m-l-5"></i> My Profile <span style="color:#6c757d" class="profile-name"></span></a>
                   <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="/spear/Settings"><i class="fa fas fa-cog m-r-5 m-l-5"></i> Account Setting</a>
+                  <a class="dropdown-item" href="/spear/SettingsGeneral"><i class="fa fas fa-cog m-r-5 m-l-5"></i> General Setting</a>
                   <div class="dropdown-divider"></div>
                   <a class="dropdown-item" href="/spear/logout"><i class="fa fa-power-off m-r-5 m-l-5"></i> Logout</a>
                </div>
@@ -117,7 +124,7 @@
             <li class="sidebar-item">
                <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-web"></i><span class="hide-menu">Web Tracker </span></a>
                <ul aria-expanded="false" class="collapse  first-level">
-                  <li class="sidebar-item"><a href="/spear/TrackerList" class="sidebar-link"><i class=" fas fa-th-list"></i><span class="hide-menu"> Tracker List </span></a></li>
+                  <li class="sidebar-item"><a href="/spear/TrackerList" class="sidebar-link"><i class="fas fa-th-list"></i><span class="hide-menu"> Tracker List </span></a></li>
                   <li class="sidebar-item"><a href="/spear/TrackerGenerator" class="sidebar-link"><i class="fas fa-plus"></i><span class="hide-menu"> New Tracker </span></a></li>
                </ul>
             </li>
@@ -139,9 +146,18 @@
                <ul aria-expanded="false" class="collapse  first-level">
                   <li class="sidebar-item"><a href="/spear/sniperhost/PlainText" class="sidebar-link"><i class="mdi mdi-format-text"></i><span class="hide-menu"> Plain-Text </span></a></li>
                   <li class="sidebar-item"><a href="/spear/sniperhost/FileHost" class="sidebar-link"><i class="mdi mdi-file-multiple"></i><span class="hide-menu"> Files </span></a></li>
+                  <li class="sidebar-item"><a href="/spear/sniperhost/LandingPage" class="sidebar-link"><i class="mdi mdi-google-pages"></i><span class="hide-menu"> Landing Page </span></a></li>
                </ul>
             </li>
-            <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="/spear/Settings" aria-expanded="false"><i class="mdi mdi-settings"></i><span class="hide-menu">Settings</span></a></li>
+            <li class="sidebar-item">
+               <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-settings"></i><span class="hide-menu">Settings</span></a>
+               <ul aria-expanded="false" class="collapse  first-level">
+                  <li class="sidebar-item"><a href="/spear/SettingsGeneral" class="sidebar-link"><i class="mdi mdi-settings"></i><span class="hide-menu"> General Settings </span></a></li>
+                  <li class="sidebar-item"><a href="/spear/SettingsUser" class="sidebar-link"><i class="mdi mdi-account-settings-variant"></i><span class="hide-menu"> User Settings </span></a></li>
+                  <li class="sidebar-item"><a href="/spear/SPLogs" class="sidebar-link"><i class="mdi mdi-note-text"></i><span class="hide-menu"> Logs </span></a></li>
+                  <li class="sidebar-item"><a href="/spear/SPAbout" class="sidebar-link"><i class="mdi mdi-information"></i><span class="hide-menu"> About </span></a></li>
+               </ul>
+            </li>
          </ul>
       </nav>
       <!-- End Sidebar navigation -->

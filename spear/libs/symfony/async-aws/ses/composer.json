@@ -1,0 +1,33 @@
+{
+    "name": "async-aws/ses",
+    "type": "library",
+    "description": "SES client, part of the AWS SDK provided by AsyncAws.",
+    "keywords": [
+        "aws",
+        "amazon",
+        "sdk",
+        "async-aws",
+        "ses"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^7.2.5 || ^8.0",
+        "ext-json": "*",
+        "async-aws/core": "^1.9"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.5-dev"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "AsyncAws\\Ses\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AsyncAws\\Ses\\Tests\\": "tests/"
+        }
+    }
+}

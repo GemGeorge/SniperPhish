@@ -1,6 +1,4 @@
-var dt_mail_campaign_result;
-var tb_camp_result_colums_list;
-var web_mailcamp_list, data_mail_live, data_web_live, data_matched, data_not_matched;
+var dt_web_mail_campaign_result, web_mailcamp_list;
 var chart_live_mailcamp;
 var radialchart_overview_mailcamp, piechart_mail_total_sent, piechart_mail_total_mail_open, piechart_mail_total_replied;
 var reply_emails = [], form_field_cols=[];
@@ -21,7 +19,10 @@ var camp_table_status_def = {
     4: `<td><i class="fas fa-clock fa-lg" data-toggle="tooltip" title="Waiting..."></i><span hidden>Waiting...</span></td>`
 };
 
+var dic_all_col={rid:'RID', user_name:'Name', user_email:'Email', sending_status:'Status', send_time:'Sent Time', send_error:'Send Error',mail_open:'Mail Open',mail_open_count:'Mail(open count)',mail_first_open:'Mail(first open)',mail_last_open:'Mail(last open)',mail_open_times:'Mail(all open times)',public_ip:'Public IP',user_agent:'User Agent',mail_client:'Mail Client',platform:'Platform',device_type:'Device Type',all_headers:'HTTP Headers',mail_reply:'Mail Reply',mail_reply_count:'Mail (reply count)',mail_reply_content:'Mail (reply content)', country:'Country', city:'City', zip:'Zip', isp:'ISP', timezone:'Timezone', coordinates:'Coordinates', wcm_rid:'RID (W)', wcm_session_id:'Session ID', wcm_public_ip:'Public IP (W)', wcm_browser:'Browser', wcm_platform:'Platform (W)', wcm_screen_res:'Screen Res', wcm_device_type:'Device Type', wcm_user_agent:'User Agent (W)', wcm_country:'Country (W)', wcm_city:'City (W)', wcm_zip:'Zip (W)', wcm_isp:'ISP (W)', wcm_timezone:'Timezone (W)', wcm_coordinates:'Coordinates (W)', wpv_activity:'Page Visit', wpv_visit_count:'Visit Count', wpv_first_visit:'First Visit', wpv_last_visit:'Last Visit', wpv_visit_times:'Visit Times', wfs_activity:'Form Submission', wfs_submission_count:'Submission Count', wfs_first_submission:'First Submission', wfs_last_submission:'Last Submission', wfs_submission_times:'Submission Times'};
+
 $(function() {
+    loadTableCampaignList();
     Prism.highlightAll();
 });
 
@@ -36,7 +37,6 @@ $("#modal_web_tracker_selector").select2({
 $("#modal_export_report_selector").select2({
     minimumResultsForSearch: -1,
 });     
-
 
 $('.accordion .panel-default .panel-heading').click(function (e) {    
     if($('#collapseOne').hasClass('show'))
@@ -73,11 +73,11 @@ $('#modal_web_tracker_selector').on('change', function() {
 
 //------------------------------------------------
 //Select 1
-$("#tb_camp_result_colums_list_mcamp").select2().on("select2:select", function(evt) {
+$("#tb_camp_result_colums_list_mcamp").select2().on("select2:select", function(evt) {   //requires to function re-ordering
     var element = evt.params.data.element;
     var $element = $(element);
     $element.detach();
-    $("#tb_camp_result_colums_list_mcamp>optgroup").append($element);
+    $(this).find('optgroup').append($element);
     $(this).trigger("change");
 });
 
@@ -86,7 +86,7 @@ $("#tb_camp_result_colums_list_wcm").select2().on("select2:select", function(evt
     var element = evt.params.data.element;
     var $element = $(element);
     $element.detach();
-    $("#tb_camp_result_colums_list_wcm>optgroup").append($element);
+    $(this).find('optgroup').append($element);
     $(this).trigger("change");
 });
 
@@ -108,8 +108,16 @@ $("#tb_camp_result_colums_list_wfs").select2().on("select2:select", function(evt
     $(this).trigger("change");
 });
 
-$.each(["tb_camp_result_colums_list_mcamp","tb_camp_result_colums_list_wcm","tb_camp_result_colums_list_wpv","tb_camp_result_colums_list_wfs"], function(i, sel_item){
+//Select 5
+$("#tb_camp_result_colums_list_wfs_data").select2().on("select2:select", function(evt) {
+    var element = evt.params.data.element;
+    var $element = $(element);
+    $element.detach();
+    $(this).append($element);
+    $(this).trigger("change");
+});
 
+$.each(["tb_camp_result_colums_list_mcamp","tb_camp_result_colums_list_wcm","tb_camp_result_colums_list_wpv","tb_camp_result_colums_list_wfs","tb_camp_result_colums_list_wfs_data"], function(i, sel_item){
     $("#"+sel_item).parent().find("ul.select2-selection__rendered").sortable({
         containment: 'parent',
         update: function() {
@@ -121,94 +129,62 @@ $.each(["tb_camp_result_colums_list_mcamp","tb_camp_result_colums_list_wcm","tb_
 function getAllReportColListSelected(){
     allReportColListSelected=[];
 
-    $.each($("#tb_camp_result_colums_list_mcamp").find("option"), function () {
-        allReportColList[$(this).text()] = $(this).val();
-    });
-    $.each($("#tb_camp_result_colums_list_wcm").find("option"), function () {
-        allReportColList[$(this).text()] = $(this).val();
-    });
-    $.each($("#tb_camp_result_colums_list_wpv").find("option"), function () {
-        allReportColList[$(this).text()] = $(this).val();
-    });
-    $.each($("#tb_camp_result_colums_list_wfs").find("option"), function () {
-        allReportColList[$(this).text()] = $(this).val();
-    });
+    $.each(["tb_camp_result_colums_list_mcamp","tb_camp_result_colums_list_wcm","tb_camp_result_colums_list_wpv","tb_camp_result_colums_list_wfs","tb_camp_result_colums_list_wfs_data"], function(i, sel_item){
+        $.each($('#'+sel_item).find("option"), function () {
+            allReportColList[$(this).text()] = $(this).val();
+        });
 
-    $.each($("#tb_camp_result_colums_list_mcamp").parent().find("ul.select2-selection__rendered").children("li[title]"), function () {
-        allReportColListSelected.push(allReportColList[this.title]);
-    });
-    $.each($("#tb_camp_result_colums_list_wcm").parent().find("ul.select2-selection__rendered").children("li[title]"), function () {
-        allReportColListSelected.push(allReportColList[this.title]);
-    });
-    $.each($("#tb_camp_result_colums_list_wpv").parent().find("ul.select2-selection__rendered").children("li[title]"), function () {
-        allReportColListSelected.push(allReportColList[this.title]);
-    });
-    $.each($("#tb_camp_result_colums_list_wfs").parent().find("ul.select2-selection__rendered").children("li[title]"), function () {
-        allReportColListSelected.push(allReportColList[this.title]);
+        $.each($('#'+sel_item).parent().find("ul.select2-selection__rendered").children("li[title]"), function () {
+            allReportColListSelected.push(allReportColList[this.title]);
+        });
     });
 }
 //----------------------------------------------
 
-function refreshDashboard() {
-    $('input[name="radio_table_data"]:checked').val() == "radio_table_data_single"?g_tb_data_single=true:g_tb_data_single=false;
+function refreshDashboard(f_refresh=false) {
     if (g_campaign_id != '' && g_tracker_id != '')
-        campaignSelected(g_campaign_id,g_tracker_id);
+        campaignSelected(g_campaign_id, g_tracker_id, f_refresh);
     else
         toastr.error('', 'Campaign not selected');
 }
 
 function startLoaders() {
-    $("#chart_live_mailcamp").attr("hidden", true);
-    $("#chart_live_mailcamp").parent().append(displayLoader("Loading..."));
-    $("#radialchart_overview_mailcamp").attr("hidden", true);
-    $("#radialchart_overview_mailcamp").parent().append(displayLoader("Loading..."));
-    $("#piechart_mail_total_sent").attr("hidden", true);
-    $("#piechart_mail_total_sent").parent().append(displayLoader("Loading..."));
-    $("#piechart_mail_total_mail_open").attr("hidden", true);
-    $("#piechart_mail_total_mail_open").parent().append(displayLoader("Loading..."));
-    $("#piechart_mail_total_replied").attr("hidden", true);
-    $("#piechart_mail_total_replied").parent().append(displayLoader("Loading..."));
-    $("#table_campaign_result").attr("hidden", true);
-    $("#table_campaign_result").parent().append(displayLoader("Loading..."));
-
-    $("#piechart_total_pv").attr("hidden", true);
-    $("#piechart_total_pv").parent().append(displayLoader("Loading..."));
-    $("#piechart_total_fs").attr("hidden", true);
-    $("#piechart_total_fs").parent().append(displayLoader("Loading..."));
-    $("#piechart_total_suspect").attr("hidden", true);
-    $("#piechart_total_suspect").parent().append(displayLoader("Loading..."));
-    $("#radialchart_overview_webcamp").attr("hidden", true);
-    $("#radialchart_overview_webcamp").parent().append(displayLoader("Loading..."));
+    $.each(['chart_live_mailcamp','radialchart_overview_mailcamp','piechart_mail_total_sent','piechart_mail_total_mail_open','piechart_mail_total_replied','table_campaign_result','piechart_total_pv','piechart_total_fs','piechart_total_suspect','radialchart_overview_webcamp'], function(i, id){
+        $('#'+id).attr('hidden', true);
+        $('#'+id).parent().find(".loader").length==0?$('#'+id).parent().append(displayLoader("Loading...")):null;
+    });
 }
 
-function loadTableCampaignList(campaign_id,tracker_id) {
+function loadTableCampaignList() {
      $.post({
-        url: "web_mail_campaign_manager",
+        url: "manager/web_mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_campaign_list_web_mail",
-            tk_id : g_tk_id,
-            campaign_id: g_campaign_id,
-            tracker_id: g_tracker_id,
         })
     }).done(function (data) {
-        web_mailcamp_list = data;
+        if(data){
+            web_mailcamp_list = data;
+            if(!data.mailcamp_list.error){
+                $.each(data.mailcamp_list, function(key, value) {
+                    if(value.camp_status == 2 || value.camp_status == 3 || value.camp_status == 4) //removes inactive and scheduled
+                        $("#modal_mailcamp_selector").append(`<option value="` + value.campaign_id + `">` + value.campaign_name + `</option>`);
+                });
+            }
+            if(!data.webtracker_list.error){
+                $.each(data.webtracker_list, function(key, value) {
+                    if(!(value['start_time'] == undefined || value.start_time == '')) //removes not started
+                        $("#modal_web_tracker_selector").append(`<option value="` + value.tracker_id + `">` + value.tracker_name + `</option>`);
+                });
 
-        if(!data.mailcamp_list.error){
-            $.each(data.mailcamp_list, function(key, value) {
-                if(value.camp_status == 2 || value.camp_status == 3 || value.camp_status == 4) //removes inactive and scheduled
-                    $("#modal_mailcamp_selector").append(`<option value="` + value.campaign_id + `">` + value.campaign_name + `</option>`);
-            });
+                if (g_campaign_id == '' && g_tracker_id == '')
+                    $("#ModalCampaignList").modal("toggle");
+                else{
+                    $("#modal_mailcamp_selector").val(g_campaign_id).trigger("change");
+                    $("#modal_web_tracker_selector").val(g_tracker_id).trigger("change");
+                }
+            }
         }
-        if(!data.webtracker_list.error){
-            $.each(data.webtracker_list, function(key, value) {
-                if(!(value['start_time'] == undefined || value.start_time == '')) //removes not started
-                    $("#modal_web_tracker_selector").append(`<option value="` + value.tracker_id + `">` + value.tracker_name + `</option>`);
-            });
-
-            if(campaign_id != '' && tracker_id != '')                
-                campaignSelected(campaign_id,tracker_id,true);
-        }    
     }); 
 }
 
@@ -230,7 +206,7 @@ function campaignSelectedValidation(){
         f_error = true;
     }   
     if(!f_error){
-        campaignSelected($("#modal_mailcamp_selector").val(),$("#modal_web_tracker_selector").val(),true);
+        campaignSelected($("#modal_mailcamp_selector").val(),$("#modal_web_tracker_selector").val(),false);
         $('#ModalCampaignList').modal('toggle');
         window.history.replaceState(null,null, location.pathname + '?mcamp=' + $("#modal_mailcamp_selector").val() + '&tracker=' + $("#modal_web_tracker_selector").val());
     }
@@ -239,31 +215,10 @@ function campaignSelectedValidation(){
 function campaignSelected(campaign_id,tracker_id,f_refresh=false) {
     g_campaign_id = campaign_id;
     g_tracker_id = tracker_id;
-    var mailcamp_info = web_mailcamp_list.mailcamp_list.filter(i => i.campaign_id === campaign_id)[0];
-    var webtracker_info = web_mailcamp_list.webtracker_list.filter(i => i.tracker_id === tracker_id)[0]; 
-    var user_group_id = mailcamp_info.campaign_data.user_group.id;
-    $("#disp_camp_name").text(mailcamp_info.campaign_name);
-    $("#disp_web_tracker_name").text(webtracker_info.tracker_name);   
-    $('#disp_camp_status').html(camp_status_def[mailcamp_info.camp_status]);
-    $('#disp_camp_start').text(UTC2Local(mailcamp_info.scheduled_time));
-    $('#disp_camp_end').text(UTC2Local(mailcamp_info.stop_time));
-    $('#Modal_export_file_name').val(mailcamp_info.campaign_name);
 
-    $('#table_campaign_info > tbody > tr:eq(0) > td:eq(1)').text(mailcamp_info.campaign_id);
-    $('#table_campaign_info > tbody > tr:eq(1) > td:eq(1)').text(mailcamp_info.date);
-    $('#table_campaign_info > tbody > tr:eq(2) > td:eq(1)').text(mailcamp_info.campaign_data.user_group.name + " (ID :" + user_group_id + ")");
-    $('#table_campaign_info > tboDy > tr:eq(3) > td:eq(1)').text(mailcamp_info.campaign_data.mail_template.name + " (ID: " + mailcamp_info.campaign_data.mail_template.id + ")");
-    $('#table_campaign_info > tbody > tr:eq(4) > td:eq(1)').text(mailcamp_info.campaign_data.mail_sender.name + " (ID: " + mailcamp_info.campaign_data.mail_sender.id + ")");
+    $('input[name="radio_table_data"]:checked').val() == "radio_table_data_single"?g_tb_data_single=true:g_tb_data_single=false;
 
-    var tracker_step_data = webtracker_info.tracker_step_data;
-    g_page_count = tracker_step_data.web_forms.count;
-    $('#table_web_tracker_info > tbody > tr:eq(0) > td:eq(1)').text(webtracker_info.tracker_id);
-    $('#table_web_tracker_info > tbody > tr:eq(1) > td:eq(1)').text(webtracker_info.date);
-    $('#table_web_tracker_info > tbody > tr:eq(2) > td:eq(1)').text("Yes");
-    $('#table_web_tracker_info > tbody > tr:eq(3) > td:eq(1)').text(g_page_count>0?"Yes":"No");
-    $('#table_web_tracker_info > tbody > tr:eq(4) > td:eq(1)').text(g_page_count);
-
-    $.each([chart_live_mailcamp,radialchart_overview_mailcamp,piechart_mail_total_sent,piechart_mail_total_mail_open,piechart_mail_total_replied,dt_mail_campaign_result,radialchart_overview_webcamp,piechart_total_pv,piechart_total_fs,piechart_total_suspect], function(i, graph){
+    $.each([chart_live_mailcamp,radialchart_overview_mailcamp,piechart_mail_total_sent,piechart_mail_total_mail_open,piechart_mail_total_replied,dt_web_mail_campaign_result,radialchart_overview_webcamp,piechart_total_pv,piechart_total_fs,piechart_total_suspect], function(i, graph){
         try {
             graph.destroy();
         } catch (err) {}
@@ -273,57 +228,128 @@ function campaignSelected(campaign_id,tracker_id,f_refresh=false) {
     getAccessInfo();
     $('#table_campaign_result thead').empty();
     $("#table_campaign_result tbody > tr").remove();
+    updateMailCampGraphs();
+    //------------------------
+
     $.post({
-        url: "web_mail_campaign_manager",
+        url: "manager/web_mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
-            action_type: "multi_get_live_campaign_data_web_mail",
+            action_type: "get_web_mail_tracker_from_id",
             tk_id : g_tk_id,
             campaign_id: g_campaign_id,
             tracker_id: g_tracker_id
         })
     }).done(function (data) {
-        if(!data.error){
-            data_mail_live = data.mailcamp_live;
-            data_web_live = data.webtracker_live;
-            data_matched = data.matched;
-            data_not_matched = data.not_matched;
+        $("#disp_camp_name").text(data.mailcamp_info.campaign_name);
+        $("#disp_web_tracker_name").text(data.webtracker_info.tracker_name);   
+        $('#disp_camp_status').html(camp_status_def[data.mailcamp_info.camp_status]);
+        $('#disp_camp_start').text(data.mailcamp_info.scheduled_time);
+        $('#disp_camp_end').text(data.mailcamp_info.stop_time=='-'?' In-progress':data.mailcamp_info.stop_time);
+        $('#Modal_export_file_name').val(data.mailcamp_info.campaign_name);
+        g_page_count = data.webtracker_info.tracker_step_data.web_forms.count;
+        var tracker_step_data = data.webtracker_info.tracker_step_data;
 
-            if(f_refresh){
-                $("#tb_camp_result_colums_list_wfs").empty();
-                $("#tb_camp_result_colums_list_wfs").append(`<option value="wfs_activity" selected>Form Submission</option>
-                                     <option value="wfs_submission_count">Submission Count</option>
-                                     <option value="wfs_first_submission">First Submission</option>
-                                     <option value="wfs_last_submission">Last Submission</option>
-                                     <option value="wfs_submission_times">Submission Times</option>`);
-               
+        $('#table_campaign_info > tbody > tr:eq(0) > td:eq(1)').text(campaign_id);
+        $('#table_campaign_info > tbody > tr:eq(1) > td:eq(1)').text(data.mailcamp_info.date);
+        $('#table_campaign_info > tbody > tr:eq(2) > td:eq(1)').text(data.mailcamp_info.campaign_data.user_group.name + " (ID :" + data.mailcamp_info.campaign_data.user_group.id + ")");
+        $('#table_campaign_info > tboDy > tr:eq(3) > td:eq(1)').text(data.mailcamp_info.campaign_data.mail_template.name + " (ID: " + data.mailcamp_info.campaign_data.mail_template.id + ")");
+        $('#table_campaign_info > tbody > tr:eq(4) > td:eq(1)').text(data.mailcamp_info.campaign_data.mail_sender.name + " (ID: " + data.mailcamp_info.campaign_data.mail_sender.id + ")");
 
-                for (var i=1; i<=g_page_count; i++)
-                   $("#tb_camp_result_colums_list_wfs").append(`<option value="Page-` + i + `" selected>P` + i + ` Submission</option>`);
+        $('#table_web_tracker_info > tbody > tr:eq(0) > td:eq(1)').text(tracker_id);
+        $('#table_web_tracker_info > tbody > tr:eq(1) > td:eq(1)').text(data.webtracker_info.date);
+        $('#table_web_tracker_info > tbody > tr:eq(2) > td:eq(1)').text("Yes");
+        $('#table_web_tracker_info > tbody > tr:eq(3) > td:eq(1)').text(g_page_count>0?"Yes":"No");
+        $('#table_web_tracker_info > tbody > tr:eq(4) > td:eq(1)').text(g_page_count);
 
-                $.each(tracker_step_data.web_forms.data, function(i, page_n) {
-                    $.each(page_n.form_fields_and_values, function(field_type, form_field) {
-                        if(field_type != "FSB"){
-                            $("#tb_camp_result_colums_list_wfs").append('<option value="Field-' + form_field.idname + '" selected>Field-' + form_field.idname + '</option>');
-                            form_field_cols.push('Field-' + form_field.idname);
-                        }
-                    });
+        if(f_refresh == false){
+            $("#tb_camp_result_colums_list_wfs_data").empty();        
+        
+            for (var i=1; i<=g_page_count; i++)
+                $("#tb_camp_result_colums_list_wfs").append(`<option value="SPPage-` + i + `" selected>Page-` + i + ` Submission</option>`);
+
+            $.each(tracker_step_data.web_forms.data, function(i, page_n) {
+                $.each(page_n.form_fields_and_values, function(field_type, form_field) {
+                    if(field_type != "FSB"){
+                        $("#tb_camp_result_colums_list_wfs_data").append('<option value="Field-' + form_field.idname + '" selected>Field-' + form_field.idname + '</option>');
+                        form_field_cols.push('Field-' + form_field.idname);
+                    }
                 });
-            }
-              
-            var sent_failed_count = data_mail_live.filter(x => x.sending_status === 3).length;
-            var sent_success_count = data_mail_live.filter(x => x.sending_status === 2).length;
-            var sent_mail_count = sent_failed_count + sent_success_count;
-            updateProgressbar(mailcamp_info.camp_status, mailcamp_info.campaign_data.mail_sender.id,mailcamp_info.campaign_data.user_group.id, mailcamp_info.campaign_data.mail_template.id, sent_mail_count, sent_success_count, sent_failed_count);
+            });
+            $("#tb_camp_result_colums_list_wfs").trigger("change");
+            $('#tb_camp_result_colums_list_wfs_data').trigger("change");
         }
-        else
-            toastr.error('', 'Error getting campaign data!');
+
+        updateWebCampGraphs(data.mailcamp_info.campaign_data.user_group.id);
+        getTimelineData(data.mailcamp_info.campaign_data.user_group.id);
+        loadTableCampaignResult();
     }); 
 }
 
-function updateProgressbar(mailcamp_status, sender_list_id, user_group_id, mail_template_id, sent_mail_count, sent_success_count, sent_failed_count) {
+function updateMailCampGraphs(){
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
+            action_type: "get_campaign_from_campaign_list_id",
+            tk_id : g_tk_id,
+            campaign_id: g_campaign_id,
+            tracker_id: g_tracker_id,
+        })
+    }).done(function (data) {
+        if(!data.error){            
+            var sent_failed_count=data.live_mcamp_data.sent_failed_count;
+            var sent_success_count=data.live_mcamp_data.sent_success_count;
+            var sent_mail_count = sent_failed_count + sent_success_count;
+            var mail_open_count = data.live_mcamp_data.mail_open_count;
+
+            updateProgressbar(data.camp_status, data.campaign_data.mail_sender.id, data.campaign_data.user_group.id, data.campaign_data.mail_template.id, sent_mail_count, sent_success_count, sent_failed_count, mail_open_count);
+        }
+        else
+            toastr.warning('', data.live_mcamp_data.error);            
+    }); 
+}
+
+function updateWebCampGraphs(user_group_id){
+    $.post({
+        url: "manager/web_mail_campaign_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
+            action_type: "get_webcamp_graph_data",
+            tk_id : g_tk_id,
+            campaign_id: g_campaign_id,
+            tracker_id: g_tracker_id,
+            user_group_id: user_group_id,
+            page_count: g_page_count
+        })
+    }).done(function (data) {
+        if(!data.error){ 
+            var total_user_email_count = data.total_user_count;           
+            var total_pv = data.total_pv;
+            var total_fs = data.total_fs;
+            var total_pv_nonmatch = data.total_suspect_pv;
+            var total_fs_nonmatch = data.total_suspect_fs;
+            var fs_counts = data.fs_counts;
+
+            var pv_percent = +(total_pv*100/total_user_email_count).toFixed(2); //+ => to number (unary plus)
+            var pv_nonmatch_percent = +((total_pv_nonmatch*100/(total_pv_nonmatch+total_fs_nonmatch)).toFixed(2));
+            pv_nonmatch_percent=isNaN(pv_nonmatch_percent)?0:pv_nonmatch_percent;   //divide by zero issue
+
+            var fs_nonmatch_percent = 100-pv_nonmatch_percent;
+
+            updatePieOverViewWeb(total_user_email_count,pv_percent,fs_counts);
+            updatePieTotalPV(total_user_email_count,total_pv,pv_percent);
+            updatePieTotalFS(total_user_email_count,total_fs);
+            updatePieTotalSuspected(total_pv_nonmatch,total_fs_nonmatch,pv_nonmatch_percent,fs_nonmatch_percent);
+        }
+        else
+            toastr.warning('', data.live_mcamp_data.error);            
+    }); 
+}
+
+function updateProgressbar(mailcamp_status, sender_list_id, user_group_id, mail_template_id, sent_mail_count, sent_success_count, sent_failed_count, mail_open_count) {
+    $.post({
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_user_group_data",
@@ -335,7 +361,7 @@ function updateProgressbar(mailcamp_status, sender_list_id, user_group_id, mail_
         if(!data.error){
             $('#user_group_name').val(data.user_group_name);
 
-            var total_user_email_count =  data.user_data.length;
+            var total_user_email_count = Object.keys(data.user_data).length;
             var sent_mail_percent = +(sent_mail_count / total_user_email_count * 100).toFixed(2);
             var sent_mail_success_percent = +(sent_success_count / total_user_email_count * 100).toFixed(2);
 
@@ -346,49 +372,45 @@ function updateProgressbar(mailcamp_status, sender_list_id, user_group_id, mail_
             else
                 $("#progressbar_status").children().removeClass("bg-success");
 
-            updateLiveCampData(data, user_group_id);
             updatePieTotalSent(total_user_email_count, sent_mail_count, sent_failed_count);
 
-            var open_mail_count = 0;
-            $.each(data_mail_live, function(i, item) {
-                if (item.mail_open_times != undefined)
-                    open_mail_count++;
-            });
-            var open_mail_percent = +(open_mail_count / total_user_email_count * 100).toFixed(2);;
-            updatePieTotalMailOpen(total_user_email_count, open_mail_count, open_mail_percent);
-            updatePieOverViewEmail(sent_mail_success_percent, open_mail_percent);
-            if (mailcamp_status != 0)
+            var mail_open_percent = +(mail_open_count / total_user_email_count * 100).toFixed(2);;
+            updatePieTotalMailOpen(total_user_email_count, mail_open_count, mail_open_percent);
+            updatePieOverViewEmail(sent_mail_success_percent, mail_open_percent);
+            if (mailcamp_status != 0 && $('input[name="radio_mail_reply_check"]:checked').val() == "reply_yes")
                 updatePieTotalMailReplied(total_user_email_count);
-
-            //-------------------------------------------------------
-            var total_pv = Object.keys(data_matched.page_visit).length;
-            var total_fs = Object.keys(data_matched.form_submission).length;
-            var total_pv_nonmatch = data_not_matched.page_visit.length;
-            var total_fs_nonmatch = data_not_matched.form_submission.length;
-
-            var pv_percent = +(total_pv*100/total_user_email_count).toFixed(2); //+ => to number (unary plus)
-            var pv_nonmatch_percent = +((total_pv_nonmatch*100/(total_pv_nonmatch+total_fs_nonmatch)).toFixed(2));
-            pv_nonmatch_percent=isNaN(pv_nonmatch_percent)?0:pv_nonmatch_percent;   //divide by zero issue
-            var fs_nonmatch_percent = 100-pv_nonmatch_percent;
-
-            updatePieOverViewWeb(total_user_email_count,pv_percent);
-            updatePieTotalPV(total_user_email_count,total_pv,pv_percent);
-            updatePieTotalFS(total_user_email_count,total_fs);
-            updatePieTotalSuspected(total_pv_nonmatch,total_fs_nonmatch,pv_nonmatch_percent,fs_nonmatch_percent);
-            loadTableCampaignResult();
-            $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+            else{
+                $("#piechart_mail_total_replied").attr("hidden", false);
+                $("#piechart_mail_total_replied").parent().children().remove('.loadercust');
+            }
         }
         else
-            toastr.error('', data.error);
+            toastr.error('', data.error);        
     });
 }
 
-function updateLiveCampData(user_group_data) {
+function getTimelineData(user_group_id){
+    $.post({
+        url: "manager/web_mail_campaign_manager",
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ 
+            action_type: "get_timeline_data_web",
+            tk_id : g_tk_id,
+            campaign_id: g_campaign_id,
+            tracker_id: g_tracker_id,
+            user_group_id: user_group_id
+        })
+    }).done(function (data) {
+        if(!data.error){
+            updateLiveCampData(data.scatter_data_mail, data.scatter_data_web, data.timestamp_conv, data.timezone);
+        }
+    }); 
+}
+
+function updateLiveCampData(scatter_data_mail, scatter_data_web, timestamp_conv, timezone) {
     $("#chart_live_mailcamp").attr("hidden", false);
     $("#chart_live_mailcamp").parent().children().remove('.loadercust');
 
-    var col_name = user_group_data.name;
-    var col_email = user_group_data.email;
     var y_axis_labels = {0:"", 1:"Mail Campaign", 2:"Page Visit", 3:"Form Submission"};
     var graph_data = {'in_progress': {"hit_time":[],"user_email":[],"user_name":[]},
                        'sent_success': {"hit_time":[],"user_email":[],"user_name":[]},
@@ -397,14 +419,14 @@ function updateLiveCampData(user_group_data) {
                        'page_visit': {"hit_time":[],"user_email":[],"user_name":[]},
                        'form_submission': {"hit_time":[],"user_email":[],"user_name":[],"page":[]}};
 
-    $.each(data_mail_live, function(i, item) {
+    $.each(scatter_data_mail, function(i, item) {
         switch (item['sending_status']) {
             case 1:     //In progress
                 graph_data.in_progress.hit_time.push([Number(item.send_time), 1]);
                 graph_data.in_progress.user_email.push(item.user_email);
                 graph_data.in_progress.user_name.push(item.user_name);
                 break;
-            case 2:     //Sent success
+            case 2:     //Send success
                 graph_data.sent_success.hit_time.push([Number(item.send_time), 1]);
                 graph_data.sent_success.user_email.push(item.user_email);
                 graph_data.sent_success.user_name.push(item.user_name);
@@ -434,43 +456,43 @@ function updateLiveCampData(user_group_data) {
     });
 
     //Page visit
-    $.each(data_matched['page_visit'], function(user_mail_id, visits) {
-        $.each(visits, function(visits, visit) {
-            if(g_tb_data_single){
-                if ($.inArray(user_mail_id,  graph_data.page_visit.user_email) <= -1 ) {
-                    graph_data.page_visit.hit_time.push([Number(visit.time), 2]);
-                    graph_data.page_visit.user_email.push(user_mail_id);
-                    graph_data.page_visit.user_name.push(visit.user_name);
-                }
+    var dummy_rid=[];
+    $.each(scatter_data_web.pv, function(i, user_info) {
+        var rid = Object.keys(user_info)[0];
+        if(g_tb_data_single){            
+            if ($.inArray(rid, dummy_rid) <= -1 ) {
+                graph_data.page_visit.hit_time.push([Number(user_info[rid].time), 2]);
+                graph_data.page_visit.user_email.push(user_info[rid].user_email);
+                graph_data.page_visit.user_name.push(user_info[rid].user_name);
             }
-            else{
-                graph_data.page_visit.hit_time.push([Number(visit.time), 2]);
-                graph_data.page_visit.user_email.push(user_mail_id);
-                graph_data.page_visit.user_name.push(visit.user_name);
-            }
-        });
+            dummy_rid.push(rid);
+        }
+        else{
+            graph_data.page_visit.hit_time.push([Number(user_info[rid].time), 2]);
+            graph_data.page_visit.user_email.push(user_info[rid].user_email);
+            graph_data.page_visit.user_name.push(user_info[rid].user_name);
+        }
     });
 
     //Form submision
-    $.each(data_matched['form_submission'], function(user_mail_id, single_user_data) {
-        $.each(single_user_data, function(visits, page_n) {
-            $.each(page_n, function(i, entry) {  //all submissions in nth page
-                if(g_tb_data_single){
-                    if ($.inArray(user_mail_id,  graph_data.form_submission.user_email) <= -1 ) {
-                        graph_data.form_submission.hit_time.push([Number(entry.time), 3]);
-                        graph_data.form_submission.user_email.push(user_mail_id);
-                        graph_data.form_submission.user_name.push(entry.user_name);
-                        graph_data.form_submission.page.push(entry.page);
-                    }
-                }
-                else{
-                    graph_data.form_submission.hit_time.push([Number(entry.time), 3]);
-                    graph_data.form_submission.user_email.push(user_mail_id);
-                    graph_data.form_submission.user_name.push(entry.user_name);
-                    graph_data.form_submission.page.push(entry.page);
-                }
-            });
-        });
+    dummy_rid=[];
+    $.each(scatter_data_web.fs, function(i, user_info) {
+        var rid = Object.keys(user_info)[0];
+        if(g_tb_data_single){
+            if ($.inArray(rid, dummy_rid) <= -1 ) {
+                graph_data.form_submission.hit_time.push([Number(user_info[rid].time), 3]);
+                graph_data.form_submission.user_email.push(user_info[rid].user_email);
+                graph_data.form_submission.user_name.push(user_info[rid].user_name);
+                //graph_data.form_submission.page.push(entry.page);
+            }
+            dummy_rid.push(rid);
+        }
+        else{
+            graph_data.form_submission.hit_time.push([Number(user_info[rid].time), 3]);
+            graph_data.form_submission.user_email.push(user_info[rid].user_email);
+            graph_data.form_submission.user_name.push(user_info[rid].user_name);
+            //graph_data.form_submission.page.push(entry.page);
+        }
     });
     var options = {
         chart: {
@@ -509,7 +531,7 @@ function updateLiveCampData(user_group_data) {
             type: 'datetime',
             labels: {
                 formatter: function(val) {
-                    return UTC2Local(val);
+                    return Unix2StdDateTime(val/1000,timezone);
                 },
                 rotate: 0,
             },
@@ -558,7 +580,7 @@ function updateLiveCampData(user_group_data) {
                 dataPointIndex,
                 w
             }) {
-                var localdate = UTC2Local(w.config.series[seriesIndex].data[dataPointIndex][0]);
+                var localdate = timestamp_conv[ w.config.series[seriesIndex].data[dataPointIndex][0]];
                 switch (seriesIndex) {
                     case 0:     //In progress
                         return `<div class="chart-tooltip">Time: ` + localdate + "<br/>Name: " + graph_data.in_progress.user_name[dataPointIndex] + ` <br/>Email: ` + graph_data.in_progress.user_email[dataPointIndex] + `</div>`;
@@ -666,7 +688,6 @@ function updatePieOverViewEmail(sent_mail_percent, open_mail_percent) {
         series: [sent_mail_percent, open_mail_percent, 0], //value 0 updated in anotehr function
         chart: {
             type: 'radialBar',
-            width: '115%'
         },
         plotOptions: {
             radialBar: {
@@ -688,10 +709,10 @@ function updatePieOverViewEmail(sent_mail_percent, open_mail_percent) {
         legend: {
             show: true,
             position: 'bottom',
-            floating: false,
+            floating: true,
             itemMargin: {
                 horizontal: 5,
-                vertical: 0,
+                vertical: 2,
             },
             onItemClick: {
                 toggleDataSeries: true
@@ -736,7 +757,7 @@ function updatePieTotalSent(total_user_email_count, sent_mail_count, sent_failed
                         },
                         value: {
                             show: true,
-                            fontSize: '12px',
+                            fontSize: '14px',
                             formatter: function(val) {
                                 return val + "%";
                             }
@@ -796,8 +817,7 @@ function updatePieTotalSent(total_user_email_count, sent_mail_count, sent_failed
 function updatePieTotalMailOpen(total_user_email_count, open_mail_count, open_mail_percent) {
     $("#piechart_mail_total_mail_open").attr("hidden", false);
     $("#piechart_mail_total_mail_open").parent().children().remove('.loadercust');
-
-    var non_open_percent = +(100 - open_mail_percent).toFixed(2);
+    var non_open_percent = +(100 - open_mail_percent).toFixed(2);;
     var options = {
         series: [open_mail_percent, non_open_percent],
         chart: {
@@ -816,7 +836,7 @@ function updatePieTotalMailOpen(total_user_email_count, open_mail_count, open_ma
                         },
                         value: {
                             show: true,
-                            fontSize: '12px',
+                            fontSize: '14px',
                             formatter: function(val) {
                                 return val + "%";
                             }
@@ -875,22 +895,22 @@ function updatePieTotalMailOpen(total_user_email_count, open_mail_count, open_ma
 
 function updatePieTotalMailReplied(total_user_email_count) {
     $.post({
-        url: "mail_campaign_manager",
+        url: "manager/mail_campaign_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_mail_replied",
             tk_id : g_tk_id,
             campaign_id: g_campaign_id,
-            tracker_id: g_tracker_id
+            tracker_id: g_tracker_id,
         }),
     }).done(function (data) {
+        loadTableCampaignResult();
         $("#piechart_mail_total_replied").attr("hidden", false);
         $("#piechart_mail_total_replied").parent().children().remove('.loadercust');
         if (!data.error) {
             window.reply_emails = data;
-            loadTableCampaignResult();
 
-            var reply_count_unique = Object.keys(data['msg_info']).length;
+            var reply_count_unique = Object.keys(data.msg_info).length;
             var reply_percent = +(reply_count_unique / total_user_email_count * 100).toFixed(2);
             var non_reply_percent = +(100 - reply_percent).toFixed(2);
             var options = {
@@ -911,7 +931,7 @@ function updatePieTotalMailReplied(total_user_email_count) {
                                 },
                                 value: {
                                     show: true,
-                                    fontSize: '12px',
+                                    fontSize: '14px',
                                     formatter: function(val) {
                                         return val + "%";
                                     }
@@ -969,18 +989,21 @@ function updatePieTotalMailReplied(total_user_email_count) {
 
             var arr_chart_data = radialchart_overview_mailcamp.w.globals.series.slice();
             arr_chart_data[2] = reply_percent;
-            radialchart_overview_mailcamp.updateSeries(arr_chart_data);   
+            radialchart_overview_mailcamp.updateSeries(arr_chart_data)
         }
         else{
             toastr.error('', data.error);
             $("#piechart_mail_total_replied").text('Loading error!');
         }
-    });
+    }).fail(function(response) {
+        toastr.error('',  response.statusText);
+        $("#piechart_mail_total_replied").parent().children().remove('.loadercust');
+    });  
 }
 
 function loadTableCampaignResult() {
     try {
-        dt_mail_campaign_result.destroy();
+        dt_web_mail_campaign_result.destroy();
     } catch (err) {}
 
     $("#table_campaign_result").attr("hidden", false);
@@ -989,604 +1012,137 @@ function loadTableCampaignResult() {
     $('#table_campaign_result thead').empty();
     $("#table_campaign_result tbody > tr").remove();
 
-    var tb_headers = "<tr><th>No</th>";
-    var tb_data = "";
 
     getAllReportColListSelected();
+    $('input[name="radio_table_data"]:checked').val() == "radio_table_data_single"?g_tb_data_single=true:g_tb_data_single=false;
 
-    $.each(allReportColListSelected, function(i, item) {
-        switch (item) {
-            case "id":
-                tb_headers += "<th>CID</th>";
-                break;
-            case "user_name":
-                tb_headers += "<th>Name</th>";
-                break;
-            case "user_email":
-                tb_headers += "<th>Email</th>";
-                break;
-            case "sending_status":
-                tb_headers += "<th class='class_sel_col'>Status</th>";
-                break;
-            case "send_time":
-                tb_headers += "<th>Sent Time</th>";
-                break;
-            case "send_error":
-                tb_headers += "<th>Send Error</th>";
-                break;
-            case "mail_open":
-                tb_headers += "<th class='class_sel_col'>Mail Open</th>";
-                break;
-            case "mail_open_count":
-                tb_headers += "<th>Mail(open count)</th>";
-                break;
-            case "mail_first_open":
-                tb_headers += "<th>Mail(first open)</th>";
-                break;
-            case "mail_last_open":
-                tb_headers += "<th>Mail(last open)</th>";
-                break;
-            case "mail_open_times":
-                tb_headers += "<th>Mail(all open times)</th>";
-                break;
-            case "public_ip":
-                tb_headers += "<th>Public IP</th>";
-                break;
-            case "user_agent":
-                tb_headers += "<th>User Agent</th>";
-                break;
-            case "mail_client":
-                tb_headers += "<th>Mail Client</th>";
-                break;
-            case "platform":
-                tb_headers += "<th>Platform</th>";
-                break;
-            case "all_headers":
-                tb_headers += "<th>HTTP Headers</th>";
-                break;
-            case "mail_reply":
-                tb_headers += "<th class='class_sel_col'>Mail Reply</th>";
-                break;
-            case "mail_reply_count":
-                tb_headers += "<th class='class_sel_col'>Mail (reply count)</th>";
-                break;
-            case "mail_reply_content":
-                tb_headers += "<th class='class_sel_col'>Mail (reply content)</th>";
-                break;
-            case "country":
-                tb_headers += "<th>Country</th>";
-                break;
-            case "city":
-                tb_headers += "<th>City</th>";
-                break;
-            case "zip":
-                tb_headers += "<th>Zip</th>";
-                break;
-            case "isp":
-                tb_headers += "<th>ISP</th>";
-                break;
-            case "timezone":
-                tb_headers += "<th>Timezone</th>";
-                break;
-            case "coordinates":
-                tb_headers += "<th>Coordinates</th>";
-                break;
+    var arr_tb_heading=[];  
+    arr_tb_heading.push({ data: 'sn', title: "SN" });
 
-            case "wcm_cid":
-                tb_headers += "<th>Client ID</th>";
-                break;
-            case "wcm_session_id":
-                tb_headers += "<th>Session ID</th>";
-                break;
-            case "wcm_public_ip":
-                tb_headers += "<th>Public IP</th>";
-                break;
-            case "wcm_browser":
-                tb_headers += "<th>Browser</th>";
-                break; 
-            case "wcm_platform":
-                tb_headers += "<th>Platform</th>";
-                break; 
-            case "wcm_screen_res":
-                tb_headers += "<th>Screen Res</th>";
-                break; 
-            case "wcm_device_type":
-                tb_headers += "<th>Device Type</th>";
-                break; 
-            case "wcm_user_agent":
-                tb_headers += "<th>User Agent</th>";
-                break;
-            case "wcm_country":
-                tb_headers += "<th>Country</th>";
-                break;
-            case "wcm_city":
-                tb_headers += "<th>City</th>";
-                break;
-            case "wcm_zip":
-                tb_headers += "<th>Zip</th>";
-                break;
-            case "wcm_isp":
-                tb_headers += "<th>ISP</th>";
-                break;
-            case "wcm_timezone":
-                tb_headers += "<th>Timezone</th>";
-                break;
-            case "wcm_coordinates":
-                tb_headers += "<th>Coordinates</th>";
-                break;
-
-
-            case "wpv_activity":
-                tb_headers += "<th class='class_sel_col'>Page Visit</th>";
-                break;
-            case "wpv_visit_count":
-                tb_headers += "<th>Visit Count</th>";
-                break;
-            case "wpv_first_visit":
-                tb_headers += "<th>First Visit</th>";
-                break;
-            case "wpv_last_visit":
-                tb_headers += "<th>Last Visit</th>";
-                break;
-            case "wpv_visit_times":
-                tb_headers += "<th>Visit Times</th>";
-                break;
-
-            case "wfs_activity":
-                tb_headers += "<th class='class_sel_col'>Form Submission</th>";
-                break;
-            case "wfs_submission_count":
-                tb_headers += "<th>Submission Count</th>";
-                break;
-            case "wfs_first_submission":
-                tb_headers += "<th>First Submission</th>";
-                break;
-            case "wfs_last_submission":
-                tb_headers += "<th>Last Submission</th>";
-                break;
-            case "wfs_submission_times":
-                tb_headers += "<th>Submission Times</th>";
-                break;
-            default:
-                if (item.startsWith("Field-"))
-                    tb_headers += "<th>" + item + "</th>";
-                else
-                if (item.startsWith("Page-"))
-                    tb_headers += "<th>P" + item.split('-')[1] + " Submission</th>";
-        }
+    $.each(allReportColListSelected, function(index, item) {
+        if (item.startsWith("Field-"))
+            arr_tb_heading.push({ data: item, title : item});
+        else
+            if (item.startsWith("SPPage-"))
+                arr_tb_heading.push({ data: item, title : item.substring(2) + ' Submission'});
+            else
+                arr_tb_heading.push({ data: item, title : dic_all_col[item]});
     });
-    tb_headers += "</tr>";
-    $("#table_campaign_result thead").append(tb_headers);
 
-    $.each(data_mail_live, function(i, item) {
-        tb_data += "<tr><td></td>";
-        $.each(allReportColListSelected, function(i, column) {
-            //---Start setting default column values
-            if(column == "mail_open" || column == "mail_reply")
-                item[column] = "<i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span>";
-            if(column == "mail_open_count")
-                item[column] = '0'; //requires '0' and not 0, unknown issue
-            //----End setting default column values
-            if($.inArray(column,['user_name','user_email','sending_status','send_time','send_error','public_ip','user_agent','mail_client','platform','all_headers'])> -1 && item[column] == undefined)
-                tb_data += "<td>-</td>";
-            else
-            if ((column == "mail_open" || column == "mail_open_count" || column == "mail_first_open" || column == "mail_last_open" || column == "mail_open_times") && item.mail_open_times != undefined) {
-                arr_mail_open_times = []; // string "[ 1598077087853, 1598077091716 ]"  => JS array
-                mail_open_first_timestamp = item.mail_open_times[0];
-                mail_open_last_timestamp = item.mail_open_times[arr_mail_open_times.length - 1];
-                $.each(item.mail_open_times, function(i, sitem) {
-                    arr_mail_open_times[i] = UTC2Local(sitem);
-                });
-                
-                switch (column) {
-                    case "mail_open":
-                        tb_data += arr_mail_open_times.length > 0 ? "<td ><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i><span hidden>Yes</span></td>" : "<td>No</td>"; // else condition is not effective
-                        break;
-                    case "mail_open_count":
-                        tb_data += "<td>" + arr_mail_open_times.length + "</td>";
-                        break;
-                    case "mail_first_open":
-                        tb_data += "<td data-order=\"" + mail_open_first_timestamp + "\">" + arr_mail_open_times[0] + "</td>";
-                        break;
-                    case "mail_last_open":
-                        tb_data += "<td data-order=\"" + mail_open_last_timestamp + "\">" + arr_mail_open_times[arr_mail_open_times.length - 1] + "</td>";
-                        break;
-                    case "mail_open_times":
-                        tb_data += "<td data-order=\"" + arr_mail_open_times[0] + "\">" + arr_mail_open_times + "</td>";
-                }
-            } 
-            else
-            if ((column == "mail_reply" || column == "mail_reply_count" || column == "mail_reply_content")) {
-                if(Object.keys(reply_emails).length == 0)
-                     tb_data += `<td><i class="fas fas fa-exclamation-triangle" data-toggle="tooltip" title="Info not loaded" onclick="viewReplyMails('` + item.user_email + `')"></i></td>`;
-                else
-                    switch (column) {
-                        case "mail_reply":
-                            tb_data += reply_emails.msg_info[item.user_email] ? "<td><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i><span hidden>Yes</span></td>" : "<td><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span></td>";
-                            break;
-                        case "mail_reply_count":
-                            tb_data += reply_emails.msg_info[item.user_email] ? "<td>" + reply_emails.msg_info[item.user_email].msg_time.length + "</td>" : "<td>0</td>";
-                            break;
-                        case "mail_reply_content":
-                            if (reply_emails.msg_info[item.user_email])
-                                tb_data += `<td><i class="fas fa-eye fa-lg cursor-pointer" data-toggle="tooltip" title="View" onclick="viewReplyMails('` + item.user_email + `')"></i></td>`;
-                            else
-                                tb_data += "<td>-</td>";
+    var no_sort_col=[0];    //0=sn field
+    $.each(allReportColListSelected, function(index, item) {
+        if(item.startsWith('wcm') || item.startsWith('wpv') || item.startsWith('wfs') || item.startsWith('Field-') || item.startsWith('SPPage-'))
+            no_sort_col.push(index+1);
+    });
+
+    dt_web_mail_campaign_result = $('#table_campaign_result').DataTable({
+        'processing': true,
+        'serverSide': true,
+        'ajax': {
+            url:'manager/web_mail_campaign_manager',
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: function (d) {   //request parameters here
+                    d.action_type = 'multi_get_live_campaign_data_web_mail';
+                    d.tk_id = g_tk_id;
+                    d.campaign_id = g_campaign_id;
+                    d.tracker_id = g_tracker_id;
+                    d.selected_col = allReportColListSelected;
+                    d.tb_data_single = g_tb_data_single;
+                    return JSON.stringify(d);
+                },
+            dataSrc: function ( resp ){
+                for (var i=0; i<resp.data.length; i++){
+                    resp.data[i]['sn'] = i+1;
+                    if(resp.data[i].mail_open==true)
+                        resp.data[i].mail_open = "<center><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i></center>";
+                    else
+                        resp.data[i].mail_open = "<center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i></center>";
+                    resp.data[i].sending_status= camp_table_status_def[resp.data[i].sending_status];
+
+                    if(Object.keys(reply_emails).length >= 0 &&  reply_emails.hasOwnProperty('msg_info') && reply_emails.msg_info.hasOwnProperty(resp.data[i].user_email) ){
+                        resp.data[i].mail_reply = `<center><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i></center>`;
+                        resp.data[i].mail_reply_count = reply_emails.msg_info[resp.data[i].user_email].msg_time.length;
+                        resp.data[i].mail_reply_content = `<center><i class="fas fa-eye fa-lg cursor-pointer" data-toggle="tooltip" title="View" onclick="viewReplyMails('` + resp.data[i].user_email + `')"></i></center>`;
                     }
-            } 
-            else 
-            if(column=='public_ip' || column=='user_agent' || column=='mail_client' || column=='platform' || column=='all_headers'){
-                if(g_tb_data_single == true)
-                    tb_data += "<td>" +item[column][0] + "</td>";
-                else
-                    tb_data += "<td>" + item[column].join(",\r\n") + "</td>";
-            }
-            else
-            if (column == 'sending_status'){
-                if(item[column] == undefined || item[column] == '')
-                    tb_data += camp_table_status_def[4];
-                else
-                    tb_data += camp_table_status_def[item[column]];
-            }                
-            else
-            if (column == 'send_time')
-                tb_data += "<td data-order=\"" + item[column] + "\">" + UTC2Local(item[column]) + "</td>";
-            else
-            if($.inArray(column,['country','city','zip','isp','timezone','coordinates'])> -1 && item.ip_info != null){
-                if(item.ip_info[column] == null)
-                    tb_data += "<td>-</td>";
-                else
-                    tb_data += "<td>" + item.ip_info[column] + "</td>";
-            }
-            else
-            if(column.startsWith('wcm_') || column.startsWith('wpv_') || column.startsWith('wfs_') || column.startsWith('Page-'))
-                tb_data += auxData_wcm(column,item);
-            else
-            if(column.startsWith('Field-'))
-                tb_data += auxData_form_fields(column,item);
-            else
-            if (item[column] != undefined && item[column] != '')
-                tb_data += "<td>" + item[column] + "</td>";
-            else
-                tb_data += "<td>-</td>";
+                    else{
+                        resp.data[i].mail_reply = `<center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i></center>`;
+                        resp.data[i].mail_reply_count = 0;
+                    }
 
-        });
-        tb_data += "</tr>";
-    });
-    $("#table_campaign_result tbody").append(tb_data);
+                    if(resp.data[i].wpv_activity==true)
+                        resp.data[i].wpv_activity = "<center><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i></center>";
+                    else
+                        resp.data[i].wpv_activity = "<center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i></center>";
 
-    dt_mail_campaign_result = $('#table_campaign_result').DataTable({
-        "bDestroy": true,
-        "preDrawCallback": function(settings) {
-            $('#table_campaign_result tbody').hide();
+                    if(resp.data[i].wfs_activity==true)
+                        resp.data[i].wfs_activity = "<center><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i></center>";
+                    else
+                        resp.data[i].wfs_activity = "<center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i></center>";
+
+                    for (key in resp.data[i]) {
+                        if (key.startsWith('SPPage-'))
+                            if(resp.data[i][key]==true)
+                                resp.data[i][key] = "<center><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i></center>";
+                            else
+                                resp.data[i][key] = "<center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i></center>";
+                    }
+                }
+                return resp.data
+            }
         },
-
-        "drawCallback": function() {
-            $('#table_campaign_result tbody').fadeIn(500);
-        },
-        'columnDefs': [{
-            "targets": ["class_sel_col"],
-            "className": "dt-center"
-        }],
-
-        dom: 'B<"bspace"l>frtip',
-        buttons: [{
-                extend: 'csvHtml5',
-                filename: function() {
-                    if ($('#Modal_export_file_name').val() == "") return $('#disp_camp_name').text() + "_" + $('#reportTypeSelector').val();
-                    else return $('#Modal_export_file_name').val();
-                },
-                exportOptions: {
-                    columns: ':visible:not(:first-child)' //removes 1st SL.No column
-                }
-            },
-            {
-                extend: 'excelHtml5',
-                filename: function() {
-                    if ($('#Modal_export_file_name').val() == "") return $('#disp_camp_name').text() + "_" + $('#reportTypeSelector').val();
-                    else return $('#Modal_export_file_name').val();
-                },
-                title: function() {
-                    return $('#disp_camp_name').text();
-                },
-                exportOptions: {
-                    columns: ':visible:not(:first-child)' //removes 1st SL.No column
-                }
-            },
-            {
-                extend: 'pdfHtml5',
-                orientation: 'landscape',
-                pageSize: 'LEGAL',
-                filename: function() {
-                    if ($('#Modal_export_file_name').val() == "") return $('#disp_camp_name').text() + "_" + $('#reportTypeSelector').val();
-                    else return $('#Modal_export_file_name').val();
-                },
-                title: function() {
-                    return $('#disp_camp_name').text();
-                },
-                exportOptions: {
-                    columns: ':visible:not(:first-child)' //removes 1st SL.No column
-                }
-            }
-        ],
-
-        initComplete: function() {
-            var $buttons = $('.dt-buttons').hide();
+        'columns': arr_tb_heading,
+        'pageLength': 20,
+        'lengthMenu': [[20, 50, 100, 500, 1000, -1], [20, 50, 100, 500, 1000, "All"]],
+        'aoColumnDefs': [{'bSortable': false, 'aTargets': no_sort_col}],
+        drawCallback: function() {
+            applyCellColors();
+            $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+            $("label>select").select2({minimumResultsForSearch: -1, });
         }
-    }); //initialize table
-
-
-    dt_mail_campaign_result.on('order.dt_mail_campaign_result search.dt_mail_campaign_result', function() {
-        dt_mail_campaign_result.column(0, {
-            search: 'applied',
-            order: 'applied'
-        }).nodes().each(function(cell, i) {
-            cell.innerHTML = i + 1;
-        });
-    }).draw();
-    applyCellColors();
-    $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-    $("label>select").select2({
-        minimumResultsForSearch: -1,
     });
 }
-
-function auxData_wcm(column,m_item){
-    var tb_data = [];
-    $.each(data_web_live.page_visit, function(i, wpv_item){
-        if(m_item.id == wpv_item.cid)
-            switch(column.substring(4)){
-                case 'cid': tb_data.push(wpv_item.cid);
-                            break;
-                case 'session_id': tb_data.push(wpv_item.session_id);
-                            break;
-                case 'public_ip': tb_data.push(wpv_item.public_ip);
-                            break;
-                case 'browser': tb_data.push(wpv_item.browser);
-                            break;
-                case 'platform': tb_data.push(wpv_item.platform);
-                            break;
-                case 'screen_res': tb_data.push(wpv_item.screen_res);
-                            break;
-                case 'device_type': tb_data.push(wpv_item.device_type);
-                            break;
-                case 'user_agent': tb_data.push(wpv_item.user_agent);
-                            break;  
-                case 'country': tb_data.push(wpv_item.ip_info.country);
-                            break; 
-                case 'city': tb_data.push(wpv_item.ip_info.city);
-                            break; 
-                case 'zip': tb_data.push(wpv_item.ip_info.zip);
-                            break; 
-                case 'isp': tb_data.push(wpv_item.ip_info.isp);
-                            break; 
-                case 'timezone': tb_data.push(wpv_item.ip_info.timezone);
-                            break; 
-                case 'coordinates': tb_data.push(wpv_item.ip_info.coordinates);
-                            break;   
-            }                             
-    }); 
-
-    if(column.startsWith('wcm_')){
-        if(g_tb_data_single == true)
-            return "<td>" + (tb_data[0]==undefined || tb_data[0]==''?'-':tb_data[0]) + "</td>"; 
-        else
-            return "<td>" + (tb_data.length==0?'-':tb_data.join(",\r\n")) + "</td>"; 
-    }
-    else
-    if(column.startsWith('wpv_'))
-        return auxData_wpv(column,m_item);
-    else
-    if(column.startsWith('wfs_') || column.startsWith('Page-'))
-        return auxData_wfs(column,m_item);    
-}
-
-function auxData_wpv(column,m_item){ 
-    var tb_data = '';
-    var hit_times = [];
-    $.each(data_web_live.page_visit, function(i, wpv_item){
-        if(m_item.id == wpv_item.cid)
-            switch(column.substring(4)){
-                case 'activity':            //Store data in array for each hits
-                case 'visit_count':
-                case 'first_visit':
-                case 'last_visit':
-                case 'visit_times':   hit_times.push(UTC2Local(wpv_item.time));
-                            break;                       
-            }                                    
-    });
-
-    switch(column.substring(4)){
-        case 'activity': tb_data += hit_times.length>0 ? "<td><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i><span hidden>Yes</span></td>" : "<td><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span></td>";
-                            break;
-        case 'visit_count': tb_data += hit_times.length>0 ? "<td>"+hit_times.length+"</td>":"<td>0</td>";
-                            break;
-        case 'first_visit': tb_data += hit_times.length>0 ? "<td data-order=\"" + Local2LocalUNIX(hit_times[0]) + "\">"+hit_times[0]+"</td>":"<td>-</td>";
-                            break;
-        case 'last_visit': tb_data += hit_times.length>0 ? "<td data-order=\"" + Local2LocalUNIX(hit_times[hit_times.length-1]) + "\">"+hit_times[hit_times.length-1]+"</td>" : "<td>-</td>";
-                            break;
-        case 'visit_times': tb_data += hit_times.length>0 ? "<td>"+hit_times.join(",\r\n")+"</td>":"<td>-</td>";
-                            break;
-    }
-    if(tb_data != '')
-        return  tb_data;
-    else
-        return "<td>-</td>";
-}
-
-function auxData_wfs(column,m_item){ 
-    var tb_data = 0;
-    var hit_times = [];
-    $.each(data_web_live.form_submit, function(i, wfs_item){
-        if(m_item.id == wfs_item.cid){
-            if(column.startsWith('Page-')){ //Page submit info
-                if(column.split('-')[1] == wfs_item.page)
-                    tb_data++;
-            }
-            else
-                switch(column.substring(4)){
-                    case 'activity':            //Store data in array for each hits
-                    case 'submission_count':
-                    case 'first_submission':
-                    case 'last_submission':
-                    case 'submission_times':   hit_times.push(UTC2Local(wfs_item.time)); break;  
-                }       
-        }                             
-    });
-
-    if(column.startsWith('Page-')){ //Page submit info
-        tb_data = tb_data>0 ? "<td><center><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i><span hidden>Yes</span></center></td>" : "<td><center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span></center></td>";
-    }
-    else
-        switch(column.substring(4)){
-            case 'activity': tb_data += hit_times.length>0 ? "<td><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i><span hidden>Yes</span></td>" : "<td><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span></td>";
-                                    break;
-            case 'submission_count': tb_data += hit_times.length>0 ? "<td>"+hit_times.length+"</td>":"<td>0</td>";
-                                break;
-            case 'first_submission': tb_data += hit_times.length>0 ? "<td data-order=\"" + Local2LocalUNIX(hit_times[0]) + "\">"+hit_times[0]+"</td>":"<td>-</td>";
-                                    break;
-            case 'last_submission': tb_data += hit_times.length>0 ? "<td data-order=\"" + Local2LocalUNIX(hit_times[hit_times.length-1]) + "\">"+hit_times[hit_times.length-1]+"</td>" : "<td>-</td>";
-                                    break;
-            case 'submission_times': tb_data += hit_times.length>0 ? "<td>"+hit_times.join(",\r\n")+"</td>":"<td>-</td>";
-                                    break;
-        }
-
-    if(tb_data != '')
-        return  tb_data;
-    else
-        return "<td>-</td>";
-}
-
-function auxData_form_fields(column,m_item){ 
-    var hit_items = [];
-    var tb_data='';
-    $.each(data_web_live.form_submit, function(i, wfs_item){
-        if(m_item.id == wfs_item.cid){
-            if(wfs_item.form_field_data[column.substring(6)])
-                hit_items.push(wfs_item.form_field_data[column.substring(6)]);
-        }             
-    });
-    
-    if(g_tb_data_single == true){
-        if(hit_items[0] == undefined)
-            tb_data = "<td>-</td>";
-        else
-        if(hit_items[0] == true)
-            tb_data = "<td><center><i class='fas fa-check fa-lg text-success' data-toggle='tooltip' title='Yes'></i><span hidden>Yes</span></center></td>";
-        else
-        if(hit_items[0] == false)
-            tb_data = "<td><center><i class='fas fa-times fa-lg text-danger' data-toggle='tooltip' title='No'></i><span hidden>No</span></center></td>";
-        else
-            tb_data += "<td>" + hit_items[0] + "</td>";  
-    }
-    else
-        tb_data += hit_items.length>0 ? "<td>"+hit_items.join(",\r\n")+"</td>":"<td>-</td>";
-
-    return tb_data;
-}
-
 
 function applyCellColors(){
     allReportColListSelected.unshift(""); // adds SLNO colum to match index
-    dt_mail_campaign_result.columns().every( function ( colIdx, tableLoop, rowLoop ) {  
+    dt_web_mail_campaign_result.columns().every( function ( colIdx, tableLoop, rowLoop ) {  
 
-        dt_mail_campaign_result.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+        dt_web_mail_campaign_result.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+            var col_name=allReportColListSelected[colIdx];
+            var cell = dt_web_mail_campaign_result.cell({ row: rowIdx, column: colIdx }).node();
 
-            switch(allReportColListSelected[colIdx]){
-                case "id": 
-                case "user_name": 
-                case "user_email": 
-                case "sending_status": 
-                case "send_time": 
-                case "send_error": 
-                case "mail_open": 
-                case "mail_open_count": 
-                case "mail_first_open": 
-                case "mail_last_open": 
-                case "mail_open_times": 
-                case "public_ip": 
-                case "user_agent": 
-                case "mail_client": 
-                case "platform": 
-                case "all_headers": 
-                case "mail_reply": 
-                case "mail_reply_count": 
-                case "mail_reply_content":
-                case "country":
-                case "city":
-                case "zip":
-                case "isp":
-                case "timezone":
-                case "coordinates": //applies default color
-                    break;
-
-                case "wcm_cid": 
-                case "wcm_session_id": 
-                case "wcm_public_ip": 
-                case "wcm_browser": 
-                case "wcm_platform": 
-                case "wcm_screen_res": 
-                case "wcm_device_type": 
-                case "wcm_user_agent":
-                case "wpv_activity":
-                case "wpv_visit_count":
-                case "wpv_first_visit":
-                case "wpv_last_visit":
-                case "wpv_visit_times":
-                case "wcm_country":
-                case "wcm_city":
-                case "wcm_zip":
-                case "wcm_isp":
-                case "wcm_timezone":
-                case "wcm_coordinates":
-                        var cell = dt_mail_campaign_result.cell({ row: rowIdx, column: colIdx }).node();
-                        if(rowIdx%2 == 0)
-                            $(cell).addClass('ccl-3');
-                    break; 
-                case "wfs_activity":
-                case "wfs_submission_count":
-                case "wfs_first_submission":
-                case "wfs_last_submission":
-                case "wfs_submission_times":
-                        var cell = dt_mail_campaign_result.cell({ row: rowIdx, column: colIdx }).node();
-                        if(rowIdx%2 == 0)
-                            $(cell).addClass('ccl-3');
-                    break; 
-                default:    var cell = dt_mail_campaign_result.cell({ row: rowIdx, column: colIdx }).node();
-                            if(allReportColListSelected[colIdx].startsWith('Page-') && rowIdx%2 == 0)
-                                    $(cell).addClass('ccl-3');
-                            else
-                            if(allReportColListSelected[colIdx].startsWith('Field-') && rowIdx%2 == 0)
-                                    $(cell).addClass('ccl-4');
-            }     
+            if(col_name.startsWith('wcm_') || col_name.startsWith('wpv_')){                
+                if(rowIdx%2 == 0)
+                    $(cell).addClass('ccl-3');
+            }
+            else
+            if((col_name.startsWith('wfs_') || col_name.startsWith('SPPage-')) && rowIdx%2 == 0){
+                if(rowIdx%2 == 0)
+                    $(cell).addClass('ccl-4');
+            }
+            else
+            if(col_name.startsWith('Field-') && rowIdx%2 == 0)
+                $(cell).addClass('ccl-2');
         });     
     });
 }
 
 //==========Start Web tracker charts=========================
-function updatePieOverViewWeb(total_user_email_count,total_lpv_percent) {
+function updatePieOverViewWeb(total_user_email_count,lpv_percent,fs_counts) {
     $("#radialchart_overview_webcamp").attr("hidden", false);
     $("#radialchart_overview_webcamp").parent().children().remove('.loadercust');
 
-    var matched_pages =  {page_count_series:[], page_count_percent_series:[], page_name_series:[]};
-    matched_pages.page_count_percent_series[0] = total_lpv_percent;
+    var matched_pages = {page_name_series:[], page_count_percent_series:[]};
+    matched_pages.page_count_percent_series[0] = lpv_percent;
     matched_pages.page_name_series[0] = 'Page visit';
 
-    for(var i=1; i<=g_page_count; i++){
-        matched_pages.page_count_series[i]=0;
-        matched_pages.page_name_series[i] = 'P' + i + ' submission';
-    }
-
-    $.each(data_matched.form_submission, function(mail_id, user){
-        for(var i=1; i<=g_page_count; i++)
-            if(user[i]!=undefined){
-                matched_pages.page_count_series[i]+=1; //unique count. All entry count is user[i].length
-                matched_pages.page_count_percent_series[i]= +(matched_pages.page_count_series[i]/total_user_email_count*100).toFixed(2);
-            }
+    $.each(fs_counts, function(page_n, fs_count_page_n) {
+        matched_pages.page_count_percent_series[page_n] = +(fs_count_page_n/total_user_email_count*100).toFixed(2);
+        matched_pages.page_name_series[page_n] = 'P' + page_n + ' submission';
     });
 
     var options = {
-        series: matched_pages.page_count_percent_series, 
+        series:  matched_pages.page_count_percent_series, 
         chart: {
             type: 'radialBar',
             width: '115%'
@@ -1908,7 +1464,7 @@ function enableDisablePublicAccess(new_tk_id=false){
     }
     $('#cb_act_dashboard_link').closest('.modal-content').find('.modal-footer').append(displayLoader("Updating...","small"))
     $.post({
-        url: "session_manager",
+        url: "manager/session_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "manage_dashboard_access",  
@@ -1935,7 +1491,7 @@ function enableDisablePublicAccess(new_tk_id=false){
 
 function getAccessInfo(){
     $.post({
-        url: "session_manager",
+        url: "manager/session_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_access_info",
@@ -1961,4 +1517,50 @@ function hideMeFromPublic(){
     $(".topbar").hide();
     $(".page-wrapper").css('margin-left',0);
     $(".item_private").hide();
+}
+
+function exportReportAction(e) {
+    if(dt_web_mail_campaign_result.rows().count() > 0){
+        var file_name = $('#Modal_export_file_name').val().trim();
+        var file_format = $('#modal_export_report_selector').val();
+        getAllReportColListSelected();
+
+        if(file_format == 'csv')
+            content_type='text/csv';
+        else
+        if(file_format == 'pdf')
+            content_type='application/pdf';
+        else
+        if(file_format == 'html')
+            content_type='text/html';
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'manager/web_mail_campaign_manager', true);
+        xhr.responseType = 'arraybuffer';
+        
+        enableDisableMe(e);
+        xhr.send(JSON.stringify({ 
+            action_type: "download_report",
+            campaign_id: g_campaign_id,
+            tracker_id: g_tracker_id,
+            selected_col: allReportColListSelected,
+            dic_all_col: dic_all_col,
+            file_name: file_name,
+            file_format: file_format,
+            tb_data_single: g_tb_data_single
+        }));
+
+        xhr.onload = function() {
+            if (this.status == 200) {
+                var link=document.createElement('a');
+                link.href = window.URL.createObjectURL(new Blob([this.response],{ type: content_type}));
+                link.download=file_name + '.' + file_format;
+                link.click();
+                $('#ModalExport').modal('toggle');
+            }
+            enableDisableMe(e);
+        };
+    }
+    else
+        toastr.error('', 'Table is empty!');
 }

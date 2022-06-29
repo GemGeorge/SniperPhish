@@ -21,6 +21,9 @@ $(function() {
         minimumResultsForSearch: -1,
     });
     Prism.highlightAll();
+    $('.container-fluid').click(function(){
+        g_deny_navigation = '';
+    });
 });
 
 $.each(g_arr_alg, function(i, val) {
@@ -147,7 +150,7 @@ function getAlgNames(){
 function generateResult(e,quite=true){
     enableDisableMe(e);
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_result_alg",
@@ -225,7 +228,7 @@ function savePlainText(e) {
 
     enableDisableMe(e);
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "save_plaintext",
@@ -242,6 +245,7 @@ function savePlainText(e) {
             window.history.replaceState(null,null, location.pathname + '?ht=' + nextRandomId);
             loadTablePlainTextList();
             generateDownloadLink(file_extension);
+            g_deny_navigation = null;
         }
         else
             toastr.error('', response.error);
@@ -251,7 +255,7 @@ function savePlainText(e) {
 
 function viewPlainTextDetailsFromId(ht_id,quite) {
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_plaintext_details_from_id",
@@ -302,7 +306,7 @@ function promptPlainTextDeletion(ht_id) {
 
 function plainTextDeletionAction() {
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_plaintext",
@@ -359,7 +363,7 @@ function loadTablePlainTextList() {
     $('#table_plaintext_list tbody > tr').remove();
 
     $.post({
-        url: "sniperhost_manager",
+        url: "manager/sniperhost_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_plaintext_list",
@@ -370,13 +374,13 @@ function loadTablePlainTextList() {
                 var action_items = `<div class="d-flex no-block align-items-center"><button type="button" class="btn btn-info btn-sm" data-toggle="tooltip" title="View/Edit" onClick="viewPlainTextDetailsFromId('` + value.ht_id + `',false)"><i class="mdi mdi-eye"></i></button><button type="button" class="btn btn-success btn-sm mdi mdi-content-copy" data-toggle="tooltip" title="Copy direct access link" onClick="copyDownloadLink($(this),'` + value.ht_id + `','` + value.file_extension + `')"></button><button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Delete" onClick="promptPlainTextDeletion('` + value.ht_id + `')"><i class="mdi mdi-delete-variant"></i></button>`;
 
                 var arr_alg = [];
-                $.each(JSON.parse(value['alg']), function(i, alg) {
+                $.each(value.alg, function(i, alg) {
                     arr_alg.push(g_arr_alg[alg]);
                 });
                 var curr_file_extension = g_arr_extensions[value['file_extension']]==undefined?'Custom ('+value.file_extension+')':g_arr_extensions[value['file_extension']];
                 var curr_header = g_arr_headers[value['file_header']]==undefined?'Custom ('+value.file_header+')':g_arr_headers[value.file_header];
 
-                $("#table_plaintext_list tbody").append("<tr><td></td><td>" + value.ht_name + "</td><td>" + arr_alg.join(", ") + "</td><td>" + curr_file_extension + "</td><td>" + curr_header +"</td><td data-order=\"" + UTC2LocalUNIX(value.date) + "\">" + UTC2Local(value.date) + "</td><td>" + action_items + "</td></tr>");
+                $("#table_plaintext_list tbody").append("<tr><td></td><td>" + value.ht_name + "</td><td>" + arr_alg.join(", ") + "</td><td>" + curr_file_extension + "</td><td>" + curr_header +"</td><td data-order=\"" + getTimestamp(value.date) + "\">" + value.date + "</td><td>" + action_items + "</td></tr>");
             });
         }
 
@@ -393,6 +397,11 @@ function loadTablePlainTextList() {
 
             "drawCallback": function() {
                 $('#table_plaintext_list tbody').fadeIn(500);
+                $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+            },
+
+            "initComplete": function() {
+                $('label>select').select2({minimumResultsForSearch: -1, });
             }
         }); //initialize table
 
@@ -405,11 +414,6 @@ function loadTablePlainTextList() {
                 cell.innerHTML = i + 1;
             });
         }).draw();
-
-        $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-        $("label>select").select2({
-            minimumResultsForSearch: -1,
-        });
     });
 }
 

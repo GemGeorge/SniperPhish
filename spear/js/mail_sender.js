@@ -1,25 +1,23 @@
-var dt_mail_sender_list, store_info;
+var dt_mail_sender_list, store_info, g_dsn_type='custom';
 var action_items_header_table = '<button type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top" onclick="editRowHeaderTable($(this))" title="Edit"><i class="mdi mdi-pencil"></i></button><button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" onclick="promptMailHeaderDeletion($(this))" title="Delete"><i class="mdi mdi-delete-variant"></i>';
-
+var xx;
 $(function() {
     $("#selector_common_mail_senders").select2({
         minimumResultsForSearch: -1
     });
     $('#selector_common_mail_senders').on('change', function() {
-        $("#lb_selector_common_mail_sender_note").html(store_info[this.value].info.disp_note);
+        $("#lb_selector_common_mail_sender_note").html(store_info[$(this).find(':selected').text()].info.disp_note);
+    });
+    $('#section_addsender').click(function(){
+        g_deny_navigation = '';
     });
 });
 
-function rangeSMTPEncryption(e){    
-    SMTP_enc_level = Number($('#range_SMTP_enc_level').val());
-    $('#lb_smtp_enc').text(SMTP_enc_level==0?"None":SMTP_enc_level==1?"SSL":"TLS");
-}
-
 var dt_mail_headers_list = $('#table_mail_headers_list').DataTable({
     'columnDefs': [{
-                    "targets": 2,
-                    "className": "dt-center"
-                }],
+            "targets": 2,
+            "className": "dt-center"
+        }],
     "preDrawCallback": function(settings) {
         $('#table_mail_headers_list tbody').hide();
     },
@@ -34,7 +32,7 @@ var dt_mail_headers_list = $('#table_mail_headers_list').DataTable({
 $("#cb_auto_mailbox").change(function() {
     if(this.checked){
         $("#mail_sender_mailbox").prop('disabled', true);
-        if($('#mail_sender_SMTP_server').val() != '')
+        if($('#mail_sender_SMTP_server').val() != '' && $('#mail_sender_SMTP_server').val() != 'NA')
             $('#mail_sender_mailbox').val("{"+ $('#mail_sender_SMTP_server').val().split(":")[0]+":993/imap/ssl}INBOX");
     }
     else
@@ -58,7 +56,6 @@ function addMailHeaderToTable() {
         $("#mail_sender_custome_header_val").removeClass("is-invalid");
 
     dt_mail_headers_list.row.add([mail_sender_custome_header_name, mail_sender_custome_header_val, action_items_header_table]).draw(false);
-
     $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
 }
 
@@ -82,7 +79,6 @@ function editRowHeaderTable(arg) {
 }
 
 function editRowHeaderTableAction() {
-
     var mail_sender_custome_header_name = $('#modal_mail_sender_custome_header_name').val().trim();
     var mail_sender_custome_header_val = $('#modal_mail_sender_custome_header_val').val().trim();
 
@@ -104,7 +100,6 @@ function editRowHeaderTableAction() {
 }
 
 function saveMailSenderGroup(e) {
-
     var cust_header_name = dt_mail_headers_list.rows().data().pluck(0).toArray();
     var cust_header_val = dt_mail_headers_list.rows().data().pluck(1).toArray();
 
@@ -158,7 +153,6 @@ function saveMailSenderGroup(e) {
             $("#mail_sender_mailbox").removeClass("is-invalid");
     }
 
-    var range_SMTP_enc_level = $('#range_SMTP_enc_level').val();
     var mail_sender_mailbox = $('#mail_sender_mailbox').val();
 
     var cust_headers = [];
@@ -168,7 +162,7 @@ function saveMailSenderGroup(e) {
 
     enableDisableMe(e);
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         data: JSON.stringify({ 
             action_type: "save_sender_list",
             sender_list_id: nextRandomId,
@@ -177,15 +171,18 @@ function saveMailSenderGroup(e) {
             sender_list_mail_sender_from: mail_sender_from,
             sender_list_mail_sender_acc_username: mail_sender_acc_username,
             sender_list_mail_sender_acc_pwd: mail_sender_acc_pwd,
-            range_SMTP_enc_level: range_SMTP_enc_level,
             mail_sender_mailbox: mail_sender_mailbox,
             cb_auto_mailbox: cb_auto_mailbox,
-            sender_list_cust_headers: Object.assign({}, cust_headers)
+            sender_list_cust_headers: Object.assign({}, cust_headers),
+            dsn_type: g_dsn_type
          }),
         contentType: 'application/json; charset=utf-8'
     }).done(function (response) {
-        if(response.result == "success")
+        if(response.result == "success"){
             toastr.success('', 'Saved successfully!');
+            window.history.replaceState(null,null, location.pathname + '?action=edit&sender=' + nextRandomId);
+            g_deny_navigation = null;
+        }
         else
             toastr.error('', 'Error saving data!');
         enableDisableMe(e);
@@ -196,11 +193,12 @@ function getSenderFromSenderListId(id) {
     if (id == "new") {
         getRandomId();
         return;
-    } else
+    } 
+    else
         nextRandomId = id;
 
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_sender_from_sender_list_id",
@@ -212,10 +210,10 @@ function getSenderFromSenderListId(id) {
             $('#mail_sender_SMTP_server').val(data['sender_SMTP_server']);
             $('#mail_sender_from').val(data['sender_from']);
             $('#mail_sender_acc_username').val(data['sender_acc_username']);
-            $('#range_SMTP_enc_level').val(data['smtp_enc_level']).trigger("change");
             $('#cb_auto_mailbox').prop('checked', (data['auto_mailbox']==1?true:false)).trigger("change");
             $('#mail_sender_mailbox').val(data['sender_mailbox']);
             cust_header_data = data['cust_headers'];
+            g_dsn_type = data['dsn_type']
 
             $.each(cust_header_data, function(header_name, header_value) {
                 dt_mail_headers_list.row.add([header_name, header_value, action_items_header_table]).draw(false);
@@ -241,7 +239,7 @@ function MailSenderCopyAction() {
         $("#mail_sender_name").removeClass("is-invalid");
 
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "make_copy_sender_list",
@@ -269,7 +267,7 @@ function promptSenderListDeletion(id) {
 
 function senderListDeletionAction() {
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_mail_sender_list_from_list_id",
@@ -313,14 +311,32 @@ function updateTable() {
 //-------------------------------------
 function loadTableSenderList() {
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_sender_list"
          })
     }).done(function (data) {
-         dt_mail_sender_list = $('#table_mail_sender_list').DataTable({
+        if(!data.error){  // no data
+            $.each(data, function(key, value) {
+                var cust_header = "";
+                if(!$.isEmptyObject(value.cust_headers)) 
+                    $.each(value.cust_headers, function(header_name, header_value) {
+                        cust_header += header_name + ": " + header_value + "</br>";
+                    });
+                else
+                    cust_header = "-";
+
+                var action_items_sender_table = '<div class="d-flex no-block align-items-center"><button type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top" title="" onclick="document.location=\'MailSender?action=edit&sender=' + value['sender_list_id'] + '\'" data-original-title="Edit"><i class="mdi mdi-pencil"></i></button><button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="top" title="Copy" onclick="promptMailSenderCopy(\'' + value['sender_list_id'] + '\')"><i class="mdi mdi-content-copy"></i></button><button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" title="" onclick="promptSenderListDeletion(\'' + value['sender_list_id'] + '\')" data-original-title="Delete"><i class="mdi mdi-delete-variant"></i></button></div>';
+
+                $("#table_mail_sender_list tbody").append("<tr><td></td><td>" + value.sender_name + "</td><td>" + value.sender_SMTP_server + "</td><td>" + value.sender_from + "</td><td>" + value.sender_acc_username + "</td><td>" + cust_header +  "</td><td data-order=\"" + getTimestamp(value.date) + "\">" + (value.date==null?'-':value.date) + "</td><td>" + action_items_sender_table + "</td></tr>");
+            });
+        }
+
+        dt_mail_sender_list = $('#table_mail_sender_list').DataTable({
             "aaSorting": [6, 'asc'],
+            'pageLength': 20,
+            'lengthMenu': [[20, 50, 100, -1], [20, 50, 100, 'All']],
             'columnDefs': [{
                 "targets": 7,
                 "className": "dt-center"
@@ -331,27 +347,16 @@ function loadTableSenderList() {
 
             "drawCallback": function() {
                 $('#table_mail_sender_list tbody').fadeIn(500);
+                $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+            },
+
+            "initComplete": function() {
+                $("label>select").select2({minimumResultsForSearch: -1, });
             }
         }, {
-            "order": [
-                [1, 'asc']
-            ]
-        }); //initialize table
+            "order": [[1, 'asc']]
+        }); 
 
-        if(!data['error']){  // no data
-            $.each(data, function(key, value) {
-                var cust_header = "";
-                if(!$.isEmptyObject(value.cust_headers)) 
-                    $.each(value.cust_headers, function(header_name, header_value) {
-                        cust_header += header_name + ": " + header_value + "</br>";
-                    });
-                else
-                    cust_header = "-";
-                
-                var action_items_sender_table = '<div class="d-flex no-block align-items-center"><button type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top" title="" onclick="document.location=\'MailSender?action=edit&sender=' + value['sender_list_id'] + '\'" data-original-title="Edit"><i class="mdi mdi-pencil"></i></button><button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="top" title="Copy" onclick="promptMailSenderCopy(\'' + value['sender_list_id'] + '\')"><i class="mdi mdi-content-copy"></i></button><button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" title="" onclick="promptSenderListDeletion(\'' + value['sender_list_id'] + '\')" data-original-title="Delete"><i class="mdi mdi-delete-variant"></i></button></div>';
-                dt_mail_sender_list.row.add(["", value['sender_name'], value['sender_SMTP_server'], value['sender_from'], value['sender_acc_username'], cust_header, UTC2Local(value['date']), action_items_sender_table]).draw(false);
-            });
-        }
         dt_mail_sender_list.on('order.dt_mail_sender_list search.dt_mail_sender_list', function() {
             dt_mail_sender_list.column(0, {
                 search: 'applied',
@@ -360,10 +365,6 @@ function loadTableSenderList() {
                 cell.innerHTML = i + 1;
             });
         }).draw();
-        $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-        $("label>select").select2({
-            minimumResultsForSearch: -1,
-        });
     });   
 }
 
@@ -378,7 +379,6 @@ function modalTestDeliveryAction(e){
     var mail_sender_acc_username = $('#mail_sender_acc_username').val();
     var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val();
     var test_to_address = $('#modal_mail_sender_test_mail_to').val();
-    var range_SMTP_enc_level = $('#range_SMTP_enc_level').val();
 
     if (RegTest(mail_sender_name, "COMMON") == false) {
         $("#mail_sender_name").addClass("is-invalid");
@@ -422,7 +422,7 @@ function modalTestDeliveryAction(e){
 
     enableDisableMe(e);
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "send_test_mail_verification",
@@ -433,7 +433,7 @@ function modalTestDeliveryAction(e){
             sender_list_mail_sender_acc_pwd: mail_sender_acc_pwd,
             sender_list_cust_headers: Object.assign({}, cust_headers),
             test_to_address: test_to_address,
-            range_SMTP_enc_level: range_SMTP_enc_level
+            dsn_type: g_dsn_type,
          })
     }).done(function (response) {
         if(response.result == "success")
@@ -486,11 +486,11 @@ function verifyMailBoxAccess(){
     });
 
     $('#modal_verifier').modal('toggle');
-    $("#modal_verifier_body").attr("hidden", true);
-    $("#modal_verifier_body").parent().append(displayLoader("Verifying..."));
-
+    $("#modal_verifier_body .area_data").text('Looking mailbox of ' + mail_sender_acc_username + ':');
+    $("#modal_verifier_body .area_loader").html('');
+    $("#modal_verifier_body .area_loader").append(displayLoader("Verifying..."));
     $.post({
-        url: "userlist_campaignlist_mailtemplate_manager",
+        url: "manager/userlist_campaignlist_mailtemplate_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "verify_mailbox_access",
@@ -498,21 +498,23 @@ function verifyMailBoxAccess(){
             mail_sender_acc_username: mail_sender_acc_username,
             mail_sender_acc_pwd: mail_sender_acc_pwd,
             mail_sender_mailbox: mail_sender_mailbox
-         })
+        })
     }).done(function (response) {
-        $("#modal_verifier_body").attr("hidden", false);
-        $("#modal_verifier_body").parent().children().remove('.loadercust');
+        $("#modal_verifier_body .area_loader").find('.loadercust').remove(); 
         if(response.result == "success")
-            $("#modal_verifier_body").html("<strong>Successfully verified.<br/>A total of " + response.total_msg_count + " messages detected in the mailbox path provided.</strong>");
+            $("#modal_verifier_body .area_loader").html("<strong>Successfully verified.<br/>A total of " + response.total_msg_count + " messages detected in the mailbox path provided.</strong>");
         else
-            $("#modal_verifier_body").html("<strong>Error:</strong><br/>" + response.error);
-    });   
+            $("#modal_verifier_body .area_loader").html("<strong>Error: </strong><br/>" + response.error);
+    }).fail(function(response){
+        $("#modal_verifier_body .area_loader").html("<strong>Error: </strong><br/>" + response.statusText);
+        $("#modal_verifier_body .area_loader").find('.loadercust').remove(); 
+    }); 
 }
 
 //------------------Store section---------------
 function getStoreList(){
     $.post({
-        url: "settings_manager",
+        url: "manager/settings_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_store_list",
@@ -522,21 +524,36 @@ function getStoreList(){
         if(!data['error']){  // no data
             store_info = data;
             $.each(data, function(name) {
-                $("#selector_common_mail_senders").append("<option value='" + name + "'>" + name + "</option>");
+                $("#selector_common_mail_senders").append("<option value='" + data[name].info.dsn_type + "'>" + name + "</option>");
             });
             $('#selector_common_mail_senders').trigger("change");    
         }
     }); 
 }
 
-function insertCommonSender(){
-    var content_content = store_info[$("#selector_common_mail_senders").val()].content;
-    $("#mail_sender_name").val($("#selector_common_mail_senders").val());
-    $("#mail_sender_SMTP_server").val(content_content.smtp);
+function appySenderTemplate(){
+    $("#mail_sender_SMTP_server").prop('disabled', false);
+    $("#mail_sender_acc_username").val('');
+
+    g_dsn_type = store_info[$("#selector_common_mail_senders").find(':selected').text()].info.dsn_type;
+    var content = store_info[$("#selector_common_mail_senders").find(':selected').text()].content;
+    $("#lb_sender_template_name").text($("#selector_common_mail_senders").find(':selected').text());
+
+    $("#mail_sender_SMTP_server").val(content.smtp.value);
+    $("#mail_sender_SMTP_server").prop('disabled', content.smtp.disabled);
+
     $("#mail_sender_from").val(content.from);
-    $("#mail_sender_acc_username").val(content_content.username);
-    $("#mail_sender_mailbox").val(content_content.mailbox);
-    $('#cb_auto_mailbox').prop('checked', false);    
-    $('#range_SMTP_enc_level').val(content_content.smtp_enc_level).trigger("change");    
-    $('#ModalStore').modal('toggle');
+    $("#mail_sender_acc_username").val(content.username);
+    $("#mail_sender_mailbox").val(content.mailbox.value);
+    $("#mail_sender_mailbox").prop('disabled', content.mailbox.disabled);
+    $('#cb_auto_mailbox').prop('checked', content.mailbox.checked).trigger("change");    
+
+    if($.inArray(g_dsn_type,  ['postmark','sendgrid','ohmysmtp']) != -1){
+        $("#mail_sender_acc_username").val('NA');
+        $("#mail_sender_acc_username").prop('disabled', true);
+    }
+    else        
+        $("#mail_sender_acc_username").prop('disabled', false);
+
+    $('#modal_store').modal('toggle');
 }

@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
@@ -59,7 +59,7 @@
                      <div class="ml-auto text-right">
                         <button type="button" class="btn btn-info btn-sm item_private" data-toggle="modal" data-target="#ModalCampaignList"><i class="mdi mdi-hand-pointing-right" title="Select web & mail campaigns" data-toggle="tooltip" data-placement="bottom"></i> Select Campaign</button>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-info btn-sm" onclick="refreshDashboard()" title="Refresh dashboard" data-toggle="tooltip" data-placement="bottom"><i class="mdi mdi-refresh"></i></button>
+                            <button type="button" class="btn btn-info btn-sm" onclick="refreshDashboard(true)" title="Refresh dashboard" data-toggle="tooltip" data-placement="bottom"><i class="mdi mdi-refresh"></i></button>
                             <button type="button" class="btn btn-info btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
@@ -177,8 +177,10 @@
                            <div class="progress m-t-15" title="Mail sending status" data-toggle="tooltip" data-placement="top" id="progressbar_status" style="height:20px; background-color:#ccccff;">
                               <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%"></div>
                            </div>
-                           <div class="align-items-left col-12 d-flex no-block m-t-10">
-                              <span><strong>Start: </strong></span><span id="disp_camp_start">NA</span>
+                           <div class="align-items-left d-flex no-block m-t-10">
+                              <div>
+                                 <span><strong>Start: </strong></span><span id="disp_camp_start">NA</span>
+                              </div>
                               <div class="align-items-right ml-auto">
                                  <span><strong>End: </strong></span><span id="disp_camp_end">NA</span>
                               </div>
@@ -255,8 +257,9 @@
                               <div class="col-md-7">
                                  <h5 class="card-title text-right m-r-20 m-t-10"><span>Campaign Result</span></h5>
                               </div>
-                              <div class="align-items-right ml-auto row">                                  
-                                 <button type="button" class="btn btn-success item_private" data-toggle="modal" data-target="#ModalExport"><i class="m-r-10 mdi mdi-file-export"></i> Export</button>
+                              <div class="align-items-right ml-auto row">  
+                                 <button type="button" class="btn btn-success mdi mdi-reload m-r-10" data-toggle="tooltip" data-placement="top" title="Refresh table" onclick="loadTableCampaignResult()"></button>                              
+                                 <button type="button" class="btn btn-success item_private" data-toggle="modal" data-target="#ModalExport"><i class="m-r-10 fas fa-file-export"></i> Export</button>
                               </div>
                            </div>
                            <div class="form-group row">
@@ -275,10 +278,13 @@
                                      Mail campaign info
                                  </div>
                                  <div class="col-md-2 ccl-3">
-                                     Web page info
+                                     Web page visit info
                                  </div>
                                  <div class="col-md-2 ccl-4">
                                      Form submission info
+                                 </div> 
+                                 <div class="col-md-2 ccl-2">
+                                     Form submission data
                                  </div> 
                               </div>
                            </div>
@@ -387,14 +393,14 @@
                            <div class="col-sm-9 custom-control">
                               <select class="select2 form-control"  style="height: 36px;width: 100%;" id="modal_export_report_selector">
                                  <option value="csv">Export as CSV</option>
-                                 <option value="excel">Export as XLS</option>
                                  <option value="pdf">Export as PDF</option>
+                                 <option value="html">Export as HTML</option>
                               </select>
                            </div>
                         </div>
                      </div>
                      <div class="modal-footer">
-                        <button type="button" class="btn btn-success" onclick="$('.buttons-' + $('#modal_export_report_selector').val()).click()" data-dismiss="modal"><i class=" mdi mdi-file-export"></i> Export</button>
+                        <button type="button" class="btn btn-success" onclick="exportReportAction($(this))"><i class="fas fa-file-export"></i> Export</button>
                      </div>
                   </div>
                </div>
@@ -427,22 +433,33 @@
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
-                           <label class="col-md-2">Table data:</label>
-                           <div class="col-md-5">
+                           <label class="col-md-3">Table data:</label>
+                           <div class="col-md-9">
                               <div class="custom-control custom-radio">
-                                 <input type="radio" class="custom-control-input" id="customControlValidation1" value="radio_table_data_single" name="radio_table_data" required checked>
-                                 <label class="custom-control-label" for="customControlValidation1">Show first entry only</label>
+                                 <input type="radio" class="custom-control-input" id="rb1" value="radio_table_data_single" name="radio_table_data" required checked>
+                                 <label class="custom-control-label" for="rb1">Show first entry only</label>
                                  <i class="mdi mdi-information cursor-pointer" tabindex="0" data-toggle="popover" data-trigger="focus" data-placement="top" data-content="First tracked data of users are displayed. Eg: displays user's first visit only"></i>
-                              </div>
-                           </div>
-                           <div class="col-md-5">
+                              </div>                           
                               <div class="custom-control custom-radio">
-                                 <input type="radio" class="custom-control-input" id="customControlValidation2" value="radio_table_data_all" name="radio_table_data" required>
-                                 <label class="custom-control-label" for="customControlValidation2">Show all entries</label>
+                                 <input type="radio" class="custom-control-input" id="rb2" value="radio_table_data_all" name="radio_table_data" required>
+                                 <label class="custom-control-label" for="rb2">Show all entries</label>
                                  <i class="mdi mdi-information cursor-pointer" tabindex="0" data-toggle="popover" data-trigger="focus" data-placement="top" data-content="All tracked data of users are displayed. Eg: displays all visits of a user"></i>
                               </div> 
                            </div>                           
                         </div>
+                        <div class="form-group row">
+                           <label class="col-md-3">Mail reply check:</label>
+                           <div class="col-md-9">
+                              <div class="custom-control custom-radio">
+                                 <input type="radio" class="custom-control-input" id="rb3" value="reply_yes" name="radio_mail_reply_check" required checked>
+                                 <label class="custom-control-label" for="rb3">Check mail replies</label>
+                              </div>
+                              <div class="custom-control custom-radio">
+                                 <input type="radio" class="custom-control-input" id="rb4" value="reply_no" name="radio_mail_reply_check" required>
+                                 <label class="custom-control-label" for="rb4">Do not check mail replies</label>
+                              </div> 
+                           </div>                           
+                        </div>          
                         <hr/>
                         <div class="form-group row m-t-30">
                            <div class="col-md-2">
@@ -453,7 +470,7 @@
                               <label for="tb_camp_result_colums_list_mcamp" class="col-md-2">Mail campaign:</label>
                               <select class="select2 col-md-10" style="width: 83%;"  multiple="multiple"  id="tb_camp_result_colums_list_mcamp">
                                  <optgroup label="User Info">
-                                    <option value="id" selected>CID</option>
+                                    <option value="rid" selected>RID</option>
                                     <option value="user_name" selected>Name</option>
                                     <option value="user_email" selected>Email</option>
                                     <option value="sending_status" selected>Status</option>
@@ -474,12 +491,12 @@
                                     <option value="mail_reply_content">Mail (reply content)</option>
                                  </optgroup>
                                  <optgroup label="User/Mail Server IP Info">
-                                    <option value="country">Country (mail)</option>
-                                    <option value="city">City (mail)</option>
-                                    <option value="zip">Zip (mail)</option>
-                                    <option value="isp">ISP (mail)</option>
-                                    <option value="timezone">Timezone (mail)</option>
-                                    <option value="coordinates">Coordinates (mail)</option>
+                                    <option value="country">Country</option>
+                                    <option value="city">City</option>
+                                    <option value="zip">Zip</option>
+                                    <option value="isp">ISP</option>
+                                    <option value="timezone">Timezone</option>
+                                    <option value="coordinates">Coordinates</option>
                                  </optgroup>
                               </select>                             
                            </div>
@@ -489,22 +506,22 @@
                               <label for="tb_camp_result_colums_list_wcm" class="col-md-2">Web common:</label>
                               <select class="select2 form-control" style="width: 83%;" multiple="multiple"  id="tb_camp_result_colums_list_wcm">
                                  <optgroup label="User Info">
-                                    <option value="wcm_cid">Client ID</option>
+                                    <option value="wcm_rid">RID (W)</option>
                                     <option value="wcm_session_id">Session ID</option>
-                                    <option value="wcm_public_ip" selected>Public IP</option>
+                                    <option value="wcm_public_ip" selected>Public IP (W)</option>
                                     <option value="wcm_browser" selected>Browser</option>
-                                    <option value="wcm_platform" selected>Platform</option>
+                                    <option value="wcm_platform" selected>Platform (W)</option>
                                     <option value="wcm_screen_res">Screen Res</option>
                                     <option value="wcm_device_type">Device Type</option>
-                                    <option value="wcm_user_agent">User Agent</option>   
+                                    <option value="wcm_user_agent">User Agent (W)</option>   
                                  </optgroup>
                                  <optgroup label="User IP Info">
-                                    <option value="wcm_country" selected>Country</option>
-                                    <option value="wcm_city">City</option>
-                                    <option value="wcm_zip">Zip</option>
-                                    <option value="wcm_isp">ISP</option>
-                                    <option value="wcm_timezone">Timezone</option>
-                                    <option value="wcm_coordinates">Coordinates</option>
+                                    <option value="wcm_country" selected>Country (W)</option>
+                                    <option value="wcm_city">City (W)</option>
+                                    <option value="wcm_zip">Zip (W)</option>
+                                    <option value="wcm_isp">ISP (W)</option>
+                                    <option value="wcm_timezone">Timezone (W)</option>
+                                    <option value="wcm_coordinates">Coordinates (W)</option>
                                  </optgroup>                              
                               </select>
                            </div>
@@ -525,12 +542,24 @@
                            <div class="col-md-12 row">
                               <label for="tb_camp_result_colums_list_wfs" class="col-md-2">Form submission:</label>
                               <select class="select2 form-control" style="width: 83%;" multiple="multiple"  id="tb_camp_result_colums_list_wfs">
+                                 <option value="wfs_activity" selected>Form Submission</option>
+                                 <option value="wfs_submission_count">Submission Count</option>
+                                 <option value="wfs_first_submission">First Submission</option>
+                                 <option value="wfs_last_submission">Last Submission</option>
+                                 <option value="wfs_submission_times">Submission Times</option>   
+                              </select>
+                           </div>
+                        </div>
+                        <div class="form-group row">
+                           <div class="col-md-12 row">
+                              <label for="tb_camp_result_colums_list_wfs" class="col-md-2">Form submission data:</label>
+                              <select class="select2 form-control" style="width: 83%;" multiple="multiple"  id="tb_camp_result_colums_list_wfs_data">
                               </select>
                            </div>
                         </div>
                      </div>
                      <div class="modal-footer">
-                        <button type="button" class="btn btn-info" onclick="$('#modal_settings').modal('toggle');refreshDashboard();">Apply</button>
+                        <button type="button" class="btn btn-info" onclick="$('#modal_settings').modal('toggle');refreshDashboard(true);">Apply</button>
                      </div>
                   </div>
                </div>
@@ -613,12 +642,7 @@
                      hideMeFromPublic(); 
                   </script>';
          else{
-             echo '<script>var g_tk_id = getRandomId();</script>
-               <script defer src="js/libs/jquery/dataTables.buttons.min.js"></script>
-               <script defer src="js/libs/jquery/buttons.html5.min.js"></script>
-               <script defer src="js/libs/pdfmake.min.js"></script>
-               <script defer src="js/libs/vfs_fonts.js"></script>    
-               <script defer src="js/libs/jszip.min.js"></script>';            
+             echo '<script>var g_tk_id = getRandomId();</script>';            
             isSessionValid(true);
          }
       ?>   
@@ -627,10 +651,9 @@
 
          if(isset($_GET['mcamp']) && isset($_GET['tracker']))
             echo 'var g_campaign_id ="'.doFilter($_GET['mcamp'],'ALPHA_NUM').'", g_tracker_id="'.doFilter($_GET['tracker'],'ALPHA_NUM').'";
-                  loadTableCampaignList("' . doFilter($_GET['mcamp'],'ALPHA_NUM') . '","' . doFilter($_GET['tracker'],'ALPHA_NUM') . '");';
+                  campaignSelected("' . doFilter($_GET['mcamp'],'ALPHA_NUM') . '","' . doFilter($_GET['tracker'],'ALPHA_NUM') . '",false);';
          else
             echo 'var g_campaign_id ="", g_tracker_id="";
-                  loadTableCampaignList("",""); 
                   $(function() { $("#ModalCampaignList").modal("toggle"); });';
          echo '</script>';
       ?>

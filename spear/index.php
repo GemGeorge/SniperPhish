@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
    if(isSessionValid() == true){
       header("Location: Home");
       die();
@@ -8,8 +8,8 @@
   if (!empty($_POST['username']) && !empty($_POST['password'])) {
       if(validateLogin($_POST['username'],$_POST['password']) == true){
          createSession(true,$_POST['username']);
-         setInfoCookie();  //c_data cookie sets
          header("Location: Home");
+         die();
       }  
    }
 ?>
@@ -67,6 +67,12 @@
                               </div>
                               <input type="password" class="form-control form-control-lg" name="password" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1" required>
                            </div>
+                           <?php 
+                              if(isset($_POST['username']) || isset($_POST['password']))
+                                 echo '<div class="text-danger">
+                                          Username or password is incorrect.
+                                       </div>';
+                           ?>
                         </div>
                      </div>
                      <div class="row border-top border-secondary">

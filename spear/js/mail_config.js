@@ -155,10 +155,8 @@ function saveConfigAction(e) {
         return;
     }
 
-    configData.batch_mail_limit = $('#tb_batch_mail_limit').val();
+    configData.peer_verification = $("#cb_peer_verification").is(':checked');
     configData.recipient_type = $('#select_recipient_type').val();
-    configData.read_receipt = $("#cb_read_receipt").is(':checked');
-    configData.non_ascii_support = $("#cb_non_ascii_support").is(':checked');
     configData.signed_mail = $("#cb_signed_mail").is(':checked');
     configData.encrypted_mail = $("#cb_encrypted_mail").is(':checked');
     configData.antiflood = {"limit": $('#tb_antiflood_limit').val(), "pause": $('#tb_antiflood_pause').val()};
@@ -166,7 +164,7 @@ function saveConfigAction(e) {
 
     enableDisableMe(e);
     $.post({
-        url: "mail_campaign_config_manager",
+        url: "manager/mail_campaign_config_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "save_mcamp_config",
@@ -190,7 +188,7 @@ function saveConfigAction(e) {
 
 function deleteConfigAction(){
     $.post({
-        url: "mail_campaign_config_manager",
+        url: "manager/mail_campaign_config_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_mcamp_config",            
@@ -210,7 +208,7 @@ function deleteConfigAction(){
 
 function getMcampConfigDetails(mconfig_id){
     $.post({
-        url: "mail_campaign_config_manager",
+        url: "manager/mail_campaign_config_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_mcamp_config_details"
@@ -249,7 +247,7 @@ function getMCampConfigFromConfigId(mconfig_id,quite) {
     }
     
     $.post({
-        url: "mail_campaign_config_manager",
+        url: "manager/mail_campaign_config_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_mcamp_config_details_from_id",
@@ -260,10 +258,8 @@ function getMCampConfigFromConfigId(mconfig_id,quite) {
         nextRandomId = data.mconfig_id;
         $('#selector_config_list').val(data.mconfig_id).trigger('change', [{auto_trigger:true}]);
 
-        $('#tb_batch_mail_limit').val(configData.batch_mail_limit);
-        $('#select_recipient_type').val(configData.recipient_type).change();
-        $('#cb_read_receipt').trigger('click').prop('checked', configData.read_receipt);       
-        $('#cb_non_ascii_support').trigger('click').prop('checked', configData.non_ascii_support); 
+        $('#cb_peer_verification').trigger('click').prop('checked', configData.peer_verification); 
+        $('#select_recipient_type').val(configData.recipient_type).change();     
         $('#cb_signed_mail').prop("checked", configData.signed_mail).trigger("change");     
         $('#cb_encrypted_mail').prop('checked', configData.encrypted_mail).trigger('change');   
         $('#tb_antiflood_limit').val(configData.antiflood.limit);

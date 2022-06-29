@@ -1,6 +1,7 @@
 var chart_web_pie;
 var chart_email_hit;
 var f_all_empty = false;
+var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 $("#graph_overview").html(displayLoader("Loading..."));
 $("#graph_timeline_all").html(displayLoader("Loading..."));
@@ -8,35 +9,35 @@ getGraphsData();
 
 function getGraphsData() {
     $.post({
-        url: "home_manager",
+        url: "manager/home_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_home_graphs_data"
         })
     }).done(function (data) {
-        var count_mailcamp = data.mailcamp?data.mailcamp.length:0;
+        var count_mailcamp = data.campaign_info.mailcamp?data.campaign_info.mailcamp.length:0;
         var count_mailcamp_active=0, count_webtracker_active=0, count_quicktracker_active=0;
         var html_cont = `<div class="text-center align-items-center m-t-40">
                              <span class="col-md-5 badge badge-pill badge-warning"><h4>No data</h4></span>
                           </div>`;
 
         if(count_mailcamp){
-            count_mailcamp_active = data.mailcamp.filter(function(x) {
-                return x.camp_status === 1 || x.camp_status === 2 || x.camp_status === 4;
+            count_mailcamp_active = data.campaign_info.mailcamp.filter(function(x) {
+                return x.camp_status == 1 || x.camp_status == 2 || x.camp_status == 4;
             }).length;
         }
 
-        count_webtracker = data.webtracker?data.webtracker.length:0;
+        count_webtracker = data.campaign_info.webtracker?data.campaign_info.webtracker.length:0;
         if(count_webtracker){
-            count_webtracker_active = data.webtracker.filter(function(x) {
-                return x.active === 1;
+            count_webtracker_active = data.campaign_info.webtracker.filter(function(x) {
+                return x.active == 1;
             }).length;
         }
 
-        count_quicktracker = data.quicktracker?data.quicktracker.length:0;
+        count_quicktracker = data.campaign_info.quicktracker?data.campaign_info.quicktracker.length:0;
             if(count_quicktracker){
-            count_quicktracker_active = data.quicktracker.filter(function(x) {
-                return x.active === 1;
+            count_quicktracker_active = data.campaign_info.quicktracker.filter(function(x) {
+                return x.active == 1;
             }).length;
         }
 
@@ -49,23 +50,40 @@ function getGraphsData() {
 
 
         $("#graph_timeline_all").html(html_cont);
-        if(data.webtracker.length == 0 && data.mailcamp.length == 0  && data.quicktracker.length == 0)
+        if(data.campaign_info.webtracker.length == 0 && data.campaign_info.mailcamp.length == 0  && data.campaign_info.quicktracker.length == 0)
             $("#graph_overview").html(html_cont);
         else{
             $("#graph_overview").html('');
-            renderOverviewGraph(data);  
+            renderOverviewGraph(data.campaign_info, data.timestamp_conv);  
             $('#graph_overview').css("height","400px");
 
-            if(data.webtracker.some(o => o.start_time!=null) || data.mailcamp.some(o => o.scheduled_time!=null) || data.quicktracker.some(o => o.start_time!=null)){
+            if(data.campaign_info.webtracker.some(o => o.start_time!='-') || data.campaign_info.mailcamp.some(o => o.scheduled_time!='-') || data.campaign_info.quicktracker.some(o => o.start_time!='-')){
                 $("#graph_timeline_all").html('');
-                renderTimelineAllGraph(data);
+                renderTimelineAllGraph(data.campaign_info,data.timestamp_conv,data.timezone);
                 $('#graph_timeline_all').css("height","400px");
             }   
         }
     }); 
 }
 
-function renderOverviewGraph(cmp_info) {
+function getDateMMDDYYYY(unix_timestamp){
+    if(unix_timestamp == '-')
+        return '-';
+    else{
+        var ts_milli = new Date(unix_timestamp * 1000);
+        var year = ts_milli.getFullYear();
+        var month = months[ts_milli.getMonth()];
+        var date = ts_milli.getDate();
+        return date + '/' + month + '/' + year;
+    }
+}
+
+function getDTStd(date_string){
+    var date_split = date_string.split('/');
+    return (date_split[0] + '-' + months.indexOf(date_split[1]) + '-' + date_split[2]);
+}
+
+function renderOverviewGraph(cmp_info, timestamp_conv) {
     date_arr = {
         'all': [],
         'webtracker': [],
@@ -73,8 +91,8 @@ function renderOverviewGraph(cmp_info) {
         'quicktracker': []
     };
 
-    $.each(cmp_info['webtracker'], function(key, value) {
-        date = moment.unix(UTC2LocalUNIX(value.date) / 1000).format("MM/DD/YYYY");
+    $.each(cmp_info['webtracker'], function(key, value) { 
+        date = getDateMMDDYYYY(timestamp_conv[value.date]);
         date_arr.webtracker.push(date);
 
         if (date_arr.all.indexOf(date) == -1)
@@ -82,14 +100,14 @@ function renderOverviewGraph(cmp_info) {
     });
 
     $.each(cmp_info['mailcamp'], function(key, value) {
-        date = moment.unix(UTC2LocalUNIX(value.date) / 1000).format("MM/DD/YYYY");
+        date = getDateMMDDYYYY(timestamp_conv[value.date]);
         date_arr.mailcamp.push(date);
         if (date_arr.all.indexOf(date) == -1)
             date_arr.all.push(date);
     });
 
     $.each(cmp_info['quicktracker'], function(key, value) {
-        date = moment.unix(UTC2LocalUNIX(value.date) / 1000).format("MM/DD/YYYY");
+        date = getDateMMDDYYYY(timestamp_conv[value.date]);
         date_arr.quicktracker.push(date);
         if (date_arr.all.indexOf(date) == -1)
             date_arr.all.push(date);
@@ -118,8 +136,6 @@ function renderOverviewGraph(cmp_info) {
         }).length;
         graph_data_all_count.quicktracker[i] = array_val_count;
     });
-
-
 
     var options = {
         series: [{
@@ -171,7 +187,7 @@ function renderOverviewGraph(cmp_info) {
                 dataPointIndex,
                 w
             }) {
-                return `<div class="chart-tooltip"><strong>` + w.config.series[seriesIndex].name + `</strong><br/>Date: ` + moment(w.config.xaxis.categories[dataPointIndex],'MM/DD/YYYY').format(getDateTimeFormat('dateonly')) + ` <br/>Count: ` + w.config.series[seriesIndex].data[dataPointIndex] + `</div>`;
+                return `<div class="chart-tooltip"><strong>` + w.config.series[seriesIndex].name + `</strong><br/>Date: ` + getDTStd(w.config.xaxis.categories[dataPointIndex]) + ` <br/>Count: ` + w.config.series[seriesIndex].data[dataPointIndex] + `</div>`;
             }
         },
         responsive: [{
@@ -194,7 +210,7 @@ function renderOverviewGraph(cmp_info) {
             categories: date_arr.all, //MM/DD/YYYY
             labels: {
                 formatter: function(value, timestamp) {
-                    return LocalUNIX2LocalDate(timestamp)
+                    return Unix2StdDate(timestamp)
                 },
             },
             tickAmount: 10
@@ -212,30 +228,31 @@ function renderOverviewGraph(cmp_info) {
     graph_overview.render();
 }
 
-function renderTimelineAllGraph(cmp_info) {
+function renderTimelineAllGraph(cmp_info,timestamp_conv, timezone) { 
     var time_arr = {
         'webtracker': [],
         'mailcamp': [],
         'quicktracker': []
     };
+    var current_time = moment().tz(timezone).valueOf();
 
     level = 0;
-
     $.each(cmp_info['webtracker'], function(key, value) {
-        if (value.start_time != '' && value.start_time != undefined) {
-            start_time = UTC2LocalUNIX(value.start_time);
-            if (value.stop_time == '' || value.stop_time == undefined)
-                stop_time = moment().tz(getDateTimeFormat('tzonly')).valueOf();
-            else
-                stop_time = UTC2LocalUNIX(value.stop_time);
+        if (value.start_time != '-') {
+            start_time = timestamp_conv[value.start_time]*1000;
 
+            if (value.stop_time == '-')
+                stop_time=current_time;
+            else
+                stop_time=timestamp_conv[value.stop_time]*1000;
+                    
             time_arr.webtracker.push({
                 x: level++ + '',
                 y: [
                     start_time,
                     stop_time
                 ],
-                z: [value.tracker_id, value.tracker_name]
+                z: [value.tracker_id, value.tracker_name, value.stop_time]  //stores actual value.stop_time
             });
         }
     });
@@ -243,19 +260,20 @@ function renderTimelineAllGraph(cmp_info) {
     level = 0;
     $.each(cmp_info['mailcamp'], function(key, value) {
         if ((value.camp_status == 2 || value.camp_status == 3 || value.camp_status == 4)) {
-            start_time = UTC2LocalUNIX(value.scheduled_time);
-            if (value.stop_time == '' || value.stop_time == undefined)
-                stop_time = moment().tz(getDateTimeFormat('tzonly')).valueOf();
+            start_time = timestamp_conv[value.scheduled_time]*1000;
+
+            if (value.stop_time == '-')
+                stop_time=current_time;
             else
-                stop_time = UTC2LocalUNIX(value.stop_time);
+                stop_time=timestamp_conv[value.stop_time]*1000;
 
             time_arr.mailcamp.push({
                 x: level++ + '',
                 y: [
-                    start_time,
-                    stop_time
+                    start_time ,
+                    stop_time 
                 ],
-                z: [value.campaign_id, value.campaign_name]
+                z: [value.campaign_id, value.campaign_name, value.stop_time]  //stores actual value.stop_time
             });
         }
     });
@@ -263,23 +281,24 @@ function renderTimelineAllGraph(cmp_info) {
     level = 0;
     $.each(cmp_info['quicktracker'], function(key, value) {
         if (value.start_time != '' && value.start_time != undefined) {
-            start_time = UTC2LocalUNIX(value.start_time);
-            if (value.stop_time == '' || value.stop_time == undefined)
-                stop_time = moment().tz(getDateTimeFormat('tzonly')).valueOf();
+            start_time = timestamp_conv[value.start_time]*1000;
+
+            if (value.stop_time == '-')
+                stop_time=current_time;
             else
-                stop_time = UTC2LocalUNIX(value.stop_time);
+                stop_time=timestamp_conv[value.stop_time]*1000;            
 
             time_arr.quicktracker.push({
                 x: level++ + '',
                 y: [
-                    start_time,
-                    stop_time
+                    start_time ,
+                    stop_time 
                 ],
-                z: [value.tracker_id, value.tracker_name]
+                z: [value.tracker_id, value.tracker_name, value.stop_time]  //stores actual value.stop_time
             });
         }
     });
-    
+
     var options = {
         series: [{
                 name: 'Mail Campaign',
@@ -308,7 +327,7 @@ function renderTimelineAllGraph(cmp_info) {
             type: 'datetime',
             labels: {
                 formatter: function(value, timestamp) {
-                    return LocalUNIX2LocalDate(value)
+                    return Unix2StdDate(value)
                 },
             },
             tickAmount: 10,
@@ -348,7 +367,16 @@ function renderTimelineAllGraph(cmp_info) {
                 dataPointIndex,
                 w
             }) {
-                return `<div class="chart-tooltip"><strong>` + w.config.series[seriesIndex].name + `</strong><br/>Name: ` + w.config.series[seriesIndex].data[dataPointIndex].z[1] + ` (ID: ` + w.config.series[seriesIndex].data[dataPointIndex].z[0] + `)<br/>Run: ` + LocalUNIX2Local(w.config.series[seriesIndex].data[dataPointIndex].y[0]) + ' to ' + LocalUNIX2Local(w.config.series[seriesIndex].data[dataPointIndex].y[1]) + `</div>`;
+                var st=w.config.series[seriesIndex].data[dataPointIndex].y[0]/1000;  //unix timestamp
+                var et=w.config.series[seriesIndex].data[dataPointIndex].y[1]/1000;  //unix timestamp
+
+                st = Unix2StdDateTime(st,timezone);
+                if(w.config.series[seriesIndex].data[dataPointIndex].z[2] == '-')   //if not ended
+                    et = 'Ꝏ';
+                else
+                    et = Unix2StdDateTime(et,timezone);
+
+                return `<div class="chart-tooltip"><strong>` + w.config.series[seriesIndex].name + `</strong><br/>Name: ` + w.config.series[seriesIndex].data[dataPointIndex].z[1] + ` (ID: ` + w.config.series[seriesIndex].data[dataPointIndex].z[0] + `)<br/>Run: ` + st + ' to ' + et + `</div>`;
             },
 
         },

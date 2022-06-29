@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
    isSessionValid(true);
 ?>
 <!DOCTYPE html>
@@ -115,7 +115,7 @@
                                     <button type="button" class="btn btn-success mdi mdi-reload " data-toggle="tooltip" data-placement="top" title="Refresh table" onclick="loadTableWebTrackerResult(g_tracker_id)"></button>
                                  </div>
                                  <div class="align-items-right ml-auto">                                  
-                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#ModalExport"><i class=" mdi mdi-file-export"></i> Export</button>
+                                    <button type="button" class="btn btn-success" onclick="exportReport()"><i class="fas fa-file-export"></i> Export</button>
                                  </div>
                               </div>
                            </div>
@@ -201,14 +201,14 @@
                            <div class="col-sm-9 custom-control">
                               <select class="select2 form-control"  style="height: 36px;width: 100%;" id="modal_export_report_selector">
                                  <option value="csv">Export as CSV</option>
-                                 <option value="excel">Export as XLS</option>
                                  <option value="pdf">Export as PDF</option>
+                                 <option value="html">Export as HTML</option>
                               </select>
                            </div>
                         </div>
                      </div>
                      <div class="modal-footer">
-                        <button type="button" class="btn btn-success" onclick="$('.buttons-' + $('#modal_export_report_selector').val()).click()" data-dismiss="modal"><i class=" mdi mdi-file-export"></i> Export</button>
+                        <button type="button" class="btn btn-success" onclick="exportReportAction($(this))"><i class="fas fa-file-export"></i> Export</button>
                      </div>
                   </div>
                </div>
@@ -251,13 +251,7 @@
          ?>     
       </script>  
       <script defer src="js/libs/moment.min.js"></script>
-      <script defer src="js/libs/moment-timezone-with-data.min.js"></script>
       <script defer src="js/libs/sidebarmenu.js"></script>
       <script defer src="js/libs/toastr.min.js"></script>
-      <script defer src="js/libs/jquery/dataTables.buttons.min.js"></script>
-      <script defer src="js/libs/jquery/buttons.html5.min.js"></script>
-      <script defer src="js/libs/pdfmake.min.js"></script>  
-      <script defer src="js/libs/vfs_fonts.js"></script>  
-      <script defer src="js/libs/jszip.min.js"></script>     
    </body>
 </html>

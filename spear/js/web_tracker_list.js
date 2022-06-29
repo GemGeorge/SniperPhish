@@ -4,9 +4,9 @@ loadTableWebTrackerList();
 
 //---------------
 function webTrackerActDeactAction(tracker_id, action_value){
-    action_value == 0 ? new_action_value=1 : new_action_value = 0;
+    action_value == false ? new_action_value=true : new_action_value = false;
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "pause_stop_web_tracker_tracking",
@@ -47,7 +47,7 @@ function promptWebTrackerDeletion(id, tracker_name) {
 
 function webTrackerDeletionAction() {
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_web_tracker",
@@ -81,7 +81,7 @@ function webTrackerCopyAction() {
         $("#modal_web_tracker_name").removeClass("is-invalid");
 
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "make_copy_web_tracker",
@@ -110,7 +110,7 @@ function promptWebTrackerDataDeletion(id, tracker_name) { // delete user data on
 
 function webTrackerDataDeletionAction() { // delete user data only
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "delete_web_tracker_data",
@@ -129,7 +129,7 @@ function webTrackerDataDeletionAction() { // delete user data only
 function trackerLinkCopy(tracker_id){
     var $temp = $("<input>");
     $("body").append($temp);
-    $temp.val(`<script src="` + location.origin + `/mod?tlink=` + tracker_id + `"></script>`).select();
+    $temp.val(`<script src="` + location.origin + `/mod?tlink=` + tracker_id + `" type="text/javascript"></script>`).select();
     document.execCommand("copy");
     $temp.remove();
 
@@ -144,7 +144,7 @@ function loadTableWebTrackerList() {
     $('#table_web_tracker_list tbody > tr').remove();
 
     $.post({
-        url: "web_tracker_generator_list_manager",
+        url: "manager/web_tracker_generator_list_manager",
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify({ 
             action_type: "get_web_tracker_list"
@@ -152,12 +152,12 @@ function loadTableWebTrackerList() {
     }).done(function (data) {
         if(!data.error){  // no data
             $.each(data, function(key, value) {
-                var action_items_web_tracker_table = `<div class="d-flex no-block"><button type="button" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Report" onclick="document.location='TrackerReport?tracker=` + value.tracker_id + `'"><i class="mdi mdi-book-open"></i></button>`;
+                var action_items_web_tracker_table = `<div class="d-flex"><button type="button" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Report" onclick="document.location='TrackerReport?tracker=` + value.tracker_id + `'"><i class="mdi mdi-book-open"></i></button>`;
 
-                if (value.active == 0)
-                    action_items_web_tracker_table += `<button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" title="Start/Resume Tracking" onClick="promptWebTrackerActDeact('` + value.tracker_id + `','` + value.tracker_name + `','` + value.active + `')"><i class="mdi mdi-play"></i></button>`;
+                if (value.active == false)
+                    action_items_web_tracker_table += `<button type="button" class="btn btn-success btn-sm" data-toggle="tooltip" title="Start/Resume Tracking" onClick="promptWebTrackerActDeact('` + value.tracker_id + `','` + value.tracker_name + `',` + value.active + `)"><i class="mdi mdi-play"></i></button>`;
                 else
-                    action_items_web_tracker_table += `<button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Pause/Stop Tracking" onClick="promptWebTrackerActDeact('` + value.tracker_id + `','` + value.tracker_name + `','` + value.active + `')"><i class="mdi mdi-stop"></i></button>`;
+                    action_items_web_tracker_table += `<button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Pause/Stop Tracking" onClick="promptWebTrackerActDeact('` + value.tracker_id + `','` + value.tracker_name + `',` + value.active + `)"><i class="mdi mdi-stop"></i></button>`;
         
                 action_items_web_tracker_table += `<div class="btn-group ml-sm-1 btn-group-table">
                         <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</button>
@@ -169,16 +169,18 @@ function loadTableWebTrackerList() {
                             <a class="dropdown-item" href="#" onClick="trackerLinkCopy('` + value.tracker_id + `')">Copy Tracker Link</a>
                         </div></div></div>`;
 
-                var tracker_step_data = JSON.parse(value.tracker_step_data);
-                $("#table_web_tracker_list tbody").append("<tr><td></td><td>" + value.tracker_id + "</td><td>" + value.tracker_name + "</td><td data-order=\"" + UTC2LocalUNIX(value.date) + "\">" + tracker_step_data.web_forms.count + "</td><td>" + UTC2Local(value.date) + "</td><td data-order=\"" + UTC2LocalUNIX(value.start_time) + "\">" + UTC2Local(value.start_time) +  "</td><td data-order=\"" + UTC2LocalUNIX(value['stop_time']) + "\">" + UTC2Local(value.stop_time) + "</td><td>" + action_items_web_tracker_table + "</td></tr>");
+                var tracker_step_data = value.tracker_step_data;
+                $("#table_web_tracker_list tbody").append("<tr><td></td><td>" + value.tracker_id + "</td><td>" + value.tracker_name + "</td><td data-order=\"" + getTimestamp(value.date) + "\">" + tracker_step_data.web_forms.count + "</td><td>" + value.date + "</td><td data-order=\"" + getTimestamp(value.start_time) + "\">" + value.start_time +  "</td><td data-order=\"" + getTimestamp(value['stop_time']) + "\">" + value.stop_time + "</td><td>" + action_items_web_tracker_table + "</td></tr>");
             });
         }
         
         dt_web_tracker_list = $('#table_web_tracker_list').DataTable({
             "bDestroy": true,
             "aaSorting": [3, 'desc'],
+            'pageLength': 20,
+            'lengthMenu': [[20, 50, 100, -1], [20, 50, 100, "All"]],
             'columnDefs': [{
-                "targets": [4,7],
+                "targets": [7],
                 "className": "dt-center"
             }],
             "preDrawCallback": function(settings) {
@@ -187,8 +189,13 @@ function loadTableWebTrackerList() {
 
             "drawCallback": function() {
                 $('#table_web_tracker_list tbody').fadeIn(500);
+                $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
+            },
+
+            "initComplete": function() {
+                $('label>select').select2({minimumResultsForSearch: -1, });
             }
-        }); //initialize table
+        });
 
         dt_web_tracker_list.on('order.dt_web_tracker_list search.dt_web_tracker_list', function() {
             dt_web_tracker_list.column(0, {
@@ -198,11 +205,6 @@ function loadTableWebTrackerList() {
                 cell.innerHTML = i + 1;
             });
         }).draw();
-
-        $('[data-toggle="tooltip"]').tooltip({ trigger: "hover" });
-        $("label>select").select2({
-            minimumResultsForSearch: -1,
-        });
     }); 
 }
          

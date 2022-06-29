@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
    isSessionValid(true);
 ?>
 <!DOCTYPE html>
@@ -85,23 +85,18 @@
                         <div class="col-md-6">
                            <div class="row">
                               <div class="col-md-12">
-                                 <h6 class="hbar">Batch Emails</h6> 
+                                 <h6 class="hbar">TLS Peer Verification</h6> 
                               </div>   
                               <div class="col-md-12">
-                                 <i class="small">The number of emails to be send as batch (default is 1).</i> 
+                                 <i class="small">Disabling TLS peer verification is not recommended for security reasons, but it can be useful when using a self-signed certificate.</i> 
                               </div>  
-                              <label for="tb_batch_mail_limit" class="col-sm-3 text-left control-label col-form-label m-t-10">Message Limit:</label>
-                              <div class="col-sm-3 m-t-10">
-                                 <div class="input-group number-spinner">
-                                    <span class="input-group-btn">
-                                       <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
-                                    </span>
-                                    <input type="text" class="form-control text-center form-control-sm" value="1" id="tb_batch_mail_limit">
-                                    <span class="input-group-btn">
-                                       <button class="btn btn-outline-secondary btn-sm" data-dir="up"><span class="fas fa-plus"></span></button>
-                                    </span>
-                                 </div>       
-                              </div>                                                     
+                              <label for="cb_encrypted_mail" class="col-md-4 text-left control-label col-form-label m-t-10">TLS Peer Verification:</label>
+                              <div class="custom-control custom-switch m-t-15 col-md-4 row">
+                                 <label class="switch">
+                                    <input type="checkbox" id="cb_peer_verification">
+                                    <span class="slider round"></span>
+                                 </label>
+                              </div>                                                 
                            </div>                           
                         </div>
                         <div class="col-md-6">
@@ -112,7 +107,7 @@
                               <div class="col-md-12">
                                  <i class="small">The recipient type such - TO, CC or BCC (default is 'TO').</i> 
                               </div>  
-                              <label for="select_recipient_type" class="col-sm-3 text-left control-label col-form-label m-t-10">Receipient Type:</label>
+                              <label for="select_recipient_type" class="col-sm-3 text-left control-label col-form-label m-t-10">Recipient Type:</label>
                               <div class="col-sm-3 m-t-10">
                                  <select class="select2 form-control custom-select" id="select_recipient_type" style="height: 36px;width: 100%;">
                                     <option value="to" selected>To</option>
@@ -122,42 +117,6 @@
                               </div>  
                            </div>                           
                         </div>                       
-                     </div>
-                     <div class="form-group row">
-                        <div class="col-md-6">
-                           <div class="row">
-                              <div class="col-md-12">
-                                 <h6 class="hbar">Read Receipts</h6> 
-                              </div>   
-                              <div class="col-md-12">
-                                 <i class="small">Request read receipts for message. By default, the read receipt is sent to the "From" address specified in the sender configuration.</i> 
-                              </div>  
-                              <label for="cb_read_receipt" class="col-sm-4 text-left control-label col-form-label m-t-10">Read Receipt:</label>
-                              <div class="custom-control custom-switch m-t-15 row">
-                                 <label class="switch">
-                                    <input type="checkbox" id="cb_read_receipt">
-                                    <span class="slider round"></span>
-                                 </label>
-                              </div>
-                           </div>                           
-                        </div>
-                        <div class="col-md-6">
-                           <div class="row">
-                              <div class="col-md-12">
-                                 <h6 class="hbar">Non ASCII Support</h6> 
-                              </div>   
-                              <div class="col-md-12">
-                                 <i class="small">Supports Punycode transcription for non ASCII characters (such as Arabic/Chinese). Enable this only if the domain/email contains non ASCII characters. Note that your outbound SMTP server must support the SMTPUTF8 extension.</i> 
-                              </div>  
-                              <label for="cb_non_ascii_support" class="col-sm-4 text-left control-label col-form-label m-t-10">Non ASCII domain/Email:</label>
-                              <div class="custom-control custom-switch m-t-15 row">
-                                 <label class="switch">
-                                    <input type="checkbox" id="cb_non_ascii_support">
-                                    <span class="slider round"></span>
-                                 </label>
-                              </div>
-                           </div>                           
-                        </div>
                      </div>
                      <div class="form-group row">
                         <div class="col-md-6">
@@ -221,30 +180,36 @@
                               <div class="col-md-12">
                                  <i class="small">Controls the number of mails send in a single connection. Once the number of mails exceeded, SniperPhish will disconnect and pause some time before it re-connects (default is 50 emails and pause for 30seconds).</i> 
                               </div>  
-                              <label for="tb_antiflood_limit" class="col-sm-3 text-left control-label col-form-label m-t-10">Message Limit:</label>
-                              <div class="col-sm-3 m-t-10">
-                                 <div class="input-group number-spinner">
-                                    <span class="input-group-btn">
-                                       <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
-                                    </span>
-                                    <input type="text" class="form-control text-center form-control-sm" value="50" id="tb_antiflood_limit">
-                                    <span class="input-group-btn">
-                                       <button class="btn btn-outline-secondary btn-sm" data-dir="up"><span class="fas fa-plus"></span></button>
-                                    </span>
-                                 </div>       
-                              </div>     
-                              <label for="tb_antiflood_pause" class="col-sm-3 text-left control-label col-form-label m-t-10">Pause for (seconds):</label>
-                              <div class="col-sm-3 m-t-10">
-                                 <div class="input-group number-spinner">
-                                    <span class="input-group-btn">
-                                       <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
-                                    </span>
-                                    <input type="text" class="form-control text-center form-control-sm" value="30" id="tb_antiflood_pause">
-                                    <span class="input-group-btn">
-                                       <button class="btn btn-outline-secondary btn-sm" data-dir="up"><span class="fas fa-plus"></span></button>
-                                    </span>
-                                 </div>       
-                              </div>           
+                              <div class="row">
+                                 <div class="col-md-6">
+                                    <label for="tb_antiflood_limit" class="col-md-12 text-left control-label col-form-label m-t-10">Message Limit:</label>                                
+                                    <div class="col-md-8">
+                                       <div class="input-group number-spinner">
+                                          <span class="input-group-btn">
+                                             <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
+                                          </span>
+                                          <input type="text" class="form-control text-center form-control-sm" value="50" id="tb_antiflood_limit">
+                                          <span class="input-group-btn">
+                                             <button class="btn btn-outline-secondary btn-sm" data-dir="up"><span class="fas fa-plus"></span></button>
+                                          </span>
+                                       </div>       
+                                    </div>     
+                                 </div>
+                                 <div class="col-md-6">
+                                    <label for="tb_antiflood_pause" class="col-md-12 text-left control-label col-form-label m-t-10">Pause for (seconds):</label>                                 
+                                    <div class="col-md-8">
+                                       <div class="input-group number-spinner">
+                                          <span class="input-group-btn">
+                                             <button class="btn btn-outline-secondary btn-sm" data-dir="dwn"><span class="fas fa-minus"></span></button>
+                                          </span>
+                                          <input type="text" class="form-control text-center form-control-sm" value="30" id="tb_antiflood_pause">
+                                          <span class="input-group-btn">
+                                             <button class="btn btn-outline-secondary btn-sm" data-dir="up"><span class="fas fa-plus"></span></button>
+                                          </span>
+                                       </div>       
+                                    </div>  
+                                 </div> 
+                              </div>        
                            </div>                           
                         </div>                        
                         <div class="col-md-6">
@@ -255,8 +220,10 @@
                               <div class="col-md-12">
                                  <i class="small">Sets the message priority of the message. Setting the priority will not change the way email is sent, it is purely an indicative setting for the recipient.</i> 
                               </div>  
-                              <label for="select_msg_priority" class="col-sm-3 text-left control-label col-form-label m-t-10">Message Priority:</label>
-                              <div class="col-sm-3 m-t-10">
+                              <div class="col-md-12">
+                                 <label for="select_msg_priority" class="text-left control-label col-form-label m-t-10">Message Priority:</label>
+                              </div>
+                              <div class="col-sm-4">
                                  <select class="select2 form-control custom-select" id="select_msg_priority" style="height: 36px;width: 100%;">
                                     <option value="1">Highest</option>
                                     <option value="2">High</option>

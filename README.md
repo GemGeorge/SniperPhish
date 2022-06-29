@@ -2,10 +2,10 @@
   <a href=""><img src="https://user-images.githubusercontent.com/15928266/116806917-ab0f8d80-ab62-11eb-8d34-962fdfe692a7.png" ></img></a>
 </h1>
 <p align="center"> 
-  <a href=""><img src="https://img.shields.io/static/v1?label=php&message=%3E=7.3&color=green&style=flat&logo=php"></a>
+  <a href=""><img src="https://img.shields.io/static/v1?label=php&message=>=7.4&color=green&style=flat&logo=php"></a>
   <a href=""><img src="https://img.shields.io/static/v1?label=Platform&message=Linux/Windows&color=orange&style=flat"></a>
   <a href=""><img src="https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat"></a>
-  <a href=""><img src="https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg?style=flat"></a>
+   <a href=""><img src="https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg?style=flat"></a>
 </p>
 
 # SniperPhish
@@ -13,7 +13,7 @@
 
 ## Basic Requirements
 * Operating System: Windows or Linux. The macOS support is not verified.
-* Web Server: Any web server supporting PHP with minimum v7.3 (well, you have Apache).
+* Web Server: Any web server supporting PHP with minimum v7.4 (well, you have Apache).
 * Database: MySQL
 
 ## Installation
@@ -22,15 +22,13 @@
 3. Open installation page http://localhost/install in your browser and follow the steps
 4. After installation, SniperPhish will redirect to login page http://localhost/spear
 >Default login - *Username: `admin`   Password: `sniperphish`*
->
->Note: For docker installation, please visit https://github.com/GemGeorge/SniperPhish-Docker
 
 ## Updating/Upgrading
 1. 1st keep a backup of your existing /spear/db.php, /spear/uploads/, /spear/sniperhost/hf_files/ and /spear/sniperhost/ht_files/ folders. 
 2. Then delete all your current SnipePhish files and replace with the new SniperPhish. You may clone the repo/unzip latest SniperPhish release to the same location.
 3. Now, re-add the files and folders you backed up at the 1st step to the same locations
 
->*Above steps applies to the update of all SniperPhish v1.0+ to the latest release as of now. There are no changes to the database.*
+>*Above steps are applicable only for SniperPhish v1.x to v1.3.1. No upgrade to SniperPhish v2.0 is available and it requires a fresh installation.*
 ## Main Features
 * Web tracker code generation - track your website visits and form submissions independently
 * Tracks data from phishing website containg any number of pages
@@ -47,7 +45,7 @@
 * Auto-renaming attachments on-the-fly
 
 ## Screenshots
-<kbd>![Web-Email Campaign Dashboard](https://user-images.githubusercontent.com/15928266/116777794-e9447880-aaa0-11eb-9697-af5f5617b279.PNG)</kbd>
+<kbd>![Web-Email Campaign Dashboard](https://user-images.githubusercontent.com/15928266/175827939-baef7654-70a6-4305-b627-8849cce6a442.png)</kbd>
 
 <kbd>![Web Tracker Insertion](https://user-images.githubusercontent.com/15928266/116777832-198c1700-aaa1-11eb-9f10-4a0b27c172d8.gif)</kbd>
 
@@ -68,7 +66,7 @@ In short, we create web tracker -> Add the web tracker to the phishing website -
 4. Now go to `Email Campaign -> Campaign List -> New Mail Campaign` and select/fill the fields to create the campaign.
 5. Start Mail campaign
 
-_Note: SniperPhish tracks your phishing website only if the page is called by appending `cid` parameter (ie. `?cid={{CID}}`) at the end. For example opening `http://yourphishingsite.com/login?cid=abcd` will be tracked, but not `http://yourphishingsite.com/login`. Above 3rd step does this by default._
+_Note: SniperPhish tracks your phishing website only if the page is called by appending `rid` parameter (ie. `?rid={{RID}}`) at the end. For example opening `http://yourphishingsite.com/login?rid=abcd` will be tracked, but not `http://yourphishingsite.com/login`. Above 3rd step does this by default._
 
 #### Viewing combined Web-Email Result
 Go to `Web-MailCamp Dashboard -> Select Campaign`. Then selct the web tracker and email campaign you created.<br/>
@@ -80,11 +78,6 @@ Go to `Web-MailCamp Dashboard -> Select Campaign`. Then selct the web tracker an
 
 ## SniperPhish honors contributions of
 Joseph Nygil ([@j_nygil](https://twitter.com/j_nygil)) and Sreehari Haridas ([@sr33h4ri](https://twitter.com/sr33h4ri))
-
-## Shoutouts
-* [@sven-hash](https://github.com/sven-hash) for the docker implementation
-* [@OzzyKampha](https://github.com/OzzyKampha), @Mr.GP & @indeserpen for poking with bugs and feature requests
-
 
 ## Come let's connect and collaborate
 Join on our SniperPhish discord community to engage with us!

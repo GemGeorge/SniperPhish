@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
 ?>
 <!DOCTYPE html>
 <html dir="ltr" lang="en">
@@ -156,25 +156,26 @@
                                        <label class="m-t-10 m-r-5"> Colums:</label>
                                     </div>  
                                     <div class="col-md-9">  
-                                       <select class="select2 form-control m-t-16" style="width: 100%;" multiple="multiple"  id="tb_mailcamp_result_colums_list">
+                                       <select class="select2 form-control m-t-16" style="width: 100%;" multiple="multiple"  id="tb_camp_result_colums_list_mcamp">
                                           <optgroup label="User Info">
-                                             <option value="id" selected>CID</option>
+                                             <option value="rid" selected>RID</option>
                                              <option value="user_name" selected>Name</option>
                                              <option value="user_email" selected>Email</option>
                                              <option value="sending_status" selected>Status</option>
                                              <option value="send_time" selected>Sent Time</option>
-                                             <option value="send_error">Send Error</option>
+                                             <option value="send_error" selected>Send Error</option>
                                              <option value="mail_open" selected>Mail Open</option>
                                              <option value="mail_open_count">Mail(open count)</option>
                                              <option value="mail_first_open">Mail(first open)</option>
-                                             <option value="mail_last_open" >Mail(last open)</option>
+                                             <option value="mail_last_open">Mail(last open)</option>
                                              <option value="mail_open_times">Mail(all open times)</option>
-                                             <option value="public_ip">Public IP</option>
+                                             <option value="public_ip" selected>Public IP</option>
                                              <option value="user_agent">User Agent</option>
-                                             <option value="mail_client">Mail Client</option>
-                                             <option value="platform">Platform</option>
+                                             <option value="mail_client" selected>Mail Client</option>
+                                             <option value="platform" selected>Platform</option>
+                                             <option value="device_type" selected>Device Type</option>
                                              <option value="all_headers">HTTP Headers</option>
-                                             <option value="mail_reply">Mail Reply</option>
+                                             <option value="mail_reply" selected>Mail Reply</option>
                                              <option value="mail_reply_count">Mail (reply count)</option>
                                              <option value="mail_reply_content">Mail (reply content)</option>
                                           </optgroup>
@@ -189,11 +190,11 @@
                                        </select>                                     
                                     </div>  
                                     <div class="col-md-1">
-                                       <button type="button" class="btn btn-success mdi mdi-reload " data-toggle="tooltip" data-placement="top" title="Refresh table" onclick="loadTableCampaignResult(data_mail_live)"></button>
+                                       <button type="button" class="btn btn-success mdi mdi-reload " data-toggle="tooltip" data-placement="top" title="Refresh table" onclick="loadTableCampaignResult()"></button>
                                     </div>
                                     <div class="align-items-right ml-auto">
                                        <div class="row">                                  
-                                          <button type="button" class="btn btn-success item_private" data-toggle="modal" data-target="#ModalExport"><i class="m-r-10 mdi mdi-file-export"></i> Export</button>
+                                          <button type="button" class="btn btn-success item_private" data-toggle="modal" data-target="#ModalExport"><i class="m-r-10 fas fa-file-export"></i> Export</button>
                                        </div>
                                     </div>
                                  </div>
@@ -262,14 +263,14 @@
                            <div class="col-sm-9 custom-control">
                               <select class="select2 form-control"  style="height: 36px;width: 100%;" id="modal_export_report_selector">
                                  <option value="csv">Export as CSV</option>
-                                 <option value="excel">Export as XLS</option>
                                  <option value="pdf">Export as PDF</option>
+                                 <option value="html">Export as HTML</option>
                               </select>
                            </div>
                         </div>
                      </div>
                      <div class="modal-footer">
-                        <button type="button" class="btn btn-success" onclick="$('.buttons-' + $('#modal_export_report_selector').val()).click()" data-dismiss="modal"><i class=" mdi mdi-file-export"></i> Export</button>
+                        <button type="button" class="btn btn-success" onclick="exportReportAction($(this))"><i class="fas fa-file-export"></i> Export</button>
                      </div>
                   </div>
                </div>
@@ -303,17 +304,30 @@
                      </div>
                      <div class="modal-body">
                         <div class="form-group row">
-                           <label class="col-md-2">Table data:</label>
-                           <div class="col-md-4">
+                           <label class="col-md-3">Table data:</label>
+                           <div class="col-md-9">
                               <div class="custom-control custom-radio">
-                                 <input type="radio" class="custom-control-input" id="customControlValidation1" value="radio_table_data_single" name="radio_table_data" required checked>
-                                 <label class="custom-control-label" for="customControlValidation1">Show first entry only</label>
+                                 <input type="radio" class="custom-control-input" id="rb1" value="radio_table_data_single" name="radio_table_data" required checked>
+                                 <label class="custom-control-label" for="rb1">Show first entry only</label>
                                  <i class="mdi mdi-information cursor-pointer" tabindex="0" data-toggle="popover" data-trigger="focus" data-placement="top" data-content="First tracked data of user's are displayed. Eg: displays user's first visit only"></i>
                               </div>
                               <div class="custom-control custom-radio">
-                                 <input type="radio" class="custom-control-input" id="customControlValidation2" value="radio_table_data_all" name="radio_table_data" required>
-                                 <label class="custom-control-label" for="customControlValidation2">Show all entries</label>
+                                 <input type="radio" class="custom-control-input" id="rb2" value="radio_table_data_all" name="radio_table_data" required>
+                                 <label class="custom-control-label" for="rb2">Show all entries</label>
                                  <i class="mdi mdi-information cursor-pointer" tabindex="0" data-toggle="popover" data-trigger="focus" data-placement="top" data-content="All tracked data of user's are displayed. Eg: displays all visits of a user"></i>
+                              </div> 
+                           </div>                           
+                        </div>
+                        <div class="form-group row">
+                           <label class="col-md-3">Mail reply check:</label>
+                           <div class="col-md-9">
+                              <div class="custom-control custom-radio">
+                                 <input type="radio" class="custom-control-input" id="rb3" value="reply_yes" name="radio_mail_reply_check" required checked>
+                                 <label class="custom-control-label" for="rb3">Check mail replies</label>
+                              </div>
+                              <div class="custom-control custom-radio">
+                                 <input type="radio" class="custom-control-input" id="rb4" value="reply_no" name="radio_mail_reply_check" required>
+                                 <label class="custom-control-label" for="rb4">Do not check mail replies</label>
                               </div> 
                            </div>                           
                         </div>                        
@@ -402,12 +416,7 @@
                      hideMeFromPublic(); 
                   </script>';
          else{
-             echo '<script>var g_tk_id = getRandomId();</script>
-               <script defer src="js/libs/jquery/dataTables.buttons.min.js"></script>
-               <script defer src="js/libs/jquery/buttons.html5.min.js"></script>
-               <script defer src="js/libs/pdfmake.min.js"></script>
-               <script defer src="js/libs/vfs_fonts.js"></script>    
-               <script defer src="js/libs/jszip.min.js"></script>';            
+             echo '<script>var g_tk_id = getRandomId();</script>';            
             isSessionValid(true);
          }
       //------------------------------------------

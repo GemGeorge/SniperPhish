@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <?php
-    require_once(dirname(__FILE__) . '/spear/common_functions.php');
+    require_once(dirname(__FILE__) . '/spear/manager/common_functions.php');
     checkInstallation();
 ?>
 <html dir="ltr">
@@ -187,6 +187,10 @@
 
         $("#doInstall").submit(function(event) {
             event.preventDefault();
+            doInstall(false);
+        });
+
+        function doInstall(f_force){
             var time_zone = { "timezone":$("#sniperphish_timezoneSelector").val(), "value":moment.tz($("#sniperphish_timezoneSelector").val()).utcOffset() * 60};
             
             $("#bt_install").attr('disabled', true);
@@ -202,22 +206,27 @@
                     db_user_pwd: $("#tb_db_user_pwd").val(),
                     user_contact_mail: $("#tb_contact_mail").val(),
                     time_zone: time_zone,
+                    f_force: f_force
                  }),
             }).done(function (data) {
                 $("#bt_install i").toggleClass('fa-spinner fa-spin');
 
                 if(!data.error){
-                  $("#lb_error").html('<span class="text-success">Installation successs. SniperPhish will rediect to <a href="/spear">login page</a> in few seconds..</span>');
+                  $("#lb_error").html('<span class="text-success">Installation success. SniperPhish will redirect to <a href="/spear">login page</a> in few seconds..</span>');
                     setTimeout(function() {
                         document.location = location.origin + '/spear';
                     }, 3000);
                 }
-                else
-                  $("#lb_error").html('<span class="text-danger">' + data.error + '</span>');
+                else{
+                    if(data.error=="db_content_exist")
+                        $('#modal_prompts').modal('toggle');
+                    else
+                        $("#lb_error").html('<span class="text-danger">' + data.error + '</span>');
+                }
            
                 $("#bt_install").attr('disabled', false);
             }); 
-        });
+        }
 
         $('html').on('click', function(e) {
           if (!$(e.target).is('.fa-times') && $(e.target).closest('.popover').length !=1 )
@@ -413,8 +422,29 @@
                 }, "");
 
             $("#sniperphish_timezoneSelector").html(selectorOptions);
-            $("#sniperphish_timezoneSelector").val("Asia/Kuala_Lumpur");   
+            let timezoneGuess = moment.tz.guess();
+            timezoneGuess = timezoneGuess.replace("Calcutta","Kolkata");
+            $("#sniperphish_timezoneSelector").val(timezoneGuess);   
         });
       </script>
    </body>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal_prompts" tabindex="-1" role="dialog" aria-hidden="true">
+       <div class="modal-dialog" role="document">
+          <div class="modal-content">
+             <div class="modal-header">
+                <h5 class="modal-title">Are you sure?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+             </div>
+             <div class="modal-body" id="modal_prompts_body">
+                Database is not empty. Do you want to empty the database and force installation?
+             </div>
+             <div class="modal-footer" >
+                <button type="button" class="btn btn-success" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="doInstall(true)" data-dismiss="modal">Proceed</button>
+             </div>
+          </div>
+       </div>
+    </div>
 </html>

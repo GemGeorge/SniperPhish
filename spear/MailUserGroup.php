@@ -1,5 +1,5 @@
 <?php
-   require_once(dirname(__FILE__) . '/session_manager.php');
+   require_once(dirname(__FILE__) . '/manager/session_manager.php');
    isSessionValid(true);
 ?>
 <!DOCTYPE html>
@@ -118,12 +118,16 @@
                      <!--<h5 class="card-title">Tracker Templates</h5>-->
                      <div class="row">
                         <div class="col-md-12">
-                           <div class="form-group row">                                              
-                              <label for="user_group_name" class="col-md-2 text-left control-label col-form-label">User Group Name: </label>
-                              <div class="col-md-5">              
-                                 <input type="text" class="form-control" id="user_group_name">
+                           <div class="row">       
+                              <div class="col-md-6">
+                                 <div class="form-group row">                                        
+                                    <label for="user_group_name" class="col-md-3 text-left control-label col-form-label">User Group Name: </label>
+                                    <div class="col-md-9">              
+                                       <input type="text" class="form-control" id="user_group_name">
+                                    </div>
+                                 </div>
                               </div>
-                              <div class="col-md-5 text-right">
+                              <div class="col-md-6 text-right">
                                  <button type="button" class="btn btn-info" onclick="saveUserGroup($(this))"><i class="fa fas fa-save"></i> Save</button>
                               </div>                             
                            </div>                    
@@ -131,40 +135,41 @@
                      </div>
                      <hr/>
                      <div class="row">
-                        <div class="col-md-12">
-                           <div class="form-group row">
-                              
-                                 <label for="tablevalue_name" class="col-md-1 text-left control-label col-form-label">Name: </label>
-                                 <div class="col-md-2">
-                                    <input type="text" class="form-control" id="tablevalue_name">
-                                 </div>
-                             
-                                 <label for="tablevalue_email" class="col-md-1 text-left control-label col-form-label">Email: </label>
-                                 <div class="col-md-3">
-                                    <input type="email" class="form-control" id="tablevalue_email">
-                                 </div>
-                              
-
-                                 <label for="tablevalue_notes" class="col-md-1 text-left control-label col-form-label">Notes: </label>
-                                 <div class="col-md-2">
-                                    <input type="text" class="form-control" id="tablevalue_notes">
-                                 </div>
-
-                                 <div class="col-md-1">
-                                    <button type="button" class="btn btn-success" id="bt_add_email_tracker" onclick="addUserToTable()"><i class="mdi mdi-plus-outline"></i> Add</button>
-                                 </div>
-
-                                 <div class="col-md-1 text-right">
-                                    <div class="btn-group"  id="bt_save_config" >
-                                        <button type="button" class="btn btn-success" onclick="addUserFromFile()" title="Import users" data-toggle="tooltip"><i class="mdi mdi-file-import"></i></button>
-                                        <input type="file" id="fileinput" accept=".txt, .csv, .lst, .rtf" hidden />
-                                        <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#ModalExport">Export</a>
-                                        </div>
-                                    </div>   
-                                 </div>
-                              
+                        <div class="col-md-4">
+                           <div class="form-group">
+                                 <label>First Name:</label>
+                                 <input type="text" class="form-control date-inputmask" id="tablevalue_fname">
+                             </div>
+                             <div class="form-group">
+                                 <label>Email:</label>
+                                 <input type="text" class="form-control phone-inputmask" id="tablevalue_email">
+                             </div>
+                        </div>
+                        <div class="col-md-4">
+                           <div class="form-group">
+                                 <label>Last Name:</label>
+                                 <input type="text" class="form-control date-inputmask" id="tablevalue_lname">
+                             </div>
+                             <div class="form-group">
+                                 <label>Notes:</label>
+                                 <input type="text" class="form-control phone-inputmask" id="tablevalue_notes">
+                             </div>
+                        </div>
+                        <div class="col-md-2">
+                           <div class="form-group m-t-25">
+                              <button type="button" class="btn btn-success" id="bt_add_email_tracker" onclick="addUserToTable($(this))"><i class="fa fas fa-plus"></i> Add</button>
+                           </div>
+                        </div>
+                        <div class="col-md-2 m-t-25 text-right">
+                           <div class="form-group">
+                              <div class="btn-group"  id="bt_save_config" >
+                                  <button type="button" class="btn btn-success" onclick="addUserFromFile()" title="Import users" data-toggle="tooltip"><i class="mdi mdi-file-import"></i></button>
+                                  <input type="file" id="fileinput" accept=".txt, .csv, .lst, .rtf" hidden />
+                                  <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                  <div class="dropdown-menu">
+                                      <a class="dropdown-item" href="#" onclick="exportUserAction()">Export as CSV</a>
+                                  </div>
+                              </div>   
                            </div>
                         </div>
                      </div>
@@ -174,7 +179,8 @@
                               <thead>
                                  <tr>
                                     <th>#</th>
-                                    <th>Name</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
                                     <th>Email</th>
                                     <th>Notes</th>
                                     <th>Actions</th>
@@ -214,9 +220,15 @@
                      </div>
                      <div class="modal-body">
                         <div class="form-group row  m-t-20">
-                           <label for="modal_tablevalue_name" class="col-sm-2 text-left control-label col-form-label">Name: </label>
+                           <label for="modal_tablevalue_name" class="col-sm-2 text-left control-label col-form-label">First Name: </label>
                            <div class="col-sm-8">
-                              <input type="text" class="form-control" id="modal_tablevalue_name">
+                              <input type="text" class="form-control" id="modal_tablevalue_fname">
+                           </div>
+                        </div>
+                        <div class="form-group row  m-t-20">
+                           <label for="modal_tablevalue_name" class="col-sm-2 text-left control-label col-form-label">Last Name: </label>
+                           <div class="col-sm-8">
+                              <input type="text" class="form-control" id="modal_tablevalue_lname">
                            </div>
                         </div>
                         <div class="form-group row  m-t-20">
@@ -233,7 +245,7 @@
                         </div>
                      </div>
                      <div class="modal-footer" >
-                        <button type="button" class="btn btn-info" id="bt_add_email_tracker" onclick="editRow_action()"><i class="mdi mdi-content-save"></i> Save</button>
+                        <button type="button" class="btn btn-info" id="bt_add_email_tracker" onclick="editRowAction($(this))"><i class="fa fas fa-save"></i> Save</button>
                      </div>
                   </div>
                </div>
@@ -256,6 +268,23 @@
                </div>
             </div>
             <!-- Modal -->
+            <div class="modal fade" id="modal_row_delete" tabindex="-1" role="dialog" aria-hidden="true">
+               <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                     <div class="modal-header">
+                        <h5 class="modal-title">Are you sure?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+                     </div>
+                     <div class="modal-body">
+                        This will delete user and the action can't be undone!
+                     </div>
+                     <div class="modal-footer" >
+                        <button type="button" class="btn btn-danger" data-tracker_id="" onclick="deleteRowAction()">Delete</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Modal -->
             <div class="modal fade" id="modal_user_group_copy" tabindex="-1" role="dialog" aria-hidden="true">
                <div class="modal-dialog" role="document">
                   <div class="modal-content">
@@ -273,37 +302,6 @@
                      </div>
                      <div class="modal-footer" >
                         <button type="button" class="btn btn-success" onclick="UserGroupCopy()"><i class="mdi mdi-content-copy"></i> Copy</button>
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <!-- Modal -->
-            <div class="modal fade" id="ModalExport" tabindex="-1" role="dialog" aria-hidden="true">
-               <div class="modal-dialog" role="document">
-                  <div class="modal-content">
-                     <div class="modal-header">
-                        <h5 class="modal-title">Export Report</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
-                     </div>
-                     <div class="modal-body">
-                        <div class="form-group row">
-                           <label for="Modal_export_file_name" class="col-sm-3 text-left control-label col-form-label">File Name: </label>
-                           <div class="col-sm-9 custom-control">
-                              <input type="text" class="form-control m-t-5" id="Modal_export_file_name" placeholder="File Name">
-                           </div>
-                        </div>
-                        <div class="form-group row">
-                           <label for="modal_export_report_selector" class="col-sm-3 text-left control-label col-form-label">File Format: </label>
-                           <div class="col-sm-9 custom-control">
-                              <select class="select2 form-control"  style="height: 36px;width: 100%;" id="modal_export_report_selector">
-                                 <option value="csv">Export as CSV</option>
-                                 <option value="excel">Export as XLS</option>
-                              </select>
-                           </div>
-                        </div>
-                     </div>
-                     <div class="modal-footer">
-                        <button type="button" class="btn btn-success" onclick="$('.buttons-' + $('#modal_export_report_selector').val()).click()" data-dismiss="modal"><i class=" mdi mdi-file-export"></i> Export</button>
                      </div>
                   </div>
                </div>
@@ -333,9 +331,6 @@
       <!-- this page js -->
       <script src="js/libs/jquery/datatables.js"></script>
       <script src="js/libs/moment.min.js"></script>
-      <script src="js/libs/moment-timezone-with-data.min.js"></script>
-      <script src="js/libs/jquery/dataTables.buttons.min.js"></script>
-      <script src="js/libs/jquery/buttons.html5.min.js"></script>
       <script src="js/common_scripts.js"></script>
       <script src="js/mail_user_group.js"></script>
       <?php
