@@ -2,7 +2,7 @@
   <a href=""><img src="https://user-images.githubusercontent.com/15928266/116806917-ab0f8d80-ab62-11eb-8d34-962fdfe692a7.png" ></img></a>
 </h1>
 <p align="center"> 
-  <a href=""><img src="https://img.shields.io/static/v1?label=php&message=>=7.4&color=green&style=flat&logo=php"></a>
+  <a href=""><img src="https://img.shields.io/static/v1?label=php&message=%3E=7.4&color=green&style=flat&logo=php"></a>
   <a href=""><img src="https://img.shields.io/static/v1?label=Platform&message=Linux/Windows&color=orange&style=flat"></a>
   <a href=""><img src="https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat"></a>
    <a href=""><img src="https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg?style=flat"></a>
