@@ -135,15 +135,25 @@
                                  </label>
                               </div>
                               <div class="col-md-4 text-right m-t-10" id="area_signed_mail_bt">
-                                  <button type="button" class="btn btn-success btn-sm" onclick='$("#sign_mail_cert_uploader").trigger("click")' title="Upload signing certificate" data-toggle="tooltip" disabled=""><i class="mdi mdi-certificate"></i></button>
-                                  <button type="button" class="btn btn-success btn-sm" onclick='$("#sign_mail_pvk_uploader").trigger("click")' title="Upload private key" data-toggle="tooltip" disabled=""><i class="mdi mdi-key-variant"></i></button>
-                               </div>
-                               <div class="col-md-12 row text-left">
+                                 <button type="button" class="btn btn-success btn-sm" onclick='$("#sign_mail_cert_uploader").trigger("click")' title="Upload signing certificate" data-toggle="tooltip" disabled=""><i class="mdi mdi-certificate"></i></button>
+                                 <button type="button" class="btn btn-success btn-sm" onclick='$("#sign_mail_pvk_uploader").trigger("click")' title="Upload private key" data-toggle="tooltip" disabled=""><i class="mdi mdi-key-variant"></i></button>
+                              </div>
+                              <div class="col-md-12 row text-left" id="area_signed_mail_uploads">
                                  <div class="col-md-6 form-control-sm text-left" id="area_signed_mail_cert">
                                  </div>
                                  <div class="col-md-6 form-control-sm text-left" id="area_signed_mail_pvk">
                                  </div>                                 
                               </div> 
+                              <div class="col-md-12 row text-left">
+                                 <div class="col-md-6">
+                                    <div class="row">
+                                       <label for="cb_signed_mail" class="col-md-5 text-left control-label col-form-label">Private key passphrase:</label>
+                                       <div class="col-md-7 text-right">
+                                          <input type="text" class="form-control" id="pvk_passphrase" placeholder="Keep empty if no passphrase">
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
                            </div>                           
                         </div>
                         <div class="col-md-6">
@@ -236,9 +246,9 @@
                         </div> 
                      </div>
                      <hr/>                     
-                     <input type="file" id="sign_mail_cert_uploader" accept=".pem" onchange="getBase64ofFile(uploadSignMailCert,this.files[0])" hidden="">
-                     <input type="file" id="sign_mail_pvk_uploader" accept=".pem" onchange="getBase64ofFile(uploadSignMailPVK,this.files[0])" hidden="">
-                     <input type="file" id="enc_mail_pvk_uploader" accept=".pem" onchange="getBase64ofFile(uploadEncMailCert,this.files[0])" hidden="">
+                     <input type="file" id="sign_mail_cert_uploader" accept=".pem,.crt" onchange="getBase64ofFile(uploadSignMailCert,this.files[0])" hidden="">
+                     <input type="file" id="sign_mail_pvk_uploader" accept=".pem,.key" onchange="getBase64ofFile(uploadSignMailPVK,this.files[0])" hidden="">
+                     <input type="file" id="enc_mail_pvk_uploader" accept=".pem,.crt" onchange="getBase64ofFile(uploadEncMailCert,this.files[0])" hidden="">
                   </div>
                   <!-- ============================================================== -->
                   <!-- End PAge Content -->

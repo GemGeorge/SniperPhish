@@ -4,7 +4,7 @@ resetconfigData();
 getMcampConfigDetails("default");
 
 function resetconfigData(){
-    configData = {'mail_sign': {'cert':{}, 'pvk':{}}, 'mail_enc': {'cert':{}}};
+    configData = {'mail_sign': {'cert':{}, 'pvk':{},'pvk_passphrase':{}}, 'mail_enc': {'cert':{}}};
 }
 
 $(document).on('click', '.number-spinner button', function () {    
@@ -26,10 +26,16 @@ $(document).on('click', '.number-spinner button', function () {
 
 
 $("#cb_signed_mail").change(function() {
-    if(this.checked)
+    if(this.checked){
         $("#area_signed_mail_bt").children().prop('disabled', false);
-    else
+        $("#area_signed_mail_uploads").find('*').attr('disabled', false);
+        $("#pvk_passphrase").prop('disabled', false);
+    }
+    else{
         $("#area_signed_mail_bt").children().prop('disabled', true);
+        $("#area_signed_mail_uploads").find('*').attr('disabled', true);
+        $("#pvk_passphrase").prop('disabled', true);
+    }
 });
 
 $("#cb_encrypted_mail").change(function() {
@@ -69,8 +75,8 @@ function uploadSignMailCert(fname,fsize,ftype,fb64){
         toastr.error('', 'File size exceeded');
         return;
     }
-    if (fname.split('.').pop().toLowerCase() != 'pem') {
-        toastr.error('', 'Certificate is not in .pem format');
+    if (fname.split('.').pop().toLowerCase() != 'pem' && fname.split('.').pop().toLowerCase() != 'crt') {
+        toastr.error('', 'Certificate is not in .pem or .crt format');
         return;
     }
     configData.mail_sign.cert = {'name':fname, 'fb64':fb64.substr(fb64.indexOf(',')+1)};
@@ -83,8 +89,8 @@ function uploadSignMailPVK(fname,fsize,ftype,fb64){
         return;
     }
 
-    if (fname.split('.').pop().toLowerCase() != 'pem') {
-        toastr.error('', 'Certificate is not in .pem format');
+    if (fname.split('.').pop().toLowerCase() != 'pem' && fname.split('.').pop().toLowerCase() != 'key') {
+        toastr.error('', 'Certificate is not in .pem or .key format');
         return;
     }
 
@@ -97,8 +103,8 @@ function uploadEncMailCert(fname,fsize,ftype,fb64){
         toastr.error('', 'File size exceeded');
         return;
     }
-    if (fname.split('.').pop().toLowerCase() != 'pem') {
-        toastr.error('', 'Certificate is not in .pem format');
+    if (fname.split('.').pop().toLowerCase() != 'pem' && fname.split('.').pop().toLowerCase() != 'crt') {
+        toastr.error('', 'Certificate is not in .pem or .crt format');
         return;
     }
     configData.mail_enc.cert = {'name':fname, 'fb64':fb64.substr(fb64.indexOf(',')+1)};
@@ -143,9 +149,10 @@ function saveConfigAction(e) {
             toastr.error('', 'Mail signing private key not uploaded!');
             return;
         }
+        configData.mail_sign.pvk.pvk_passphrase = $('#pvk_passphrase').val().trim() == ''?null:$('#pvk_passphrase').val().trim();
     }
     else
-        if($.isEmptyObject(configData.mail_sign.cert) || $.isEmptyObject(configData.mail_sign.pvk)){ //clear if both files are not uplaoded
+        if($.isEmptyObject(configData.mail_sign.cert) || $.isEmptyObject(configData.mail_sign.pvk)){ //clear if both files are not uploaded
             configData.mail_sign.cert = {};
             configData.mail_sign.pvk = {};
         }
@@ -260,7 +267,8 @@ function getMCampConfigFromConfigId(mconfig_id,quite) {
 
         $('#cb_peer_verification').trigger('click').prop('checked', configData.peer_verification); 
         $('#select_recipient_type').val(configData.recipient_type).change();     
-        $('#cb_signed_mail').prop("checked", configData.signed_mail).trigger("change");     
+        $('#cb_signed_mail').prop("checked", configData.signed_mail).trigger("change");  
+        $('#pvk_passphrase').val(configData.mail_sign.pvk.pvk_passphrase);   
         $('#cb_encrypted_mail').prop('checked', configData.encrypted_mail).trigger('change');   
         $('#tb_antiflood_limit').val(configData.antiflood.limit);
         $('#tb_antiflood_pause').val(configData.antiflood.pause);

@@ -9,6 +9,8 @@ use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Crypto\SMimeSigner;
+use Symfony\Component\Mime\Crypto\SMimeEncrypter;
 date_default_timezone_set('UTC');
 $entry_time = (new DateTime())->format('d-m-Y h:i A');
 
@@ -148,6 +150,7 @@ function InitMailCampaign($conn, $campaign_id){
 		$config_mail_sign_cert_fb64 = $MCONFIG_DATA['mconfig_data']['mail_sign']['cert']['fb64'];
 		$config_mail_sign_pvk_name = $MCONFIG_DATA['mconfig_data']['mail_sign']['pvk']['name'];
 		$config_mail_sign_pvk_fb64 = $MCONFIG_DATA['mconfig_data']['mail_sign']['pvk']['fb64'];
+		$config_mail_sign_pvk_passphrase = $MCONFIG_DATA['mconfig_data']['mail_sign']['pvk']['pvk_passphrase'];
 	}
 	if($config_encrypted_mail){
 		$config_mail_enc_cert_name = $MCONFIG_DATA['mconfig_data']['mail_enc']['cert']['name'];
@@ -233,6 +236,31 @@ function InitMailCampaign($conn, $campaign_id){
 		    	$message->attachFromPath($file_path, $file_disp_name);			
 		}
 	  	
+		//-------------Start Signing & Encryption-------------
+      	if($config_signed_mail){
+    	  	$temp_mail_sign_cert = tmpfile();
+    	  	fwrite($temp_mail_sign_cert, base64_decode($config_mail_sign_cert_fb64));
+    	  	$temp_mail_sign_cert_path = stream_get_meta_data($temp_mail_sign_cert)['uri'];
+    
+    	  	$temp_mail_sign_pvk = tmpfile();
+    	  	fwrite($temp_mail_sign_pvk, base64_decode($config_mail_sign_pvk_fb64));
+    	  	$temp_mail_sign_pvk_path = stream_get_meta_data($temp_mail_sign_pvk)['uri'];
+    	  	
+    	  	$signer = new SMimeSigner($temp_mail_sign_cert_path, $temp_mail_sign_pvk_path, $config_mail_sign_pvk_passphrase);
+    		$message = $signer->sign($message);
+    	}
+
+		//Encrypted mail
+		if($config_encrypted_mail){
+			$temp_mail_enc_cert = tmpfile();
+		  	fwrite($temp_mail_enc_cert, base64_decode($config_mail_enc_cert_fb64));
+		  	$temp_mail_enc_cert_path = stream_get_meta_data($temp_mail_enc_cert)['uri'];
+
+			$encrypter = new SMimeEncrypter($temp_mail_enc_cert_path);
+			$message = $encrypter->encrypt($message);	
+		}    	    
+    	//-------------End Signing & Encryption-------------
+		
 	  	while($msg_fail_retry_counter <= $MC_msg_fail_retry){
 			// Send the message
 			try{
