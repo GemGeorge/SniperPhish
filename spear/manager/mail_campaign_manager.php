@@ -79,10 +79,10 @@ function saveCampaignList($conn, &$POSTJ){
 	if ($stmt->execute() === TRUE){
 		deleteLiveMailcampData($conn,$campaign_id); /// Clear live data before starting or when campaign deletes
 		kickStartCampaign($conn,$campaign_id);
-		echo(json_encode(['result' => 'success']));	
+		echo json_encode(['result' => 'success']);	
 	}
 	else 
-		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+		echo json_encode(['result' => 'failed', 'error' => $stmt->error]);	
 }
 
 function getCampaignList($conn){
@@ -98,7 +98,7 @@ function getCampaignList($conn){
 			$row['stop_time'] = getInClientTime_FD($DTime_info,$row['stop_time'],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);	
@@ -143,7 +143,7 @@ function getCampaignFromCampaignListId($conn, $campaign_id){
 		$resp['date'] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
 		$resp['scheduled_time'] = getInClientTime_FD($DTime_info,$row['scheduled_time'],null,'d-m-Y h:i A');
 		$resp['camp_status'] = $row['camp_status'];
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);	
@@ -155,11 +155,11 @@ function deleteMailCampaignFromCampaignId($conn,$campaign_id){
 	$stmt->bind_param("s", $campaign_id);
 	$stmt->execute();
 	if($stmt->affected_rows != 0){
-		echo(json_encode(['result' => 'success']));	
+		echo json_encode(['result' => 'success']);	
 		deleteLiveMailcampData($conn,$campaign_id); // Clear live data before starting or when campaign deletes
 	}
 	else
-		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+		echo json_encode(['result' => 'failed', 'error' => $stmt->error]);	
 	$stmt->close();
 }
 
@@ -168,10 +168,10 @@ function makeCopyMailCampaignList($conn, $old_campaign_id, $new_campaign_id, $ne
 	$stmt->bind_param("ssss", $new_campaign_id, $new_campaign_name, $GLOBALS['entry_time'], $old_campaign_id);
 	
 	if ($stmt->execute() === TRUE){
-		echo(json_encode(['result' => 'success']));	
+		echo json_encode(['result' => 'success']);	
 	}
 	else 
-		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+		echo json_encode(['result' => 'failed', 'error' => $stmt->error]);	
 	$stmt->close();
 }
 
@@ -197,7 +197,7 @@ function pullMailCampaignFieldData($conn){
 		$resp['mail_config'] = mysqli_fetch_all($result, MYSQLI_ASSOC);
 	}
 
-	echo (json_encode($resp));
+	echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 }
 
 function startStopMailCampaign($conn, $campaign_id, $action_value){	
@@ -208,11 +208,10 @@ function startStopMailCampaign($conn, $campaign_id, $action_value){
 
 	$stmt = $conn->prepare("UPDATE tb_core_mailcamp_list SET camp_status=?,stop_time=? where campaign_id=?");
 	$stmt->bind_param('sss', $action_value,$stop_time,$campaign_id);
-	if ($stmt->execute() === TRUE){
-		echo(json_encode(['result' => 'success']));	
-	}
+	if ($stmt->execute() === TRUE)
+		echo json_encode(['result' => 'success']);	
 	else 
-		echo(json_encode(['result' => 'failed', 'error' => $stmt->error]));	
+		echo json_encode(['result' => 'failed', 'error' => $stmt->error]);	
 
 	if($action_value == 1){	//if scheduled campaign
 		deleteLiveMailcampData($conn,$campaign_id); // Clear live data before starting or when campaign deletes
@@ -405,7 +404,7 @@ function multi_get_mcampinfo_from_mcamp_list_id_get_live_mcamp_data($conn, $POST
 		  "data" => $arr_filtered
 		);
 
-	echo json_encode($resp);
+	echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 }
 
 function downloadReport($conn,$campaign_id,$selected_col,$dic_all_col,$file_name,$file_format,$tb_data_single){

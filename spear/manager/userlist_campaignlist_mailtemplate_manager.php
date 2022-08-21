@@ -214,7 +214,7 @@ function getUserGroupList($conn){
 			$row["date"] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);	
@@ -304,7 +304,7 @@ function getUserGroupFromGroupIdTable($conn,&$POSTJ){
 		);
 
 		$resp['user_group_name'] = $row['user_group_name'];
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}		
 	else
 		echo json_encode(['error' => 'No data']);	
@@ -383,7 +383,7 @@ function getMailTemplateList($conn){
 			$row["date"] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);	
@@ -398,7 +398,7 @@ function getMailTemplateFromTemplateId($conn, $mail_template_id){
 	if($result->num_rows != 0){
 		$row = $result->fetch_assoc() ;
 		$row['attachment'] = json_decode($row['attachment']);
-		echo json_encode($row) ;
+		echo json_encode($row, JSON_INVALID_UTF8_IGNORE) ;
 	}
 	else
 		echo json_encode(['error' => 'No data']);				
@@ -539,7 +539,7 @@ function getSenderList($conn){
 			$row["date"] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);	
@@ -554,7 +554,7 @@ function getSenderFromSenderListId($conn, $sender_list_id){
 	if($result->num_rows > 0){
 		$row = $result->fetch_assoc() ;
 		$row["cust_headers"] = json_decode($row["cust_headers"]);	//avoid double json encoding
-		echo json_encode($row) ;
+		echo json_encode($row, JSON_INVALID_UTF8_IGNORE) ;
 	}			
 	else
 		echo json_encode(['error' => 'No data']);	

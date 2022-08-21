@@ -76,7 +76,7 @@ function getMcampConfigDetailsFromId($conn,$mconfig_id){
 	if($result->num_rows != 0){
 		$row = $result->fetch_assoc();
 		$row["mconfig_data"] = json_decode($row["mconfig_data"]);	//avoid double json encoding
-		echo (json_encode($row));
+		echo json_encode($row, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);		

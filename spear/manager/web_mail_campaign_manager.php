@@ -73,7 +73,7 @@ function getWebMailTrackerFromId($conn, $campaign_id, $tracker_id){
 		$row['stop_time'] = getInClientTime_FD($DTime_info,$row['stop_time']);
 		$resp['webtracker_info'] = $row;
 	}	
-	echo json_encode($resp);
+	echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	$stmt->close();	
 }
 
@@ -108,7 +108,7 @@ function getCampaignListWebMail($conn){
 	else
 		$campaign['webtracker_list'] = ['error' => 'No data'];
 
-	echo json_encode($campaign);
+	echo json_encode($campaign, JSON_INVALID_UTF8_IGNORE);
 }
 
 function getTimelineDataWeb($conn, $campaign_id, $tracker_id, $user_group_id){
@@ -164,7 +164,7 @@ function getTimelineDataWeb($conn, $campaign_id, $tracker_id, $user_group_id){
 	$timestamp_conv_mail = $scatter_data_mail_full['timestamp_conv'];
 	$timestamp_conv = $timestamp_conv_mail+$timestamp_conv_web;
 	
-	echo json_encode(['scatter_data_mail'=>$scatter_data_mail, 'scatter_data_web'=>$scatter_data_web, 'timestamp_conv'=>$timestamp_conv, 'timezone'=>$DTime_info['time_zone']['timezone']]);
+	echo json_encode(['scatter_data_mail'=>$scatter_data_mail, 'scatter_data_web'=>$scatter_data_web, 'timestamp_conv'=>$timestamp_conv, 'timezone'=>$DTime_info['time_zone']['timezone']], JSON_INVALID_UTF8_IGNORE);
 }
 
 function getWebcampGraphData($conn, $campaign_id, $tracker_id, $user_group_id, $page_count){
@@ -232,7 +232,7 @@ function getWebcampGraphData($conn, $campaign_id, $tracker_id, $user_group_id, $
 	foreach($arr_rids['fs'] as $i => $rid)
 		$arr_fs_count[$i] = count($rid);
 
-	echo (json_encode(['total_user_count'=>$total_user_count, 'total_pv'=>$total_pv, 'total_fs'=>$total_fs, 'fs_counts'=>$arr_fs_count, 'total_suspect_pv'=>$total_suspect_pv, 'total_suspect_fs'=>$total_suspect_fs]));
+	echo json_encode(['total_user_count'=>$total_user_count, 'total_pv'=>$total_pv, 'total_fs'=>$total_fs, 'fs_counts'=>$arr_fs_count, 'total_suspect_pv'=>$total_suspect_pv, 'total_suspect_fs'=>$total_suspect_fs], JSON_INVALID_UTF8_IGNORE);
 }
 
 
@@ -434,7 +434,7 @@ function multi_get_live_campaign_data_web_mail($conn, $POSTJ){
 		"data" => $arr_filtered
 	);
 
-	echo json_encode($resp);
+	echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 }
 
 function downloadReport($conn,$campaign_id,$tracker_id,$selected_col,$dic_all_col,$file_name,$file_format,$tb_data_single){

@@ -80,7 +80,7 @@ function getWebTrackerList($conn){
 			$row['stop_time'] = getInClientTime_FD($DTime_info,$row['stop_time'],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);
@@ -98,7 +98,7 @@ function getWebTrackerFromId($conn, $tracker_id){
 		$row['date'] = getInClientTime_FD($DTime_info,$row['date']);
 		$row['start_time'] = getInClientTime_FD($DTime_info,$row['start_time']);
 		$row['stop_time'] = getInClientTime_FD($DTime_info,$row['stop_time']);
-		echo json_encode($row);
+		echo json_encode($row, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);				
@@ -131,7 +131,7 @@ function makeCopyWebTracker($conn, $old_tracker_id, $new_tracker_id, $new_tracke
 function getWebTrackerListForModal($conn){	
 	$result = mysqli_query($conn, "SELECT tracker_id,tracker_name,date FROM tb_core_web_tracker_list");
 	if(mysqli_num_rows($result) > 0)
-		echo json_encode(mysqli_fetch_all($result, MYSQLI_ASSOC));
+		echo json_encode(mysqli_fetch_all($result, MYSQLI_ASSOC), JSON_INVALID_UTF8_IGNORE);
 	else
 		echo json_encode(['error' => 'No data']);	
 }

@@ -65,7 +65,7 @@ function getQuickTrackerList($conn){
 			$row['stop_time'] = getInClientTime_FD($DTime_info,$row['stop_time'],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);
@@ -99,10 +99,10 @@ function pauseStopQuickTrackerTracking($conn, $tracker_id, $active){
 		}
 
 	if ($stmt->execute() === TRUE){
-		echo(json_encode(['result' => 'success']));	
+		echo json_encode(['result' => 'success']);	
 	}
 	else 
-		echo(json_encode(['result' => 'failed', 'error' => 'Error changing status']));	
+		echo json_encode(['result' => 'failed', 'error' => 'Error changing status']);	
 }
 
 function deleteQuickTrackerData($conn, $tracker_id){
@@ -127,7 +127,7 @@ function getQuickTrackerFromId($conn,$tracker_id){
 		$row['date'] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
 		$row['start_time'] = getInClientTime_FD($DTime_info,$row['start_time'],null,'d-m-Y h:i A');
 		$row['stop_time'] = getInClientTime_FD($DTime_info,$row['stop_time'],null,'d-m-Y h:i A');
-		echo json_encode($row);
+		echo json_encode($row, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);	
@@ -209,7 +209,7 @@ function getQuickTrackerData($conn, &$POSTJ){
 		"data" => $arr_filtered
 	);
 
-	echo json_encode($resp);
+	echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 }
 
 function downloadReport($conn,$tracker_id,$selected_col,$dic_all_col,$file_name,$file_format){

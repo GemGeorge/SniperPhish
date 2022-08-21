@@ -203,7 +203,7 @@ function getTableWebpageVisitFormSubmission($conn, &$POSTJ){
 		  "data" => $arr_filtered
 		);
 
-	echo json_encode($resp);
+	echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 }
 
 function getWebTrackerFromId($conn, $tracker_id){	
@@ -214,7 +214,7 @@ function getWebTrackerFromId($conn, $tracker_id){
 	if($result->num_rows > 0){
 		$row = $result->fetch_assoc();
 		$row['tracker_step_data'] = json_decode($row["tracker_step_data"]);	
-		echo json_encode($row) ;
+		echo json_encode($row, JSON_INVALID_UTF8_IGNORE) ;
 	}
 	else
 		echo json_encode(['error' => 'No data']);

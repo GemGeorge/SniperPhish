@@ -62,7 +62,7 @@ function getCurrentUser($conn){
 	if($result->num_rows != 0){
 		$row = $result->fetch_assoc() ;
 		$row['date'] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
-		echo json_encode($row) ;
+		echo json_encode($row, JSON_INVALID_UTF8_IGNORE) ;
 	}
 	else
 		echo json_encode(['error' => 'No data']);				
@@ -78,7 +78,7 @@ function getUserList($conn){
 			$row['date'] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 	else
 		echo json_encode(['error' => 'No data']);
@@ -327,7 +327,7 @@ function getStoreList($conn, $type, $name){
 		$rows = $result->fetch_all(MYSQLI_ASSOC);
 		foreach($rows as $i => $row)
 			$resp[$row['name']] = ["info" => json_decode($row['info']), "content" => json_decode($row['content'])];
-		echo json_encode($resp);
+		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 	}
 
 	if($type == "mail_template"){
@@ -339,7 +339,7 @@ function getStoreList($conn, $type, $name){
 			$result = $result->fetch_all(MYSQLI_ASSOC);
 			foreach($result as $row)
 				$resp[$row['name']] = json_decode($row['info']);
-			echo json_encode($resp);
+			echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 		}
 		else{
 			$stmt = $conn->prepare("SELECT content FROM tb_store WHERE type = ? AND name = ?");
@@ -409,7 +409,7 @@ function getLogs($conn, &$POSTJ){
 		"data" => $rows
 	);
 
-	echo json_encode($resp);
+	echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);
 }
 
 function downloadLogs($conn,$file_format){

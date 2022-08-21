@@ -144,16 +144,15 @@
                                  <div class="col-md-6 form-control-sm text-left" id="area_signed_mail_pvk">
                                  </div>                                 
                               </div> 
-                              <div class="col-md-12 row text-left">
-                                 <div class="col-md-6">
+                              
+                                 <div class="col-md-12">
                                     <div class="row">
-                                       <label for="cb_signed_mail" class="col-md-5 text-left control-label col-form-label">Private key passphrase:</label>
-                                       <div class="col-md-7 text-right">
+                                       <label for="cb_signed_mail" class="col-md-4 text-left control-label col-form-label">Private key passphrase:</label>
+                                       <div class="col-md-5 text-right">
                                           <input type="text" class="form-control" id="pvk_passphrase" placeholder="Keep empty if no passphrase">
                                        </div>
                                     </div>
                                  </div>
-                              </div>
                            </div>                           
                         </div>
                         <div class="col-md-6">

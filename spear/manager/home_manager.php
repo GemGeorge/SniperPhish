@@ -83,7 +83,7 @@ function getHomeGraphsData($conn){
 	else
 		$campaign_info['quicktracker'] = [];
 
-	echo json_encode(['campaign_info'=>$campaign_info, 'timestamp_conv'=>$timestamp_conv, 'timezone'=>$DTime_info['time_zone']['timezone']]);
+	echo json_encode(['campaign_info'=>$campaign_info, 'timestamp_conv'=>$timestamp_conv, 'timezone'=>$DTime_info['time_zone']['timezone']], JSON_INVALID_UTF8_IGNORE);
 }
 
 //-------------SniperPhish Process----------
