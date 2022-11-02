@@ -184,7 +184,7 @@ function InitMailCampaign($conn, $campaign_id){
 	    $keyword_vals['{{RID}}'] = $RID;
 	    $keyword_vals['{{MID}}'] = $campaign_id;
 	    $keyword_vals['{{NAME}}'] = $arr_user['fname'].' '.$arr_user['lname'];
-	    $keyword_vals['{{FNAME}}'] = $arr_user['lname'];
+	    $keyword_vals['{{FNAME}}'] = $arr_user['fname'];
 	    $keyword_vals['{{LNAME}}'] = $arr_user['lname'];
 	    $keyword_vals['{{NOTES}}'] = $arr_user['notes'];
 	    $keyword_vals['{{EMAIL}}'] = $arr_user['email'];
