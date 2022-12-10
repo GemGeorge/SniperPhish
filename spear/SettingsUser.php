@@ -112,6 +112,7 @@
                                           <th>Username</th>
                                           <th>Email</th>
                                           <th>Date Created</th>
+                                          <th>Last Login</th>
                                           <th>Actions</th>
                                        </tr>
                                     </thead>

@@ -72,10 +72,11 @@ function getCurrentUser($conn){
 function getUserList($conn){
 	$resp = [];
 	$DTime_info = getTimeInfo($conn);
-	$result = mysqli_query($conn, "SELECT id,name,username,contact_mail,dp_name,date FROM tb_main");
+	$result = mysqli_query($conn, "SELECT id,name,username,contact_mail,dp_name,date,last_login FROM tb_main");
 	if(mysqli_num_rows($result) > 0){
 		foreach (mysqli_fetch_all($result, MYSQLI_ASSOC) as $row){
 			$row['date'] = getInClientTime_FD($DTime_info,$row['date'],null,'d-m-Y h:i A');
+			$row['last_login'] = getInClientTime_FD($DTime_info,json_decode($row['last_login'])[0],null,'d-m-Y h:i A');
         	array_push($resp,$row);
 		}
 		echo json_encode($resp, JSON_INVALID_UTF8_IGNORE);

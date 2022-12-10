@@ -210,7 +210,7 @@ function loadTableUserList() {
                 else
                     var action_items = `<button type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top" onclick="prompModifyUser('`+value.id+`','`+value.name+`','`+value.username+`','`+value.contact_mail+`','`+value.dp_name+`')" title="View/Edit"><i class="mdi mdi-pencil"></i></button><button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" title="Delete" onclick="promptDeleteAccount('` + value.id + `')"><i class="mdi mdi-delete-variant"></i></button>`;
 
-                $("#table_user_list tbody").append("<tr><td></td><td>" + value.name + "</td><td>" + value.username + "</td><td>" + value.contact_mail + "</td><td data-order=\"" + getTimestamp(value.date) + "\">" + value.date + "</td><<td>" + action_items + "</td></tr>");
+                $("#table_user_list tbody").append("<tr><td></td><td>" + value.name + "</td><td>" + value.username + "</td><td>" + value.contact_mail + "</td><td data-order=\"" + getTimestamp(value.date) + "\">" + value.date + "</td><td data-order=\"" + getTimestamp(value.last_login) + "\">" + value.last_login + "</td><<td>" + action_items + "</td></tr>");
             });
         }
         
