@@ -1,6 +1,6 @@
 var dt_mail_sender_list, store_info, g_dsn_type='custom';
 var action_items_header_table = '<button type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top" onclick="editRowHeaderTable($(this))" title="Edit"><i class="mdi mdi-pencil"></i></button><button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" onclick="promptMailHeaderDeletion($(this))" title="Delete"><i class="mdi mdi-delete-variant"></i>';
-var xx;
+
 $(function() {
     $("#selector_common_mail_senders").select2({
         minimumResultsForSearch: -1
@@ -31,12 +31,19 @@ var dt_mail_headers_list = $('#table_mail_headers_list').DataTable({
 
 $("#cb_auto_mailbox").change(function() {
     if(this.checked){
-        $("#mail_sender_mailbox").prop('disabled', true);
-        if($('#mail_sender_SMTP_server').val() != '' && $('#mail_sender_SMTP_server').val() != 'NA')
+        if($('#mail_sender_SMTP_server').val().trim() != '' && $('#mail_sender_SMTP_server').val().trim() != 'NA')
             $('#mail_sender_mailbox').val("{"+ $('#mail_sender_SMTP_server').val().split(":")[0]+":993/imap/ssl}INBOX");
+        else{
+            if($('#mail_sender_mailbox').val().trim() != 'None'){
+                $('#mail_sender_mailbox').val('None'); 
+                toastr.warning('', 'Failed to determine mailbox path. None value is set. Set mailbox path manually if required.');  
+            }
+        }
+        $("#mail_sender_mailbox").prop('disabled', true);
     }
     else
-       $("#mail_sender_mailbox").prop('disabled', false);        
+        $("#mail_sender_mailbox").prop('disabled', false);
+    $("#mail_sender_mailbox").removeClass("is-invalid");
 });
 
 function addMailHeaderToTable() {
@@ -103,12 +110,12 @@ function saveMailSenderGroup(e) {
     var cust_header_name = dt_mail_headers_list.rows().data().pluck(0).toArray();
     var cust_header_val = dt_mail_headers_list.rows().data().pluck(1).toArray();
 
-    var mail_sender_name = $('#mail_sender_name').val();
-    var mail_sender_SMTP_server = $('#mail_sender_SMTP_server').val();
-    var mail_sender_from = $('#mail_sender_from').val();
-    var mail_sender_acc_username = $('#mail_sender_acc_username').val();
-    var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val();
-    var mail_sender_mailbox = $('#mail_sender_mailbox').val();
+    var mail_sender_name = $('#mail_sender_name').val().trim();
+    var mail_sender_SMTP_server = $('#mail_sender_SMTP_server').val().trim();
+    var mail_sender_from = $('#mail_sender_from').val().trim();
+    var mail_sender_acc_username = $('#mail_sender_acc_username').val().trim();
+    var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val().trim();
+    var mail_sender_mailbox = $('#mail_sender_mailbox').val().trim();
 
     if (RegTest(mail_sender_name, "COMMON") == false) {
         $("#mail_sender_name").addClass("is-invalid");
@@ -117,29 +124,28 @@ function saveMailSenderGroup(e) {
     } else
         $("#mail_sender_name").removeClass("is-invalid");
 
-    if (mail_sender_SMTP_server.trim() == '') {
+    if (mail_sender_SMTP_server == '') {
         $("#mail_sender_SMTP_server").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
     } else
         $("#mail_sender_SMTP_server").removeClass("is-invalid");
 
-    if (mail_sender_from.trim() == '') {
-        $("#mail_sender_from").addClass("is-invalid");
-        toastr.error('', 'Empty/unsupported character!');
-        return;
-    } else
-        $("#mail_sender_from").removeClass("is-invalid");
-
-    if (mail_sender_acc_username.trim() == '') {
+    if (mail_sender_acc_username == '') {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
     } else
         $("#mail_sender_acc_username").removeClass("is-invalid");
 
-    if ($("#cb_auto_mailbox").is(':checked')){
-        $('#mail_sender_mailbox').val("{"+mail_sender_SMTP_server.split(":")[0]+":993/imap/ssl}INBOX");
+    if (mail_sender_from == '') {
+        $("#mail_sender_from").addClass("is-invalid");
+        toastr.error('', 'Empty/unsupported character!');
+        return;
+    } else
+        $("#mail_sender_from").removeClass("is-invalid");
+
+    if ($("#cb_auto_mailbox").is(':checked') && $("#mail_sender_mailbox").val() != null){
         $("#mail_sender_mailbox").removeClass("is-invalid");
         var cb_auto_mailbox = 1;
     }
@@ -153,7 +159,6 @@ function saveMailSenderGroup(e) {
             $("#mail_sender_mailbox").removeClass("is-invalid");
     }
 
-    var mail_sender_mailbox = $('#mail_sender_mailbox').val();
 
     var cust_headers = [];
     $.each(cust_header_name, function(index, value) {
@@ -210,14 +215,16 @@ function getSenderFromSenderListId(id) {
             $('#mail_sender_SMTP_server').val(data['sender_SMTP_server']);
             $('#mail_sender_from').val(data['sender_from']);
             $('#mail_sender_acc_username').val(data['sender_acc_username']);
-            $('#cb_auto_mailbox').prop('checked', (data['auto_mailbox']==1?true:false)).trigger("change");
             $('#mail_sender_mailbox').val(data['sender_mailbox']);
+            $('#cb_auto_mailbox').prop('checked', (data['auto_mailbox']==1?true:false)).trigger("change");
+            $("#lb_sender_template_name").text(data['dsn_type']);
             cust_header_data = data['cust_headers'];
-            g_dsn_type = data['dsn_type']
+            g_dsn_type = data['dsn_type'];
 
             $.each(cust_header_data, function(header_name, header_value) {
                 dt_mail_headers_list.row.add([header_name, header_value, action_items_header_table]).draw(false);
             });
+
             $('[data-toggle="tooltip"]').tooltip();
         }
     }); 
@@ -373,12 +380,12 @@ function modalTestDeliveryAction(e){
     var cust_header_name = dt_mail_headers_list.rows().data().pluck(0).toArray();
     var cust_header_val = dt_mail_headers_list.rows().data().pluck(1).toArray();
 
-    var mail_sender_name = $('#mail_sender_name').val();
-    var mail_sender_SMTP_server = $('#mail_sender_SMTP_server').val();
-    var mail_sender_from = $('#mail_sender_from').val();
-    var mail_sender_acc_username = $('#mail_sender_acc_username').val();
-    var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val();
-    var test_to_address = $('#modal_mail_sender_test_mail_to').val();
+    var mail_sender_name = $('#mail_sender_name').val().trim();
+    var mail_sender_SMTP_server = $('#mail_sender_SMTP_server').val().trim();
+    var mail_sender_from = $('#mail_sender_from').val().trim();
+    var mail_sender_acc_username = $('#mail_sender_acc_username').val().trim();
+    var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val().trim();
+    var test_to_address = $('#modal_mail_sender_test_mail_to').val().trim();
 
     if (RegTest(mail_sender_name, "COMMON") == false) {
         $("#mail_sender_name").addClass("is-invalid");
@@ -387,21 +394,21 @@ function modalTestDeliveryAction(e){
     } else
         $("#mail_sender_name").removeClass("is-invalid");
 
-    if (mail_sender_SMTP_server.trim() == '') {
+    if (mail_sender_SMTP_server == '') {
         $("#mail_sender_SMTP_server").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
     } else
         $("#mail_sender_SMTP_server").removeClass("is-invalid");
 
-    if (mail_sender_from.trim() == '') {
+    if (mail_sender_from == '') {
         $("#mail_sender_from").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
     } else
         $("#mail_sender_from").removeClass("is-invalid");
 
-    if (mail_sender_acc_username.trim() == '') {
+    if (mail_sender_acc_username == '') {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
@@ -446,9 +453,15 @@ function modalTestDeliveryAction(e){
 }
 
 function verifyMailBoxAccess(){
-    var mail_sender_SMTP_server = $('#mail_sender_SMTP_server').val();
-    var mail_sender_acc_username = $('#mail_sender_acc_username').val();
-    var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val();
+    var mail_sender_SMTP_server = $('#mail_sender_SMTP_server').val().trim();
+    var mail_sender_acc_username = $('#mail_sender_acc_username').val().trim();
+    var mail_sender_acc_pwd = $('#mail_sender_acc_pwd').val().trim();
+    var mail_sender_mailbox = $('#mail_sender_mailbox').val().trim();
+
+    if (mail_sender_mailbox == '' || mail_sender_mailbox == 'None') {
+        toastr.error('', 'Mailbox path incorrectly configured!');
+        return;
+    }
 
     if (mail_sender_SMTP_server == '') {
         $("#mail_sender_SMTP_server").addClass("is-invalid");
@@ -457,26 +470,23 @@ function verifyMailBoxAccess(){
     } else
         $("#mail_sender_SMTP_server").removeClass("is-invalid");
 
-    if (RegTest(mail_sender_acc_username, "EMAIL") == false) {
+    if (mail_sender_acc_username == '') {
         $("#mail_sender_acc_username").addClass("is-invalid");
         toastr.error('', 'Empty/unsupported character!');
         return;
     } else
         $("#mail_sender_acc_username").removeClass("is-invalid");
 
-    if ($("#cb_auto_mailbox").is(':checked')){
-        $('#mail_sender_mailbox').val("{"+mail_sender_SMTP_server.split(":")[0]+":993/imap/ssl}INBOX");
+    if ($("#cb_auto_mailbox").is(':checked') && $("#mail_sender_mailbox").val() != null)
         $("#mail_sender_mailbox").removeClass("is-invalid");
-    }
-    else 
+    else {        
         if (mail_sender_mailbox == '') {
             $("#mail_sender_mailbox").addClass("is-invalid");
             toastr.error('', 'Empty/unsupported character!');
             return;
         } else
             $("#mail_sender_mailbox").removeClass("is-invalid");
-
-    var mail_sender_mailbox = $('#mail_sender_mailbox').val();
+    }
 
     var cust_header_name = dt_mail_headers_list.rows().data().pluck(0).toArray();
     var cust_header_val = dt_mail_headers_list.rows().data().pluck(1).toArray();
@@ -526,7 +536,14 @@ function getStoreList(){
             $.each(data, function(name) {
                 $("#selector_common_mail_senders").append("<option value='" + data[name].info.dsn_type + "'>" + name + "</option>");
             });
-            $('#selector_common_mail_senders').trigger("change");    
+            $('#selector_common_mail_senders').trigger("change"); 
+
+            $.each(store_info, function(i, item) {
+                if(item.info.dsn_type == g_dsn_type){
+                    appySenderTemplateAttr(item.content);
+                    return false;
+                }
+            });
         }
     }); 
 }
@@ -540,13 +557,18 @@ function appySenderTemplate(){
     $("#lb_sender_template_name").text($("#selector_common_mail_senders").find(':selected').text());
 
     $("#mail_sender_SMTP_server").val(content.smtp.value);
-    $("#mail_sender_SMTP_server").prop('disabled', content.smtp.disabled);
 
     $("#mail_sender_from").val(content.from);
     $("#mail_sender_acc_username").val(content.username);
     $("#mail_sender_mailbox").val(content.mailbox.value);
-    $("#mail_sender_mailbox").prop('disabled', content.mailbox.disabled);
     $('#cb_auto_mailbox').prop('checked', content.mailbox.checked).trigger("change");    
+
+    appySenderTemplateAttr(content);
+    $('#modal_store').modal('toggle');
+}
+
+function appySenderTemplateAttr(content){
+    $("#mail_sender_SMTP_server").prop('disabled', content.smtp.disabled);
 
     if($.inArray(g_dsn_type,  ['postmark','sendgrid','ohmysmtp']) != -1){
         $("#mail_sender_acc_username").val('NA');
@@ -554,6 +576,4 @@ function appySenderTemplate(){
     }
     else        
         $("#mail_sender_acc_username").prop('disabled', false);
-
-    $('#modal_store').modal('toggle');
 }
