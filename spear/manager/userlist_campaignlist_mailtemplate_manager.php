@@ -225,22 +225,20 @@ function uploadUserCVS($conn, &$POSTJ){
 	$user_group_name = $POSTJ['user_group_name'];
 	$user_data = explode("\n", $POSTJ['user_data']);
 	array_shift($user_data);	//removes column heading 
+	$user_data = array_map('trim', $user_data);	//trim array strings
 	$user_data = array_filter(($user_data));	//removes empty array
 	$arr_users=[];
 
-	if(isValidEmail(explode(",", $user_data[0])[1])){	//name,email,notes format
-		foreach ($user_data as $user) {
-			$user = explode(",", $user);
-			$uid = getRandomStr(10);
+	foreach ($user_data as $user) {
+		$user = explode(",", $user);
+		$uid = getRandomStr(10);
+
+		if(isValidEmail($user[1]))
 	    	array_push($arr_users,['uid'=>$uid, 'fname'=>$user[0], 'lname'=>null, 'email'=>$user[1], 'notes'=>$user[2]]);
-	    }
-	}
-	elseif (isValidEmail(explode(",", $user_data[0])[2])) {	//fname,lname,email,notes format
-		foreach ($user_data as $user) {
-			$user = explode(",", $user);
-			$uid = getRandomStr(10);
+    	elseif(isValidEmail($user[2]))
 	    	array_push($arr_users,['uid'=>$uid, 'fname'=>$user[0], 'lname'=>$user[1], 'email'=>$user[2], 'notes'=>$user[3]]);
-	    }
+    	else
+    		die(json_encode(['result' => 'failed', 'error' => 'Import failed. Invalid email at '. $user[2]]));
 	}
 
 	$row = getUserGroupFromGroupId($conn, $user_group_id);

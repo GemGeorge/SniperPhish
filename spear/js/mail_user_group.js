@@ -181,7 +181,14 @@ function editRowAction(e) {
 }
 
 function addUserFromFile() {
-    $('input[type=file]').trigger('click');
+    if (RegTest($('#user_group_name').val(),'COMMON') == false) {
+        $("#user_group_name").addClass("is-invalid");
+        toastr.error('', 'Empty/Unsupported character! Provide a valid name first.');
+        return;
+    } else{
+        $("#user_group_name").removeClass("is-invalid");
+        $('input[type=file]').trigger('click');
+    }
 }
 
 $('input[type=file]').change(function() {

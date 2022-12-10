@@ -163,7 +163,7 @@
                         <div class="col-md-2 m-t-25 text-right">
                            <div class="form-group">
                               <div class="btn-group"  id="bt_save_config" >
-                                  <button type="button" class="btn btn-success" onclick="addUserFromFile()" title="Import users" data-toggle="tooltip"><i class="mdi mdi-file-import"></i></button>
+                                  <button type="button" class="btn btn-success" onclick="addUserFromFile()" title="Import email list" data-toggle="tooltip">Import</button>
                                   <input type="file" id="fileinput" accept=".txt, .csv, .lst, .rtf" hidden />
                                   <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                   <div class="dropdown-menu">
