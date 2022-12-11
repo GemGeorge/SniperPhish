@@ -22,8 +22,8 @@ function validateLogin($username,$pwd){
 	$stmt->execute();
 	$row = $stmt->get_result()->fetch_row();
 	if($row[0] > 0){
-		updateLoginLogout($conn, $username, $GLOBALS['entry_time'], true);
 		setInfoCookie($conn,$username);
+		updateLoginLogout($conn, $username, $GLOBALS['entry_time'], true);
 		$os = getOSType();
 		if(!isProcessRunning($conn,$os))
 			startProcess($os);
@@ -45,30 +45,53 @@ function isSessionValid($f_redirection=false){	//this check refreshes session ex
 }
 
 function setInfoCookie(&$conn, &$username){
-	$stmt = $conn->prepare("SELECT name,username,dp_name,last_login FROM tb_main where username=?");
-	$stmt->bind_param('s', $username);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	if($result->num_rows > 0){
-		$row = $result->fetch_assoc();
-		$DTime_info = getTimeInfo($conn);
-		$row['timezone'] = $DTime_info['time_zone']['timezone'];
-		$row['last_login'] = getInClientTime_FD($DTime_info,$row['last_login'],null,'d-m-Y h:i A');
-		if($row['last_login'] == '-') //first time login
-			$row['last_login'] = getInClientTime_FD($DTime_info,(new DateTime())->format('d-m-Y h:i A'),null,'d-m-Y h:i A');
-
-		setcookie("c_data",base64_encode(json_encode($row)), ["path" => "/", "SameSite" => "Strict", "HttpOnly" => false]);
-	}	
+	$row = getLoginLogoutInfo($conn, $username);
+	$DTime_info = getTimeInfo($conn);
+	$row['timezone'] = $DTime_info['time_zone']['timezone'];
+	$last_login_hist = json_decode($row['last_login']);
+	$last_login = count($last_login_hist)>1?$last_login_hist[1]:$last_login_hist[0];
+	$row['last_login'] = getInClientTime_FD($DTime_info,$last_login,null,'d-m-Y h:i A');
+	if($row['last_login'] == '-') //first time login
+		$row['last_login'] = getInClientTime_FD($DTime_info,(new DateTime())->format('d-m-Y h:i A'),null,'d-m-Y h:i A');
+	setcookie("c_data",base64_encode(json_encode($row)), ["path" => "/", "SameSite" => "Strict", "HttpOnly" => false]);
 }
 
 function updateLoginLogout($conn, $username, $entry_time, $islogin){
-	if($islogin)
+	$access_info = getLoginLogoutInfo($conn, $username);
+
+	if($islogin){
+		$login_logout_hist = getUpdatedLoginLogoutHist($entry_time, json_decode($access_info['last_login']));
 		$stmt = $conn->prepare("UPDATE tb_main SET last_login=? WHERE username=?");
-	else
+		logIt('Account login',$username);
+	}
+	else{
+		$login_logout_hist = getUpdatedLoginLogoutHist($entry_time, json_decode($access_info['last_logout']));
 		$stmt = $conn->prepare("UPDATE tb_main SET last_logout=? WHERE username=?");
-	$stmt->bind_param('ss', $entry_time,$username);
+		logIt("Account logout");
+	}
+	$stmt->bind_param('ss', json_encode($login_logout_hist),$username);
 	$stmt->execute();
-	logIt('Account login',$username);
+}
+
+function getUpdatedLoginLogoutHist(&$entry_time, &$login_logout_hist){
+	if(count($login_logout_hist) == 0)
+		$login_logout_hist[0]=$entry_time;
+	elseif(count($login_logout_hist) == 1)
+		$login_logout_hist[1]=$entry_time;
+	else{
+		$login_logout_hist[0]=$login_logout_hist[1];
+		$login_logout_hist[1]=$entry_time;
+	}
+	return $login_logout_hist;
+}
+
+function getLoginLogoutInfo(&$conn, &$username){
+	$stmt = $conn->prepare("SELECT name,username,dp_name,last_login,last_logout FROM tb_main WHERE username=?");
+	$stmt->bind_param('s', $username);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if($result->num_rows > 0)
+		return $result->fetch_assoc();
 }
 
 //-----------------------------------Start Public Access-------------------------------
