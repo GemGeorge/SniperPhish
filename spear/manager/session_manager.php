@@ -49,7 +49,7 @@ function setInfoCookie(&$conn, &$username){
 	$DTime_info = getTimeInfo($conn);
 	$row['timezone'] = $DTime_info['time_zone']['timezone'];
 	$last_login_hist = json_decode($row['last_login']);
-	$last_login = count($last_login_hist)>1?$last_login_hist[1]:$last_login_hist[0];
+	$last_login = ($last_login_hist==null || count($last_login_hist)==1)?$last_login_hist[0]:$last_login_hist[1];
 	$row['last_login'] = getInClientTime_FD($DTime_info,$last_login,null,'d-m-Y h:i A');
 	if($row['last_login'] == '-') //first time login
 		$row['last_login'] = getInClientTime_FD($DTime_info,(new DateTime())->format('d-m-Y h:i A'),null,'d-m-Y h:i A');
@@ -74,7 +74,7 @@ function updateLoginLogout($conn, $username, $entry_time, $islogin){
 }
 
 function getUpdatedLoginLogoutHist(&$entry_time, &$login_logout_hist){
-	if(count($login_logout_hist) == 0)
+	if($login_logout_hist==null || count($login_logout_hist) == 0)
 		$login_logout_hist[0]=$entry_time;
 	elseif(count($login_logout_hist) == 1)
 		$login_logout_hist[1]=$entry_time;
