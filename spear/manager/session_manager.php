@@ -74,7 +74,7 @@ function updateLoginLogout($conn, $username, $entry_time, $islogin){
 }
 
 function getUpdatedLoginLogoutHist(&$entry_time, &$login_logout_hist){
-	if($login_logout_hist==null || count($login_logout_hist) == 0)
+	if($login_logout_hist==null)
 		$login_logout_hist[0]=$entry_time;
 	elseif(count($login_logout_hist) == 1)
 		$login_logout_hist[1]=$entry_time;
