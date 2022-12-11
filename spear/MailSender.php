@@ -395,7 +395,8 @@
                                  </select>
                               </div>
                         </div>
-                        <i id="lb_selector_common_mail_sender_note"></i>
+                        <div class="form-group"><i>*You are selecting the default configuration corresponding to each service providers. If they are not working, check the corresponding service provider's website for any changes and manually configure it after selecting "Custom" option.</i></div>
+                        <div class="form-group"><i id="lb_selector_common_mail_sender_note"></i></div>
                      </div>
                      <div class="modal-footer" >
                         <button type="button" class="btn btn-success" onclick="appySenderTemplate()"><i class="mdi mdi-arrow-bottom-left"></i> Insert</button>
