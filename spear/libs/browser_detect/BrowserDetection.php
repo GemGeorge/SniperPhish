@@ -4,19 +4,17 @@
  * Browser detection class file.
  * This file contains everything required to use the BrowserDetection class. Tested with PHP 5.3.29 - 7.4.0.
  *
- * This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
- * later version (if any).
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details at: https://www.gnu.org/licenses/lgpl-3.0.html
+ * This program is free software; you can redistribute it and/or modify it under the terms of EITHER the MIT License
+ * (SPDX short identifier: MIT) OR the GNU Lesser General Public License Version 3 (SPDX short identifier:
+ * LGPL-3.0-only). License details can be found in the LICENSE-*.md files of this project or on the below URLs.
  *
  * @package Browser_Detection
- * @version 2.9.6
- * @last-modified May 1, 2022
+ * @version 2.9.7
+ * @last-modified September 20, 2022
  * @author Alexandre Valiquette
  * @copyright Copyright (c) 2022, Wolfcast
+ * @license https://spdx.org/licenses/GPL-3.0-only.html
+ * @license https://spdx.org/licenses/MIT.html
  * @link https://wolfcast.com/
  */
 
@@ -40,6 +38,10 @@ namespace Wolfcast;
  * 2010. Chris' class was based on the original work from Gary White.
  *
  * Updates:
+ *
+ * 2022-09-20: Version 2.9.7
+ *  + Changed licensing to dual licensing: MIT or LGPL-3.0-only. This has no impact on existing users. You can continue
+ *    under the previous license or switch to MIT.
  *
  * 2022-05-01: Version 2.9.6
  *  + Added support for Chrome OS.
@@ -142,11 +144,12 @@ namespace Wolfcast;
  *  + Better Mozilla detection
  *
  * @package Browser_Detection
- * @version 2.9.6
- * @last-modified May 1, 2022
+ * @version 2.9.7
+ * @last-modified September 20, 2022
  * @author Alexandre Valiquette, Chris Schuld, Gary White
  * @copyright Copyright (c) 2022, Wolfcast
- * @license https://www.gnu.org/licenses/lgpl-3.0.html
+ * @license https://spdx.org/licenses/GPL-3.0-only.html
+ * @license https://spdx.org/licenses/MIT.html
  * @link https://wolfcast.com/
  * @link https://wolfcast.com/open-source/browser-detection/tutorial.php
  * @link https://chrisschuld.com/
@@ -523,7 +526,7 @@ class BrowserDetection
      */
     public function getLibVersion()
     {
-        return '2.9.6';
+        return '2.9.7';
     }
 
     /**
@@ -567,7 +570,7 @@ class BrowserDetection
             if($v_num_first >= 13)
                 return 'Windows 11';
         }
-
+		
         if ($this->_platformVersion == self::PLATFORM_VERSION_UNKNOWN || $this->_platformVersion == '') {
             return self::PLATFORM_VERSION_UNKNOWN;
         }
