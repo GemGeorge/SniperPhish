@@ -122,8 +122,9 @@ function modifyUserAction(e){
     } else
         $("#tb_update_current_pwd").removeClass("is-invalid");
 
-	if(!isPwdSecure(new_pwd, confirm_pwd, '#tb_update_new_pwd', '#tb_update_confirm_pwd'))
-		return;
+	if(!(new_pwd=='' && confirm_pwd==''))
+        if(!isPwdSecure(new_pwd, confirm_pwd, '#tb_add_pwd', '#tb_add_confirm_pwd'))
+            return;
 
     enableDisableMe(e);
     $.post({
