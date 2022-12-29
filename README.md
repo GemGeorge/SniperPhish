@@ -23,12 +23,9 @@
 4. After installation, SniperPhish will redirect to login page http://localhost/spear
 >Default login - *Username: `admin`   Password: `sniperphish`*
 
-## Updating/Upgrading
-1. 1st keep a backup of your existing /spear/db.php, /spear/uploads/, /spear/sniperhost/hf_files/ and /spear/sniperhost/ht_files/ folders. 
-2. Then delete all your current SnipePhish files and replace with the new SniperPhish. You may clone the repo/unzip latest SniperPhish release to the same location.
-3. Now, re-add the files and folders you backed up at the 1st step to the same locations
+## Documentation
+SniperPhish docmentation is available at https://docs.sniperphish.com/
 
->*Above steps are applicable only for SniperPhish v1.x to v1.3.1. No upgrade to SniperPhish v2.0 is available and it requires a fresh installation.*
 ## Main Features
 * Web tracker code generation - track your website visits and form submissions independently
 * Tracks data from phishing website containg any number of pages
