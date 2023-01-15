@@ -2,7 +2,6 @@
 
 namespace Egulias\EmailValidator;
 
-use Egulias\EmailValidator\Parser;
 use Egulias\EmailValidator\Result\Result;
 use Egulias\EmailValidator\Parser\IDLeftPart;
 use Egulias\EmailValidator\Parser\IDRightPart;
@@ -14,7 +13,7 @@ use Egulias\EmailValidator\Result\Reason\NoLocalPart;
 class MessageIDParser extends Parser
 {
 
-    const EMAILID_MAX_LENGTH = 254;
+    public const EMAILID_MAX_LENGTH = 254;
 
     /**
      * @var string

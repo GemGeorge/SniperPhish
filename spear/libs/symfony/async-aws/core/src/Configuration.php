@@ -30,6 +30,7 @@ final class Configuration
     public const OPTION_WEB_IDENTITY_TOKEN_FILE = 'webIdentityTokenFile';
     public const OPTION_ROLE_SESSION_NAME = 'roleSessionName';
     public const OPTION_CONTAINER_CREDENTIALS_RELATIVE_URI = 'containerCredentialsRelativeUri';
+    public const OPTION_ENDPOINT_DISCOVERY_ENABLED = 'endpointDiscoveryEnabled';
 
     // S3 specific option
     public const OPTION_PATH_STYLE_ENDPOINT = 'pathStyleEndpoint';
@@ -49,6 +50,7 @@ final class Configuration
         self::OPTION_WEB_IDENTITY_TOKEN_FILE => true,
         self::OPTION_ROLE_SESSION_NAME => true,
         self::OPTION_CONTAINER_CREDENTIALS_RELATIVE_URI => true,
+        self::OPTION_ENDPOINT_DISCOVERY_ENABLED => true,
         self::OPTION_PATH_STYLE_ENDPOINT => true,
         self::OPTION_SEND_CHUNKED_BODY => true,
     ];
@@ -70,6 +72,7 @@ final class Configuration
             self::OPTION_ROLE_SESSION_NAME => 'AWS_ROLE_SESSION_NAME',
         ],
         [self::OPTION_CONTAINER_CREDENTIALS_RELATIVE_URI => 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'],
+        [self::OPTION_ENDPOINT_DISCOVERY_ENABLED => ['AWS_ENDPOINT_DISCOVERY_ENABLED', 'AWS_ENABLE_ENDPOINT_DISCOVERY']],
     ];
 
     private const DEFAULT_OPTIONS = [
@@ -82,6 +85,7 @@ final class Configuration
         self::OPTION_ENDPOINT => 'https://%service%.%region%.amazonaws.com',
         self::OPTION_PATH_STYLE_ENDPOINT => 'false',
         self::OPTION_SEND_CHUNKED_BODY => 'false',
+        self::OPTION_ENDPOINT_DISCOVERY_ENABLED => 'false',
     ];
 
     private $data = [];

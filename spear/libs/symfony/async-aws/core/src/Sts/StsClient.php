@@ -156,21 +156,6 @@ class StsClient extends AbstractApi
                     'signService' => 'sts',
                     'signVersions' => ['v4'],
                 ];
-            case 'us-iso-east-1':
-            case 'us-iso-west-1':
-                return [
-                    'endpoint' => "https://sts.$region.c2s.ic.gov",
-                    'signRegion' => $region,
-                    'signService' => 'sts',
-                    'signVersions' => ['v4'],
-                ];
-            case 'us-isob-east-1':
-                return [
-                    'endpoint' => 'https://sts.us-isob-east-1.sc2s.sgov.gov',
-                    'signRegion' => 'us-isob-east-1',
-                    'signService' => 'sts',
-                    'signVersions' => ['v4'],
-                ];
             case 'us-east-1-fips':
                 return [
                     'endpoint' => 'https://sts-fips.us-east-1.amazonaws.com',
@@ -182,6 +167,20 @@ class StsClient extends AbstractApi
                 return [
                     'endpoint' => 'https://sts-fips.us-east-2.amazonaws.com',
                     'signRegion' => 'us-east-2',
+                    'signService' => 'sts',
+                    'signVersions' => ['v4'],
+                ];
+            case 'us-west-1-fips':
+                return [
+                    'endpoint' => 'https://sts-fips.us-west-1.amazonaws.com',
+                    'signRegion' => 'us-west-1',
+                    'signService' => 'sts',
+                    'signVersions' => ['v4'],
+                ];
+            case 'us-west-2-fips':
+                return [
+                    'endpoint' => 'https://sts-fips.us-west-2.amazonaws.com',
+                    'signRegion' => 'us-west-2',
                     'signService' => 'sts',
                     'signVersions' => ['v4'],
                 ];
@@ -199,17 +198,18 @@ class StsClient extends AbstractApi
                     'signService' => 'sts',
                     'signVersions' => ['v4'],
                 ];
-            case 'us-west-1-fips':
+            case 'us-iso-east-1':
+            case 'us-iso-west-1':
                 return [
-                    'endpoint' => 'https://sts-fips.us-west-1.amazonaws.com',
-                    'signRegion' => 'us-west-1',
+                    'endpoint' => "https://sts.$region.c2s.ic.gov",
+                    'signRegion' => $region,
                     'signService' => 'sts',
                     'signVersions' => ['v4'],
                 ];
-            case 'us-west-2-fips':
+            case 'us-isob-east-1':
                 return [
-                    'endpoint' => 'https://sts-fips.us-west-2.amazonaws.com',
-                    'signRegion' => 'us-west-2',
+                    'endpoint' => 'https://sts.us-isob-east-1.sc2s.sgov.gov',
+                    'signRegion' => 'us-isob-east-1',
                     'signService' => 'sts',
                     'signVersions' => ['v4'],
                 ];

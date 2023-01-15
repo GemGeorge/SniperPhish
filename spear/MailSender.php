@@ -165,7 +165,7 @@
                                  <div class="form-group row">
                                     <label for="mail_sender_acc_pwd" class="col-sm-3 text-left control-label col-form-label">SMTP Password:*</label>
                                     <div class="col-sm-7">
-                                       <input type="password" class="form-control" id="mail_sender_acc_pwd" placeholder="SMTP login password">
+                                       <input type="password" class="form-control" id="mail_sender_acc_pwd" placeholder="SMTP login password" autocomplete="new-password">
                                     </div>
                                  </div>
                                  <div class="form-group row">

@@ -19,12 +19,24 @@ class RequestContext
         'expirationDate' => true,
         'currentDate' => true,
         'exceptionMapping' => true,
+        'usesEndpointDiscovery' => true,
+        'requiresEndpointDiscovery' => true,
     ];
 
     /**
      * @var string|null
      */
     private $operation;
+
+    /**
+     * @var bool
+     */
+    private $usesEndpointDiscovery = false;
+
+    /**
+     * @var bool
+     */
+    private $requiresEndpointDiscovery = false;
 
     /**
      * @var string|null
@@ -53,6 +65,8 @@ class RequestContext
      *  expirationDate?: null|\DateTimeImmutable
      *  currentDate?: null|\DateTimeImmutable
      *  exceptionMapping?: string[]
+     *  usesEndpointDiscovery?: bool
+     *  requiresEndpointDiscovery?: bool
      * }
      */
     public function __construct(array $options = [])
@@ -89,5 +103,15 @@ class RequestContext
     public function getExceptionMapping(): array
     {
         return $this->exceptionMapping;
+    }
+
+    public function usesEndpointDiscovery(): bool
+    {
+        return $this->usesEndpointDiscovery;
+    }
+
+    public function requiresEndpointDiscovery(): bool
+    {
+        return $this->requiresEndpointDiscovery;
     }
 }

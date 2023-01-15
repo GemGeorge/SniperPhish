@@ -153,7 +153,7 @@ function getMailerDSN($dsn_type, $sender_username, $sender_pwd, $smtp_server, $v
         case 'postmark'             : return 'postmark+smtp://'.$sender_pwd.'@default?verify_peer='.$verify_peer;   //postmark+smtp://ID@default
         case 'sendgrid'             : return 'sendgrid+smtp://'.$sender_pwd.'@default?verify_peer='.$verify_peer;  //sendgrid+smtp://KEY@default
         case 'sendinblue'           : return 'sendinblue+smtp://'.$sender_username.':'.$sender_pwd.'@default?verify_peer='.$verify_peer;
-        case 'ohmysmtp'             : return 'ohmysmtp+smtp://'.$sender_pwd.'@default?verify_peer='.$verify_peer;  //ohmysmtp+smtp://API_TOKEN@default
+        case 'mailpace'             : return 'mailpace+api://'.$sender_pwd.'@default?verify_peer='.$verify_peer;    //mailpace+api://API_TOKEN@default
         default                     : return 'smtp://'.$sender_username.':'.$sender_pwd.'@'.$smtp_server.'?verify_peer='.$verify_peer;
     }
 }

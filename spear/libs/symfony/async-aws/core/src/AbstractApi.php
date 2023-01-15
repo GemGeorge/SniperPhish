@@ -9,8 +9,10 @@ use AsyncAws\Core\AwsError\ChainAwsErrorFactory;
 use AsyncAws\Core\Credentials\CacheProvider;
 use AsyncAws\Core\Credentials\ChainProvider;
 use AsyncAws\Core\Credentials\CredentialProvider;
+use AsyncAws\Core\EndpointDiscovery\EndpointCache;
 use AsyncAws\Core\Exception\InvalidArgument;
 use AsyncAws\Core\Exception\LogicException;
+use AsyncAws\Core\Exception\RuntimeException;
 use AsyncAws\Core\HttpClient\AwsRetryStrategy;
 use AsyncAws\Core\Signer\Signer;
 use AsyncAws\Core\Signer\SignerV4;
@@ -60,6 +62,11 @@ abstract class AbstractApi
     private $awsErrorFactory;
 
     /**
+     * @var EndpointCache
+     */
+    private $endpointCache;
+
+    /**
      * @param Configuration|array $configuration
      */
     public function __construct($configuration = [], ?CredentialProvider $credentialProvider = null, ?HttpClientInterface $httpClient = null, ?LoggerInterface $logger = null)
@@ -72,6 +79,7 @@ abstract class AbstractApi
 
         $this->logger = $logger ?? new NullLogger();
         $this->awsErrorFactory = $this->getAwsErrorFactory();
+        $this->endpointCache = new EndpointCache();
         if (!isset($httpClient)) {
             $httpClient = HttpClient::create();
             if (class_exists(RetryableHttpClient::class)) {
@@ -132,7 +140,7 @@ abstract class AbstractApi
 
     final protected function getResponse(Request $request, ?RequestContext $context = null): Response
     {
-        $request->setEndpoint($this->getEndpoint($request->getUri(), $request->getQuery(), $context ? $context->getRegion() : null));
+        $request->setEndpoint($this->getDiscoveredEndpoint($request->getUri(), $request->getQuery(), $context ? $context->getRegion() : null, $context ? $context->usesEndpointDiscovery() : false, $context ? $context->requiresEndpointDiscovery() : false));
 
         if (null !== $credentials = $this->credentialProvider->getCredentials($this->configuration)) {
             $this->getSigner($context ? $context->getRegion() : null)->sign($request, $credentials, $context ?? new RequestContext());
@@ -166,7 +174,7 @@ abstract class AbstractApi
             ]);
         }
 
-        return new Response($response, $this->httpClient, $this->logger, $this->awsErrorFactory, $debug, $context ? $context->getExceptionMapping() : []);
+        return new Response($response, $this->httpClient, $this->logger, $this->awsErrorFactory, $this->endpointCache, $request, $debug, $context ? $context->getExceptionMapping() : []);
     }
 
     /**
@@ -253,6 +261,49 @@ abstract class AbstractApi
         }
 
         return $endpoint . (false === strpos($endpoint, '?') ? '?' : '&') . http_build_query($query);
+    }
+
+    protected function discoverEndpoints(?string $region): array
+    {
+        throw new LogicException(sprintf('The Client "%s" must implement the "%s" method.', \get_class($this), 'discoverEndpoints'));
+    }
+
+    private function getDiscoveredEndpoint(string $uri, array $query, ?string $region, bool $usesEndpointDiscovery, bool $requiresEndpointDiscovery)
+    {
+        if (!$this->configuration->isDefault('endpoint')) {
+            return $this->getEndpoint($uri, $query, $region);
+        }
+
+        $usesEndpointDiscovery = $requiresEndpointDiscovery || ($usesEndpointDiscovery && filter_var($this->configuration->get(Configuration::OPTION_ENDPOINT_DISCOVERY_ENABLED), \FILTER_VALIDATE_BOOLEAN));
+        if (!$usesEndpointDiscovery) {
+            return $this->getEndpoint($uri, $query, $region);
+        }
+
+        // 1. use an active endpoints
+        if (null === $endpoint = $this->endpointCache->getActiveEndpoint($region)) {
+            $previous = null;
+
+            try {
+                // 2. call API to fetch new endpoints
+                $endpoints = $this->discoverEndpoints($region);
+                $this->endpointCache->addEndpoints($region, $endpoints);
+
+                // 3. use active endpoints that has just been injected
+                $endpoint = $this->endpointCache->getActiveEndpoint($region);
+            } catch (\Exception $previous) {
+            }
+
+            // 4. if endpoint is still null, fallback to expired endpoint
+            if (null === $endpoint && null === $endpoint = $this->endpointCache->getExpiredEndpoint($region)) {
+                if ($requiresEndpointDiscovery) {
+                    throw new RuntimeException(sprintf('The Client "%s" failed to fetch the endpoint.', \get_class($this)), 0, $previous);
+                }
+
+                return $this->getEndpoint($uri, $query, $region);
+            }
+        }
+
+        return $endpoint;
     }
 
     /**

@@ -570,7 +570,7 @@ function appySenderTemplate(){
 function appySenderTemplateAttr(content){
     $("#mail_sender_SMTP_server").prop('disabled', content.smtp.disabled);
 
-    if($.inArray(g_dsn_type,  ['postmark','sendgrid','ohmysmtp']) != -1){
+    if($.inArray(g_dsn_type,  ['postmark','sendgrid','mailpace']) != -1){
         $("#mail_sender_acc_username").val('NA');
         $("#mail_sender_acc_username").prop('disabled', true);
     }

@@ -2,6 +2,25 @@
 
 ## NOT RELEASED
 
+## 1.18.0
+
+### Added
+
+- Added support for Scheduler
+
+## 1.17.0
+
+### Added
+
+- Added support for Iot Data
+
+## 1.16.0
+
+### Added
+
+- Added support for endpoint discovery
+- Added support for Iot Core
+
 ## 1.15.0
 
 ### Added

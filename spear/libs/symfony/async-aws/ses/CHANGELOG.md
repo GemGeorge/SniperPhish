@@ -2,6 +2,13 @@
 
 ## NOT RELEASED
 
+## 1.5.0
+
+### Added
+
+- AWS api-change: reorder regions
+- AWS api-change: Added `fips-us-east-1` and `fips-us-west-2` regions
+
 ## 1.4.1
 
 ### Fixed

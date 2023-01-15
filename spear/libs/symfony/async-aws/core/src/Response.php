@@ -6,6 +6,7 @@ namespace AsyncAws\Core;
 
 use AsyncAws\Core\AwsError\AwsErrorFactoryInterface;
 use AsyncAws\Core\AwsError\ChainAwsErrorFactory;
+use AsyncAws\Core\EndpointDiscovery\EndpointCache;
 use AsyncAws\Core\Exception\Exception;
 use AsyncAws\Core\Exception\Http\ClientException;
 use AsyncAws\Core\Exception\Http\HttpException;
@@ -80,6 +81,16 @@ class Response
     private $awsErrorFactory;
 
     /**
+     * @var ?EndpointCache
+     */
+    private $endpointCache;
+
+    /**
+     * @var ?Request
+     */
+    private $request;
+
+    /**
      * @var bool
      */
     private $debug;
@@ -89,12 +100,14 @@ class Response
      */
     private $exceptionMapping;
 
-    public function __construct(ResponseInterface $response, HttpClientInterface $httpClient, LoggerInterface $logger, AwsErrorFactoryInterface $awsErrorFactory = null, bool $debug = false, array $exceptionMapping = [])
+    public function __construct(ResponseInterface $response, HttpClientInterface $httpClient, LoggerInterface $logger, AwsErrorFactoryInterface $awsErrorFactory = null, EndpointCache $endpointCache = null, Request $request = null, bool $debug = false, array $exceptionMapping = [])
     {
         $this->httpResponse = $response;
         $this->httpClient = $httpClient;
         $this->logger = $logger;
         $this->awsErrorFactory = $awsErrorFactory ?? new ChainAwsErrorFactory();
+        $this->endpointCache = $endpointCache;
+        $this->request = $request;
         $this->debug = $debug;
         $this->exceptionMapping = $exceptionMapping;
     }
@@ -385,6 +398,9 @@ class Response
         if (300 <= $statusCode) {
             try {
                 $awsError = $this->awsErrorFactory->createFromResponse($this->httpResponse);
+                if ($this->request && $this->endpointCache && (400 === $statusCode || 'InvalidEndpointException' === $awsError->getCode())) {
+                    $this->endpointCache->removeEndpoint($this->request->getEndpoint());
+                }
             } catch (UnparsableResponse $e) {
                 $awsError = null;
             }

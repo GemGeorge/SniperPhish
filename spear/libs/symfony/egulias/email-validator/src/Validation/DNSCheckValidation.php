@@ -2,7 +2,6 @@
 
 namespace Egulias\EmailValidator\Validation;
 
-use Egulias\EmailValidator\Validation\DNSGetRecordWrapper;
 use Egulias\EmailValidator\EmailLexer;
 use Egulias\EmailValidator\Result\InvalidEmail;
 use Egulias\EmailValidator\Result\Reason\DomainAcceptsNoMail;
@@ -22,7 +21,7 @@ class DNSCheckValidation implements EmailValidation
      * Reserved Top Level DNS Names (https://tools.ietf.org/html/rfc2606#section-2),
      * mDNS and private DNS Namespaces (https://tools.ietf.org/html/rfc6762#appendix-G)
      */
-    const RESERVED_DNS_TOP_LEVEL_NAMES = [
+    public const RESERVED_DNS_TOP_LEVEL_NAMES = [
         // Reserved Top Level DNS Names
         'test',
         'example',
@@ -61,7 +60,7 @@ class DNSCheckValidation implements EmailValidation
      */
     private $dnsGetRecord;
 
-    public function __construct(DNSGetRecordWrapper $dnsGetRecord = null)
+    public function __construct(?DNSGetRecordWrapper $dnsGetRecord = null)
     {
         if (!function_exists('idn_to_ascii')) {
             throw new \LogicException(sprintf('The %s class requires the Intl extension.', __CLASS__));

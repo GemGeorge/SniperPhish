@@ -2,6 +2,7 @@
 
 namespace Egulias\EmailValidator\Parser;
 
+use Doctrine\Common\Lexer\Token;
 use Egulias\EmailValidator\EmailLexer;
 use Egulias\EmailValidator\Warning\TLD;
 use Egulias\EmailValidator\Result\Result;
@@ -24,8 +25,8 @@ use Egulias\EmailValidator\Parser\DomainLiteral as DomainLiteralParser;
 
 class DomainPart extends PartParser
 {
-    const DOMAIN_MAX_LENGTH = 253;
-    const LABEL_MAX_LENGTH = 63;
+    public const DOMAIN_MAX_LENGTH = 253;
+    public const LABEL_MAX_LENGTH = 63;
 
     /**
      * @var string
@@ -212,7 +213,10 @@ class DomainPart extends PartParser
         return new ValidEmail();
     }
 
-    private function checkNotAllowedChars(array $token) : Result
+    /**
+     * @psalm-param array|Token<int, string> $token
+     */
+    private function checkNotAllowedChars($token) : Result
     {
         $notAllowed = [EmailLexer::S_BACKSLASH => true, EmailLexer::S_SLASH=> true];
         if (isset($notAllowed[$token['type']])) {
@@ -292,7 +296,7 @@ class DomainPart extends PartParser
     private function isLabelTooLong(string $label) : bool
     {
         if (preg_match('/[^\x00-\x7F]/', $label)) {
-            idn_to_ascii(utf8_decode($label), IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46, $idnaInfo);
+            idn_to_ascii($label, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46, $idnaInfo);
             return (bool) ($idnaInfo['errors'] & IDNA_ERROR_LABEL_TOO_LONG);
         }
         return strlen($label) > self::LABEL_MAX_LENGTH;
