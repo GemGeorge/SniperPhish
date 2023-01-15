@@ -98,6 +98,7 @@ function generateRID(&$conn, &$campaign_id){ //this make 100% unique RID
 
 function InitMailCampaign($conn, $campaign_id){
 	$keyword_vals = array();
+	$i=0; // user counter
 
 	$MC_DATA = getMC($conn, $campaign_id);
 	$MC_name = $MC_DATA['campaign_name'];
@@ -176,10 +177,11 @@ function InitMailCampaign($conn, $campaign_id){
             $message->getHeaders()->addTextHeader($header_name, $header_val);
 	}
 
-	foreach ($arr_user_data as $i  => $arr_user) {
+	foreach ($arr_user_data as $arr_user) {
 		$send_time = round(microtime(true) * 1000); //milli-seconds
     	$msg_fail_retry_counter = 0;
 	    $RID = generateRID($conn, $campaign_id); 
+	    $i++;
 
 	    $keyword_vals['{{RID}}'] = $RID;
 	    $keyword_vals['{{MID}}'] = $campaign_id;
@@ -279,8 +281,10 @@ function InitMailCampaign($conn, $campaign_id){
 		usleep($delay_val*1000); //usleep is in microseconds
 
 		//Anti-flood control
-		if(($i+1)%$config_antiflood_limit == 0)
+		if($i%$config_antiflood_limit == 0){
+			$transport->stop();
 			sleep($config_antiflood_pause);
+		}
 
 		//Exit if campaign is stopped by user
 		if(isCampaignStopped($conn, $campaign_id))
