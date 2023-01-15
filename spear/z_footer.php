@@ -1,3 +1,3 @@
 <footer class="footer text-center">
-   © 2022 | All Rights Reserved 
+   © 2023 | All Rights Reserved 
 </footer>
