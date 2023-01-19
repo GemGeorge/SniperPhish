@@ -1,5 +1,5 @@
 <?php
-require_once(dirname(__FILE__,2) . '/db.php');
+require_once(dirname(__FILE__,2) . '/config/db.php');
 
 if(isset($_GET['ht']))	//host text
 	displayHostPlainText($conn,$_GET['ht']);
