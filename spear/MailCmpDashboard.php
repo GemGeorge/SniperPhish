@@ -363,7 +363,7 @@
                         </span>
                      </div>
                      <div class="modal-footer col-md-12">
-                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_test_mail">Close</button>  
+                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_dashboard_link">Close</button>  
                      </div>
                   </div>
                </div>
