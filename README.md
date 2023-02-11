@@ -77,6 +77,7 @@ Joseph Nygil ([@j_nygil](https://twitter.com/j_nygil)) and Sreehari Haridas ([@s
 ## Come let's connect and collaborate
 Join on our SniperPhish discord community to engage with us!
 * Discord: https://sniperphish.com/discord/
+* Subscribe: https://www.youtube.com/@sniperphish
 
 ## Donation
 If this project help you 'Phish', you can give me a cup of coffee :) 
