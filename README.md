@@ -17,18 +17,15 @@
 * Database: MySQL
 
 ## Installation
-1. Clone the repo or download the latest release
+1. Clone this repo or download the latest release
 2. Put the contents in your web root folder
 3. Open installation page http://localhost/install in your browser and follow the steps
 4. After installation, SniperPhish will redirect to login page http://localhost/spear
 >Default login - *Username: `admin`   Password: `sniperphish`*
 
-## Documentation
-SniperPhish docmentation is available at https://docs.sniperphish.com/
-
 ## Main Features
 * Web tracker code generation - track your website visits and form submissions independently
-* Tracks data from phishing website containg any number of pages
+* Tracks data from phishing website containing any number of pages
 * Create and schedule Phishing mail campaigns
 * Combine your phishing site with email campaign for centrally tracking
 * An independent "Quick Tracker" module for quick tracking an email or web page visit
@@ -66,12 +63,13 @@ In short, we create web tracker -> Add the web tracker to the phishing website -
 _Note: SniperPhish tracks your phishing website only if the page is called by appending `rid` parameter (ie. `?rid={{RID}}`) at the end. For example opening `http://yourphishingsite.com/login?rid=abcd` will be tracked, but not `http://yourphishingsite.com/login`. Above 3rd step does this by default._
 
 #### Viewing combined Web-Email Result
-Go to `Web-MailCamp Dashboard -> Select Campaign`. Then selct the web tracker and email campaign you created.<br/>
+Go to `Web-MailCamp Dashboard -> Select Campaign`. Then select the web tracker and email campaign you created.<br/>
 <kbd><img src="https://user-images.githubusercontent.com/15928266/116777253-2e1bdf80-aaa0-11eb-9c44-e1db8f200c39.png" height="286"></img></kbd>
 
 ## More
 * SniperPhish website: https://sniperphish.com/
 * SniperPhish demo: https://demo.sniperphish.com/spear/
+* SniperPhish documentation: https://docs.sniperphish.com/
 
 ## SniperPhish honors contributions of
 Joseph Nygil ([@j_nygil](https://twitter.com/j_nygil)) and Sreehari Haridas ([@sr33h4ri](https://twitter.com/sr33h4ri))
