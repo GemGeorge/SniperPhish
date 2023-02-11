@@ -2,18 +2,18 @@
   <a href=""><img src="https://user-images.githubusercontent.com/15928266/116806917-ab0f8d80-ab62-11eb-8d34-962fdfe692a7.png" ></img></a>
 </h1>
 <p align="center"> 
-  <a href=""><img src="https://img.shields.io/static/v1?label=php&message=%3E=7.4&color=green&style=flat&logo=php"></a>
+  <a href=""><img src="https://img.shields.io/static/v1?label=php&message=%3E=8.1&color=green&style=flat&logo=php"></a>
   <a href=""><img src="https://img.shields.io/static/v1?label=Platform&message=Linux/Windows&color=orange&style=flat"></a>
   <a href=""><img src="https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat"></a>
    <a href=""><img src="https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg?style=flat"></a>
 </p>
 
 # SniperPhish
-[SniperPhish](https://sniperphish.com/) is a phishing toolkit for pentester or security professionals to enhance user awareness by simulating real-world phishing attacks. SniperPhish helps to combine both phishing emails and phishing websites you created to centrally track user actions. The tool is designed in a view of performing professional phishing exercise and would be reminded to take prior permission from the targeted organization to avoid legal implications.
+[SniperPhish](https://sniperphish.com/) (SP in short) is a phishing toolkit for pentester or security professionals to enhance user awareness by simulating real-world phishing attacks. SniperPhish helps to combine both phishing emails and phishing websites you created to centrally track user actions. The tool is designed in a view of performing professional phishing exercise and would be reminded to take prior permission from the targeted organization to avoid legal implications.
 
 ## Basic Requirements
 * Operating System: Windows or Linux. The macOS support is not verified.
-* Web Server: Any web server supporting PHP with minimum v7.4 (well, you have Apache).
+* Web Server: Any web server supporting PHP v8.1 or higher (for SP<=2.0, minimum requirement is PHP v7.4).
 * Database: MySQL
 
 ## Installation
