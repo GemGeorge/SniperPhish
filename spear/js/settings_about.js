@@ -17,47 +17,44 @@ function checkUpdates(e){
     }); 
 }
 
-function isNewerVersion (oldVer, newVer) {
-    var f_new = false;
-    if(oldVer == newVer)
-        f_new = false;
-    else{
-        var oldVer_num=oldVer.split('-')[0];
-        var oldVer_type=oldVer.split('-')[1];
-        var newVer_num=newVer.split('-')[0];
-        var newVer_type=newVer.split('-')[1];
-
-        if(oldVer_num == newVer_num){
-            if(oldVer_type == 'alpha' && (newVer_type == 'beta' || newVer_type == null))
-                f_new = true;
-            else
-                f_new = false;
-
-            if(oldVer_type == null && (newVer_type == 'alpha' || newVer_type == 'beta'))
-                f_new = false;
-            else
-                f_new = true;
-
-            if(oldVer_type == 'beta' && (newVer_type == 'alpha' || newVer_type == 'beta'))
-                f_new = false;
-            else
-                f_new = true;
-        }
-
-        const oldParts = oldVer_num.split('.');
-        const newParts = newVer_num.split('.');
-        for (var i = 0; i < newParts.length; i++) {
-            const a = ~~newParts[i] // parse int
-            const b = ~~oldParts[i] // parse int
-            if (a > b) {
-                f_new = true;
-                break;
-            }
-            if (a < b){
-                f_new = false;
-                break;
-            } 
-        }
+function isNewerVersion(myVer, newVer) {
+    if (myVer === newVer) {
+        return false;
     }
-    return f_new;
+
+    const myVerSplit = myVer.split('-');
+    const myVerNum = myVerSplit[0];
+    const myVerType = myVerSplit[1] || 'final';
+
+    const newVerSplit = newVer.split('-');
+    const newVerNum = newVerSplit[0];
+    const newVerType = newVerSplit[1] || 'final';
+
+    if (myVerNum === newVerNum) {
+        if (myVerType === 'alpha' && (newVerType === 'beta' || newVerType === 'final')) {
+            return true;
+        } else if (myVerType === 'final' && newVerType === 'alpha') {
+            return false;
+        } else if (myVerType === 'beta' && newVerType === 'alpha') {
+            return false;
+        } else {
+            return false;
+        }
+    } else {
+        const myVerParts = myVerNum.split('.');
+        const newVerParts = newVerNum.split('.');
+
+        for (let i = 0; i < myVerParts.length; i++) {
+            const myVerPart = Number(myVerParts[i]);
+            const newVerPart = Number(newVerParts[i] || 0);
+
+            if (myVerPart > newVerPart) {
+                return false;
+            } else if (myVerPart < newVerPart) {
+                return true;
+            }
+        }
+
+        return true;
+    }
 }

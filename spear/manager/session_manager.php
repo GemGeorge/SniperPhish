@@ -22,7 +22,6 @@ function validateLogin($username,$pwd){
 	$stmt->execute();
 	$row = $stmt->get_result()->fetch_row();
 	if($row[0] > 0){
-		setInfoCookie($conn,$username);
 		updateLoginLogout($conn, $username, $GLOBALS['entry_time'], true);
 		$os = getOSType();
 		if(!isProcessRunning($conn,$os))
@@ -207,7 +206,6 @@ function doReLogin($username, $pwd){
 	$row = $stmt->get_result()->fetch_row();
 	if($row[0] > 0){
 		createSession(true,$username);
-		setInfoCookie($conn,$username);
 		echo json_encode(['result' => 'success']);	
 	}
 	else
@@ -215,19 +213,24 @@ function doReLogin($username, $pwd){
 }
 
 function createSession($f_regenerate,$username){
+	global $conn;
 	session_destroy();
 	session_set_cookie_params([
-            'lifetime' => 86400,	//86400=1 day
-            'secure' => false,
-            'httponly' => true,
-            'samesite' => 'Strict'
-        ]);
+			'lifetime' => 86400,	//86400=1 day
+			'secure' => false,
+			'httponly' => true,
+			'samesite' => 'Strict'
+		]);
 
 	session_start();
-	if($f_regenerate)
+
+	if($f_regenerate){
+		header_remove('Set-Cookie');	//deletes header set by session_start(); from response
 		session_regenerate_id(true);
+	}
 
 	$_SESSION['username'] = $username;
+	setInfoCookie($conn,$username);
 }
 
 function terminateSession($redirection=true){

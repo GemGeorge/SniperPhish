@@ -256,7 +256,7 @@ function idleTimerFun() {
     idleTime++;
     if (idleTime > idleMax){
         $.post({
-            url: window.location.origin + "/spear/session_manager",
+            url: window.location.origin + "/spear/manager/session_manager",
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({ 
                     action_type: "terminate_session"
