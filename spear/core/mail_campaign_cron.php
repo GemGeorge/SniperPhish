@@ -161,7 +161,7 @@ function InitMailCampaign($conn, $campaign_id){
 	$serv_variables = getServerVariable($conn);
 	//----------------------------------------------------------------------------------------
 	
-	$transport = Transport::fromDsn(getMailerDSN($sender_dsn_type, $sender_acc_username, $sender_acc_pwd, $sender_SMTP_server, $config_peer_verification));
+	$transport = Transport::fromDsn(getMailerDSN($sender_dsn_type, urlencode($sender_acc_username), urlencode($sender_acc_pwd), $sender_SMTP_server, $config_peer_verification));
 	$mailer = new Mailer($transport); 
 	$message = (new Email());
 

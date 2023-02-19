@@ -117,7 +117,7 @@ function shootMail(&$message,$smtp_server,$sender_username,$sender_pwd,$sender_f
         $sender_from_mail = $matches[0];
         $sender_from_name = explode("<", $sender_from)[0];
 
-        $transport = Transport::fromDsn(getMailerDSN($dsn_type, $sender_username, $sender_pwd, $smtp_server, 0));
+        $transport = Transport::fromDsn(getMailerDSN($dsn_type, urlencode($sender_username), urlencode($sender_pwd), $smtp_server, 0));
         $mailer = new Mailer($transport);
         $message->from($sender_from)->to($test_to_address)->subject($mail_subject);
 
