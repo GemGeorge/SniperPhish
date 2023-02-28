@@ -25,7 +25,7 @@ function checkRequirements(){
     $extensions = get_loaded_extensions();
     $success = "<i class='fas fa-check fa-lg text-success'></i>";
 
-    if (phpversion() >= 8.1) 
+    if (version_compare(phpversion(), '8.1', '>=')) 
         $resp_arr['PHP version ' . phpversion() ] = true;
     else{
         $resp_arr['PHP version ' . phpversion() ] = "PHP version >= 8.1 is required"; 
