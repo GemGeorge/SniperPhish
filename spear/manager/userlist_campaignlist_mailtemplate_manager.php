@@ -292,7 +292,7 @@ function getUserGroupFromGroupIdTable($conn,&$POSTJ){
 		    	array_push($arr_filtered, $item);
 		}
 
-		$totalRecords = sizeof($user_data);
+		$totalRecords = empty($row['user_data'])?0:sizeof($user_data);
 		$totalRecords_with_filter = sizeof($arr_filtered);
 		$resp = array(
 		  "draw" => intval($draw),
