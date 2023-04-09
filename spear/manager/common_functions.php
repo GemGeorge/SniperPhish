@@ -457,7 +457,7 @@ function doFilter($string, $type){
         return $string;
 }
 
-function validateEmail($email) { //supports  RFC 5322
+function isValidEmail($email) { //supports  RFC 5322
   if (empty($email)) {
     return false;
   }
