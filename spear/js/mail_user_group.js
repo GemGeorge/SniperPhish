@@ -34,7 +34,7 @@ function exportUserAction() {
             })
         }).done(function (response) {
             if(response.error)
-                toastr.error('', 'Error adding user!');
+                toastr.error('', 'Error exporting user!');
             else{
                 var a = window.document.createElement('a');
                 a.href = window.URL.createObjectURL(new Blob([response],{ type: 'text/csv'}));
